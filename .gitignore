@@ -10,3 +10,8 @@ db.sqlite3
 staticfiles/
 runtime/
 check_run_*_attempt_*.png
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+.DS_Store
