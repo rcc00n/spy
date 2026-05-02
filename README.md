@@ -58,3 +58,27 @@ collector described above.
 
 ```bash
 cp .env.example .env
+```
+
+For host-based development, set `DEBUG=True` and either remove `DATABASE_URL`
+to use SQLite or point it at a local PostgreSQL database. Add a real
+`SECRET_KEY` before running with `DEBUG=False`.
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+python -m playwright install chromium
+python manage.py migrate
+python manage.py runserver
+```
+
+Create the first web/admin user:
+
+```bash
+python manage.py createsuperuser
+```
+
+Open:
+
+- Research portal: http://127.0.0.1:8000/research/
