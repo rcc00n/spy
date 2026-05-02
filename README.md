@@ -22,3 +22,39 @@ bounded recurring passes. See [collector operations](docs/facebook-scan.md) for
 budgets, recovery, migrations and deployment notes. Private or inaccessible
 content, full historical coverage and video analysis are outside current scope.
 
+The older account-monitoring dashboard remains at `/?legacy=1`; remote research
+jobs remain at `/research/`. Notification delivery and AI classification are not
+part of the findings workspace. The next product stage is source expansion and
+AI-assisted relevance analysis.
+
+## Scope and safety rules
+
+- Monitor only public pages and public accounts.
+- Optional Facebook login uses a saved browser session for an operator-owned
+  account, but monitoring scope should still stay limited to public pages and
+  accounts you are allowed to monitor.
+- Do not use CAPTCHA solving, checkpoint bypasses, or other protection bypasses.
+- Do not access private accounts, paywalled content, or content hidden behind login.
+- Store only the text and short raw snapshot needed for keyword monitoring.
+- Checks include random delays between accounts.
+
+The legacy account checker is intentionally conservative. It opens the
+public URL with Playwright headless Chromium, reads visible page text, stores a
+bounded snapshot, and searches active keywords. Its bounded account snapshots are separate from the durable Facebook discussion
+collector described above.
+
+## Stack
+
+- Django, Django ORM, Django admin, Django templates
+- PostgreSQL in Docker Compose
+- Redis, Celery worker, Celery beat
+- Remote research engine API for the large language model and critic loop
+- Playwright headless Chromium
+- python-telegram-bot
+- Nginx reverse proxy
+- Certbot service and HTTPS config example
+
+## Local development setup
+
+```bash
+cp .env.example .env
