@@ -82,3 +82,27 @@ python manage.py createsuperuser
 Open:
 
 - Research portal: http://127.0.0.1:8000/research/
+- Dashboard: http://127.0.0.1:8000/
+- Admin: http://127.0.0.1:8000/admin/
+- Health: http://127.0.0.1:8000/health/
+
+## Docker Compose setup
+
+Edit `.env` before first boot:
+
+- Set `SECRET_KEY`.
+- Set `POSTGRES_PASSWORD`.
+- Make `DATABASE_URL` use the same PostgreSQL password.
+- Set `TELEGRAM_BOT_TOKEN` if Telegram alerts or bot polling are needed.
+- Facebook auth can be turned on with `FACEBOOK_AUTH_ENABLED=True`, or by saving
+  active Facebook credentials in **Facebook Login** after the app is running.
+
+Start the web stack:
+
+```bash
+docker compose up --build
+```
+
+To use the Compose-managed Nginx service in a standalone environment:
+
+```bash
