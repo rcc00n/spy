@@ -142,3 +142,27 @@ Use **Research** in the sidebar to create and track long-running research jobs.
 The Django server is the portal/orchestrator; the large model and critic should
 run on another machine behind `RESEARCH_ENGINE_URL`.
 
+When a user creates a research job:
+
+- Django stores a `ResearchJob` row with query, depth, social-source preference,
+  status, plan, final Markdown report, and remote job id.
+- Celery sends the request to the remote engine.
+- Celery polls the remote engine and records status events, sources, errors, and
+  the final report.
+- The job detail page polls `/research/<id>/status/` every 5 seconds.
+
+Configure the remote engine in `.env`:
+
+```bash
+RESEARCH_ENGINE_URL=http://model-server:9000
+RESEARCH_ENGINE_TOKEN=replace-with-shared-secret
+RESEARCH_ENGINE_TIMEOUT_SECONDS=30
+RESEARCH_ENGINE_POLL_SECONDS=5
+RESEARCH_ENGINE_MAX_POLLS=2160
+RESEARCH_TASK_TIME_LIMIT_SECONDS=21600
+RESEARCH_TASK_SOFT_TIME_LIMIT_SECONDS=21000
+RESEARCH_PORTAL_PUBLIC_BASE_URL=http://144.202.24.190
+RESEARCH_SOCIAL_TOOL_BASE_URL=http://144.202.24.190
+RUNPOD_API_KEY=
+RUNPOD_POD_ID=
+RUNPOD_ENGINE_PORT=8000
