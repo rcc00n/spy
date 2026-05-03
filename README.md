@@ -190,3 +190,27 @@ The submit response must either return a finished report or a remote job id:
   "message": "Research accepted"
 }
 ```
+
+Polling responses can include any of these fields:
+
+```json
+{
+  "status": "critiquing",
+  "plan": {"steps": ["web search", "social scan", "critic report"]},
+  "sources": [
+    {
+      "source_type": "web",
+      "title": "Source title",
+      "url": "https://example.com",
+      "excerpt": "Short evidence excerpt"
+    }
+  ],
+  "report_markdown": "# Final report",
+  "error_message": ""
+}
+```
+
+Known remote statuses are normalized into portal states: `queued`, `planning`,
+`collecting`, `social_collecting`, `critiquing`, `completed`, `failed`, and
+`cancelled`.
+
