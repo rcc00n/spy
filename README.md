@@ -106,3 +106,39 @@ docker compose up --build
 To use the Compose-managed Nginx service in a standalone environment:
 
 ```bash
+docker compose --profile nginx up --build
+```
+
+If your Docker Compose build path fails inside Bake, retry with:
+
+```bash
+COMPOSE_BAKE=false docker compose up --build
+```
+
+Create an admin user:
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+Run one monitoring pass manually:
+
+```bash
+docker compose exec web python manage.py check_accounts --force
+```
+
+Run the Telegram bot service:
+
+```bash
+docker compose --profile bot up -d telegram-bot
+```
+
+Celery beat runs `check_accounts` every `MONITORING_BEAT_SECONDS` seconds and
+each account still respects its own `check_interval_minutes`.
+
+## Research portal
+
+Use **Research** in the sidebar to create and track long-running research jobs.
+The Django server is the portal/orchestrator; the large model and critic should
+run on another machine behind `RESEARCH_ENGINE_URL`.
+
