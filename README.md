@@ -166,3 +166,27 @@ RESEARCH_SOCIAL_TOOL_BASE_URL=http://144.202.24.190
 RUNPOD_API_KEY=
 RUNPOD_POD_ID=
 RUNPOD_ENGINE_PORT=8000
+RUNPOD_AUTOSTART_ENABLED=False
+RUNPOD_AUTOSTOP_AFTER_JOB=False
+```
+
+If the portal is exposed only by IP, include it in `ALLOWED_HOSTS`, for example:
+
+```bash
+ALLOWED_HOSTS=144.202.24.190,localhost,127.0.0.1
+```
+
+Remote engine API contract:
+
+- `POST /v1/research/jobs`
+- `GET /v1/research/jobs/{external_job_id}`
+
+The submit response must either return a finished report or a remote job id:
+
+```json
+{
+  "external_job_id": "research-123",
+  "status": "planning",
+  "message": "Research accepted"
+}
+```
