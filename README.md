@@ -214,3 +214,39 @@ Known remote statuses are normalized into portal states: `queued`, `planning`,
 `collecting`, `social_collecting`, `critiquing`, `completed`, `failed`, and
 `cancelled`.
 
+### RunPod lifecycle mode
+
+For the cheapest Pod-based workflow, keep the GPU Pod stopped when no research
+is running. The portal supports two modes:
+
+- Manual mode: leave `RUNPOD_AUTOSTART_ENABLED=False`. Start the RunPod pod
+  yourself, then set `RESEARCH_ENGINE_URL=https://<pod-id>-8000.proxy.runpod.net`.
+- Automatic mode: set `RUNPOD_API_KEY`, `RUNPOD_POD_ID`,
+  `RUNPOD_AUTOSTART_ENABLED=True`, and optionally
+  `RUNPOD_AUTOSTOP_AFTER_JOB=True`. The Celery worker resumes the pod, waits for
+  `/health`, runs the research job, and stops the pod when no other research job
+  is active.
+
+If `RESEARCH_ENGINE_URL` is empty but `RUNPOD_POD_ID` and `RUNPOD_ENGINE_PORT`
+are set, the portal derives the proxy URL as:
+
+```text
+https://<RUNPOD_POD_ID>-<RUNPOD_ENGINE_PORT>.proxy.runpod.net
+```
+
+RunPod API keys are secrets. Store `RUNPOD_API_KEY` only in the production
+`.env` or secret manager, never in source control.
+
+## Social monitoring data
+
+The dashboard supports normal CRUD for:
+
+- `MonitoredAccount`: public Facebook Page or Instagram public account URL.
+- `Keyword`: active phrase to match.
+
+Use the dashboard to add, edit, and deactivate accounts or keywords. Deactivate
+keeps historical posts, matches, and check runs intact. Django admin is still
+available for full internal management, including `TelegramChat` rows.
+
+Dashboard pages show active account count, active keyword count, total matches,
+latest matches, latest check runs, and each account's last status/error.
