@@ -250,3 +250,27 @@ available for full internal management, including `TelegramChat` rows.
 
 Dashboard pages show active account count, active keyword count, total matches,
 latest matches, latest check runs, and each account's last status/error.
+
+## Manual checks
+
+From the web portal, use **Run all active checks now** on the dashboard or
+accounts page. Each account row also has **Check this account now**. The optional
+`Limit to last N posts` field overrides the account's default
+`max_posts_per_check` for that manual run only.
+
+For the MVP manual checks run synchronously and may take time if several
+accounts are configured.
+
+From the command line:
+
+```bash
+python manage.py check_accounts --force
+python manage.py check_accounts --force --no-telegram
+python manage.py check_accounts --force --account-id 3
+python manage.py check_accounts --force --account-id 3 --limit 5
+```
+
+Without `--force`, the command only checks active accounts whose
+`check_interval_minutes` has elapsed. `--limit` means "process at most N posts
+per account for this run" and must be between 1 and 20.
+
