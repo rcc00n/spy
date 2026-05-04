@@ -274,3 +274,27 @@ Without `--force`, the command only checks active accounts whose
 `check_interval_minutes` has elapsed. `--limit` means "process at most N posts
 per account for this run" and must be between 1 and 20.
 
+Each monitored account has:
+
+- `check_interval_minutes`: how often scheduled checks should run.
+- `max_posts_per_check`: default number of recent candidates to process, 1-20.
+- `scroll_rounds`: conservative page scroll count, 0-5.
+
+## Facebook public checker
+
+The Facebook checker is a conservative, best-effort public Page monitor. It:
+
+- launches headless Chromium with a desktop user agent
+- optionally loads a saved Playwright Facebook browser session
+- opens the configured public Facebook Page URL
+- waits for visible body content
+- detects login walls, CAPTCHA/checkpoints, unavailable/private pages, rate
+  limits, and empty responses before parsing
+- scrolls slowly for the configured `scroll_rounds`
+- extracts visible post candidates from `role="article"` containers and links
+  containing `/posts/`, `/permalink/`, `story_fbid=`, `/photos/`, `/videos/`,
+  or `/reel/`
+- normalizes Facebook post URLs and removes common tracking parameters
+- creates one `Post` per stable candidate ID
+- keyword-matches each post separately
+- sends Telegram alerts only for newly-created post-keyword matches
