@@ -298,3 +298,39 @@ The Facebook checker is a conservative, best-effort public Page monitor. It:
 - creates one `Post` per stable candidate ID
 - keyword-matches each post separately
 - sends Telegram alerts only for newly-created post-keyword matches
+
+Blocked statuses:
+
+- `login_required`: Facebook showed a login wall.
+- `captcha_or_checkpoint`: CAPTCHA, checkpoint, or security check detected.
+- `private_or_unavailable`: private, removed, or unavailable content detected.
+- `rate_limited_or_blocked`: temporary block or rate limit detected.
+- `empty_response`: no usable visible text was returned.
+
+Current limitations of non-API Facebook monitoring:
+
+- Facebook markup changes frequently, so selectors are best-effort.
+- Facebook can show different content by account, region, IP, or time.
+- Saved browser sessions expire. If Facebook rejects the session, refresh it
+  manually; the checker never solves CAPTCHA/checkpoint challenges.
+- Timestamp parsing is opportunistic; missing timestamps do not block matching.
+- Photo/video/reel links are used only when nearby visible text is available.
+
+## Optional Facebook authenticated session
+
+For pages that show a generic login wall to unauthenticated browsers, save
+Facebook credentials in **Facebook Login** or create a Playwright storage-state
+file manually.
+
+This setting forces authenticated checks even before credentials are saved:
+
+```bash
+FACEBOOK_AUTH_ENABLED=True
+FACEBOOK_AUTH_STORAGE_STATE_PATH=/app/runtime/facebook_storage_state.json
+```
+
+Credentials can be managed without editing `.env`: sign in to the web app with
+a staff user, open **Facebook Login**, and save the Facebook username/password.
+The password is encrypted before being stored in the database. The same model is
+also available in Django admin as `PlatformCredential`. Active stored
+credentials automatically enable authenticated checks; no `.env` edit is needed.
