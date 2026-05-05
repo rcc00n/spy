@@ -358,3 +358,27 @@ manager. Set a protected operator URL in `.env`:
 FACEBOOK_SESSION_MANAGER_URL=https://spy.raccncode.com/facebook-session/vnc.html
 FACEBOOK_SESSION_REQUEST_TTL_SECONDS=900
 FACEBOOK_SESSION_RUN_CHECKS_AFTER_SUCCESS=True
+```
+
+Start the service:
+
+```bash
+docker compose -f docker-compose.prod.yml --profile session up -d facebook-session-manager
+```
+
+Then sign in to the web app as a staff user, open **Facebook Login**, and create
+a session refresh request. The app sends the request to Telegram. Open the
+session-manager browser, complete Facebook login, 2FA, or checkpoint manually,
+and the session manager saves `/app/runtime/facebook_storage_state.json`.
+
+The session manager is a separate container with write access to the Facebook
+session volume. The Celery worker mounts the same volume read-only and only
+uses an already-saved session. By default the noVNC port is bound to
+`127.0.0.1:${SPY_FACEBOOK_SESSION_PORT:-18011}`; expose it only through a
+protected reverse proxy or SSH tunnel.
+
+## Telegram setup
+
+Create a Telegram bot with BotFather, then put the token in `.env`:
+
+```bash
