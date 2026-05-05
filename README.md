@@ -406,3 +406,39 @@ skip and does not crash checks.
 ## Telegram commands
 
 - `/start` registers the current chat for alerts.
+- `/accounts` lists active monitored accounts.
+- `/keywords` lists active keywords.
+- `/matches` lists the latest 5 matches.
+- `/session` shows Facebook session state and recent session refresh requests.
+- `/addaccount`, `/removeaccount`, `/addkeyword`, and `/removekeyword` are MVP
+  placeholders. Use the dashboard or Django admin for changes.
+
+Alerts use this format:
+
+```text
+Platform:
+Account:
+Keyword:
+Post:
+Preview:
+```
+
+## Logs and observability
+
+Docker Compose logs:
+
+```bash
+docker compose -f docker-compose.prod.yml logs -f web
+docker compose -f docker-compose.prod.yml logs -f celery-worker
+docker compose -f docker-compose.prod.yml logs -f celery-beat
+docker compose -f docker-compose.prod.yml --profile bot logs -f telegram-bot
+```
+
+Nginx logs on the VPS:
+
+```bash
+tail -f /var/log/nginx/spy-access.log
+tail -f /var/log/nginx/spy-error.log
+```
+
+The dashboard check-run views show latest run status, posts found, new posts,
