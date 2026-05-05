@@ -382,3 +382,27 @@ protected reverse proxy or SSH tunnel.
 Create a Telegram bot with BotFather, then put the token in `.env`:
 
 ```bash
+TELEGRAM_BOT_TOKEN=123456789:replace-with-real-token
+```
+
+For local development:
+
+```bash
+python manage.py run_telegram_bot
+```
+
+For Docker Compose:
+
+```bash
+docker compose --profile bot up -d telegram-bot
+```
+
+Open a chat with the bot and send `/start`. This creates or reactivates a
+`TelegramChat` row. Alerts are sent to active `TelegramChat` rows only.
+
+If `TELEGRAM_BOT_TOKEN` is empty or no active chats exist, alert sending logs a
+skip and does not crash checks.
+
+## Telegram commands
+
+- `/start` registers the current chat for alerts.
