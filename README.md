@@ -334,3 +334,27 @@ a staff user, open **Facebook Login**, and save the Facebook username/password.
 The password is encrypted before being stored in the database. The same model is
 also available in Django admin as `PlatformCredential`. Active stored
 credentials automatically enable authenticated checks; no `.env` edit is needed.
+
+When auth is active, the checker loads the saved Playwright session. If the
+session file is missing or Facebook rejects it with a login wall, CAPTCHA, or
+checkpoint, the check is marked `auth_required` and sends a Telegram alert. The
+scheduled checker does not attempt to solve CAPTCHA/checkpoint challenges or
+keep retrying credentials.
+
+Create or refresh the session:
+
+```bash
+python manage.py refresh_facebook_session
+```
+
+That opens a browser window. Log in normally, complete any first-party 2FA or
+checkpoint prompts yourself, and the command saves the resulting browser
+session.
+
+For a server or Docker environment, use the dedicated human-assisted session
+manager. Set a protected operator URL in `.env`:
+
+```bash
+FACEBOOK_SESSION_MANAGER_URL=https://spy.raccncode.com/facebook-session/vnc.html
+FACEBOOK_SESSION_REQUEST_TTL_SECONDS=900
+FACEBOOK_SESSION_RUN_CHECKS_AFTER_SUCCESS=True
