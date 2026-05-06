@@ -490,3 +490,39 @@ SECRET_KEY=replace-with-strong-random-value
 ALLOWED_HOSTS=spy.raccncode.com,localhost,127.0.0.1
 CSRF_TRUSTED_ORIGINS=https://spy.raccncode.com
 POSTGRES_DB=spy
+POSTGRES_USER=spy
+POSTGRES_PASSWORD=replace-with-strong-random-value
+DATABASE_URL=postgres://spy:replace-with-strong-random-value@postgres:5432/spy
+REDIS_URL=redis://redis:6379/0
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
+RESEARCH_ENGINE_URL=
+RESEARCH_ENGINE_TOKEN=
+RESEARCH_PORTAL_PUBLIC_BASE_URL=https://spy.raccncode.com
+RESEARCH_SOCIAL_TOOL_BASE_URL=https://spy.raccncode.com
+RUNPOD_API_KEY=
+RUNPOD_POD_ID=
+RUNPOD_ENGINE_PORT=8000
+RUNPOD_AUTOSTART_ENABLED=False
+RUNPOD_AUTOSTOP_AFTER_JOB=False
+TELEGRAM_BOT_TOKEN=
+SPY_WEB_PORT=18010
+SPY_FACEBOOK_SESSION_PORT=18011
+FACEBOOK_SESSION_MANAGER_URL=
+```
+
+Deployment is repeatable with:
+
+```bash
+cd /var/www/spy
+./deploy.sh
+```
+
+The script pulls latest code if `/var/www/spy` is a Git repo, rebuilds
+containers, runs migrations, runs `collectstatic`, restarts web/Celery services,
+starts the Telegram bot only when `TELEGRAM_BOT_TOKEN` is set, starts the
+Facebook session manager only when `FACEBOOK_SESSION_MANAGER_URL` is set, and
+prints container status.
+
+After deployment, verify:
+
