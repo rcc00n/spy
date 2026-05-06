@@ -466,3 +466,27 @@ After certificates exist, replace `nginx/default.conf` with the contents of
 docker compose exec nginx nginx -s reload
 ```
 
+For renewal, run:
+
+```bash
+docker compose --profile certbot run --rm certbot renew
+docker compose exec nginx nginx -s reload
+```
+
+Set `SECURE_SSL_REDIRECT=True` after HTTPS is confirmed.
+
+## Production deployment for spy.raccncode.com
+
+Production runs from `/var/www/spy` on the VPS. Host-level Nginx owns ports 80
+and 443, and proxies `spy.raccncode.com` to the Django container on
+`127.0.0.1:18010`. Do not start the Compose `nginx` profile on that VPS unless
+you intentionally replace the host-level reverse proxy.
+
+Required production `.env` values:
+
+```bash
+DEBUG=False
+SECRET_KEY=replace-with-strong-random-value
+ALLOWED_HOSTS=spy.raccncode.com,localhost,127.0.0.1
+CSRF_TRUSTED_ORIGINS=https://spy.raccncode.com
+POSTGRES_DB=spy
