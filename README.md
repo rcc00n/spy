@@ -526,3 +526,18 @@ prints container status.
 
 After deployment, verify:
 
+```bash
+curl -I https://spy.raccncode.com/health/
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml exec web python manage.py check_accounts
+```
+
+## Useful commands
+
+```bash
+python manage.py check
+python manage.py makemigrations
+python manage.py migrate
+python manage.py check_accounts --force --no-telegram
+python manage.py run_telegram_bot
+```
