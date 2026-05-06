@@ -442,3 +442,27 @@ tail -f /var/log/nginx/spy-error.log
 ```
 
 The dashboard check-run views show latest run status, posts found, new posts,
+matches, and latest error per account.
+
+## HTTPS for spy.raccncode.com
+
+The default Nginx config serves HTTP and ACME challenges. Point DNS for
+`spy.raccncode.com` at the server, then run:
+
+```bash
+docker compose --profile certbot run --rm certbot certonly \
+  --webroot \
+  --webroot-path /var/www/certbot \
+  --email admin@raccncode.com \
+  --agree-tos \
+  --no-eff-email \
+  -d spy.raccncode.com
+```
+
+After certificates exist, replace `nginx/default.conf` with the contents of
+`nginx/ssl.conf.example`, then reload Nginx:
+
+```bash
+docker compose exec nginx nginx -s reload
+```
+
