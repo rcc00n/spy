@@ -130,3 +130,27 @@ STORAGES = {
             else "whitenoise.storage.CompressedManifestStaticFilesStorage"
         ),
     },
+}
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard:index"
+LOGOUT_REDIRECT_URL = "login"
+
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=not DEBUG)
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=False)
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+REDIS_URL = env.str("REDIS_URL", default="redis://redis:6379/0")
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default=REDIS_URL)
+CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default=REDIS_URL)
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = env.int("CELERY_TASK_TIME_LIMIT", default=1800)
+CELERY_WORKER_PREFETCH_MULTIPLIER = env.int(
+    "CELERY_WORKER_PREFETCH_MULTIPLIER",
+    default=1,
+)
+CELERY_TASK_ANNOTATIONS = {
+    "apps.research.tasks.run_research_job": {
