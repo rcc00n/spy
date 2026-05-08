@@ -262,3 +262,27 @@ FACEBOOK_SESSION_VALIDATE_MONITORED_ACCOUNTS = env.bool(
 FACEBOOK_SESSION_VALIDATE_POST_LIMIT = env.int(
     "FACEBOOK_SESSION_VALIDATE_POST_LIMIT",
     default=2,
+)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        }
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": env.str("LOG_LEVEL", default="INFO"),
+    },
+    "loggers": {
+        "httpx": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "httpcore": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
