@@ -154,3 +154,27 @@ CELERY_WORKER_PREFETCH_MULTIPLIER = env.int(
 )
 CELERY_TASK_ANNOTATIONS = {
     "apps.research.tasks.run_research_job": {
+        "time_limit": env.int("RESEARCH_TASK_TIME_LIMIT_SECONDS", default=21600),
+        "soft_time_limit": env.int(
+            "RESEARCH_TASK_SOFT_TIME_LIMIT_SECONDS",
+            default=21000,
+        ),
+    },
+}
+CELERY_BEAT_SCHEDULE = {
+    "resume-facebook-collection": {
+        "task": "apps.research.facebook_tasks.dispatch_facebook_scans",
+        "schedule": timedelta(seconds=30),
+    },
+    "check-monitored-accounts": {
+        "task": "apps.monitoring.tasks.check_active_accounts",
+        "schedule": timedelta(
+            seconds=env.int("MONITORING_BEAT_SECONDS", default=300)
+        ),
+    }
+}
+
+RESEARCH_ENGINE_URL = env.str("RESEARCH_ENGINE_URL", default="")
+RESEARCH_ENGINE_TOKEN = env.str("RESEARCH_ENGINE_TOKEN", default="")
+RESEARCH_ENGINE_TIMEOUT_SECONDS = env_float("RESEARCH_ENGINE_TIMEOUT_SECONDS", 30.0)
+RESEARCH_ENGINE_POLL_SECONDS = env_float("RESEARCH_ENGINE_POLL_SECONDS", 5.0)
