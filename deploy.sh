@@ -34,3 +34,8 @@ fi
 session_manager_url="$(grep -E '^FACEBOOK_SESSION_MANAGER_URL=.+' .env | cut -d= -f2- || true)"
 if [ -n "$session_manager_url" ]; then
   compose --profile session up -d facebook-session-manager
+else
+  compose stop facebook-session-manager >/dev/null 2>&1 || true
+fi
+
+compose ps
