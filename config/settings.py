@@ -286,3 +286,11 @@ LOGGING = {
             "handlers": ["console"],
             "level": "WARNING",
             "propagate": False,
+        },
+        "telegram": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
