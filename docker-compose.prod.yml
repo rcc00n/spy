@@ -46,3 +46,27 @@ services:
         condition: service_healthy
     volumes:
       - static_volume:/app/staticfiles
+      - facebook_auth_state:/app/runtime
+    ports:
+      - "127.0.0.1:${SPY_WEB_PORT:-18010}:8000"
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+
+  celery-worker:
+    build: .
+    init: true
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - facebook_auth_state:/app/runtime
+    command: celery -A config worker --loglevel=info
+
