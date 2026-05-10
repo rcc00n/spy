@@ -70,3 +70,27 @@ services:
       - facebook_auth_state:/app/runtime
     command: celery -A config worker --loglevel=info
 
+  celery-beat:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A config beat --loglevel=info
+
+  telegram-bot:
+    build: .
+    restart: unless-stopped
+    profiles:
+      - bot
+    env_file:
+      - .env
+    environment:
