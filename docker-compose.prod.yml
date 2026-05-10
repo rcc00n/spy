@@ -94,3 +94,39 @@ services:
     env_file:
       - .env
     environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py run_telegram_bot
+
+  facebook-session-manager:
+    build: .
+    restart: unless-stopped
+    profiles:
+      - session
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - facebook_auth_state:/app/runtime
+    ports:
+      - "127.0.0.1:${SPY_FACEBOOK_SESSION_PORT:-18011}:7900"
+    command: /app/scripts/facebook_session_manager.sh
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
