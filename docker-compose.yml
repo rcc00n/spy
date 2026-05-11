@@ -34,3 +34,27 @@ services:
     env_file:
       - .env
     environment:
+      WAIT_FOR_POSTGRES: "1"
+      RUN_MIGRATIONS: "1"
+      COLLECT_STATIC: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - static_volume:/app/staticfiles
+      - facebook_auth_state:/app/runtime
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+
+  celery-worker:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
