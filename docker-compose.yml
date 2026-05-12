@@ -142,3 +142,15 @@ services:
   certbot:
     image: certbot/certbot:latest
     profiles:
+      - certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  facebook_auth_state:
+  certbot_www:
+  certbot_conf:
