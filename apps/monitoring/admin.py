@@ -46,3 +46,39 @@ class KeywordAdmin(admin.ModelAdmin):
 class PostAdmin(admin.ModelAdmin):
     list_display = (
         "monitored_account",
+        "platform",
+        "external_post_id",
+        "published_at",
+        "first_seen_at",
+    )
+    list_filter = ("platform", "first_seen_at")
+    search_fields = ("external_post_id", "post_url", "text")
+    readonly_fields = ("first_seen_at",)
+
+
+@admin.register(PostKeywordMatch)
+class PostKeywordMatchAdmin(admin.ModelAdmin):
+    list_display = ("keyword", "post", "created_at", "telegram_sent")
+    list_filter = ("telegram_sent", "created_at", "keyword")
+    search_fields = ("keyword__phrase", "post__text", "matched_text_preview")
+    readonly_fields = ("created_at",)
+
+
+class CheckRunPostInline(admin.TabularInline):
+    model = CheckRunPost
+    extra = 0
+    fields = (
+        "sequence",
+        "status",
+        "is_new",
+        "source_type",
+        "post_url",
+        "skip_reason",
+    )
+    readonly_fields = fields
+    can_delete = False
+    show_change_link = True
+
+
+@admin.register(CheckRun)
+class CheckRunAdmin(admin.ModelAdmin):
