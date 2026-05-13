@@ -82,3 +82,27 @@ class CheckRunPostInline(admin.TabularInline):
 
 @admin.register(CheckRun)
 class CheckRunAdmin(admin.ModelAdmin):
+    list_display = (
+        "monitored_account",
+        "status",
+        "started_at",
+        "finished_at",
+        "posts_found",
+        "new_posts_found",
+        "matches_found",
+        "facebook_state",
+        "final_url",
+    )
+    list_filter = ("status", "started_at", "monitored_account__platform")
+    search_fields = ("monitored_account__account_name", "error_message")
+    readonly_fields = (
+        "started_at",
+        "finished_at",
+        "status",
+        "error_message",
+        "posts_found",
+        "new_posts_found",
+        "matches_found",
+        "final_url",
+        "route_url",
+        "page_title",
