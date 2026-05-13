@@ -106,3 +106,27 @@ class CheckRunAdmin(admin.ModelAdmin):
         "final_url",
         "route_url",
         "page_title",
+        "http_status_code",
+        "facebook_state",
+        "article_count",
+        "link_count",
+        "post_link_count",
+        "diagnostic_text",
+        "diagnostic_html_snapshot",
+        "screenshot_path",
+    )
+    inlines = (CheckRunPostInline,)
+
+
+@admin.register(CheckRunPost)
+class CheckRunPostAdmin(admin.ModelAdmin):
+    list_display = (
+        "check_run",
+        "sequence",
+        "status",
+        "is_new",
+        "source_type",
+        "post_url",
+        "observed_at",
+    )
+    list_filter = ("status", "is_new", "source_type", "observed_at")
