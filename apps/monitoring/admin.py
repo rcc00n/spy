@@ -214,3 +214,27 @@ class FacebookSessionRefreshRequestAdmin(admin.ModelAdmin):
 @admin.register(TelegramChat)
 class TelegramChatAdmin(admin.ModelAdmin):
     list_display = ("chat_id", "user", "is_active", "created_at")
+    list_filter = ("is_active", "created_at")
+    search_fields = ("chat_id", "user__username", "user__email")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(TelegramMessageTemplate)
+class TelegramMessageTemplateAdmin(admin.ModelAdmin):
+    list_display = ("key", "name", "is_active", "updated_at")
+    list_filter = ("is_active", "updated_at")
+    search_fields = ("key", "name", "description", "body")
+    readonly_fields = ("available_placeholders", "created_at", "updated_at")
+    fieldsets = (
+        (
+            "Template",
+            {
+                "fields": (
+                    "key",
+                    "name",
+                    "description",
+                    "body",
+                    "available_placeholders",
+                    "is_active",
+                )
+            },
