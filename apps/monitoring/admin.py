@@ -130,3 +130,39 @@ class CheckRunPostAdmin(admin.ModelAdmin):
         "observed_at",
     )
     list_filter = ("status", "is_new", "source_type", "observed_at")
+    search_fields = ("external_post_id", "post_url", "text", "skip_reason")
+    readonly_fields = (
+        "check_run",
+        "post",
+        "sequence",
+        "status",
+        "skip_reason",
+        "external_post_id",
+        "post_url",
+        "source_type",
+        "text",
+        "raw_snapshot",
+        "is_new",
+        "observed_at",
+    )
+
+
+@admin.register(ManualCheckJob)
+class ManualCheckJobAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "status",
+        "account",
+        "requested_by",
+        "requested_at",
+        "finished_at",
+        "summary",
+    )
+    list_filter = ("status", "requested_at", "finished_at")
+    search_fields = ("task_id", "summary", "error_message", "account__account_name")
+    readonly_fields = (
+        "requested_by",
+        "account",
+        "post_limit",
+        "status",
+        "task_id",
