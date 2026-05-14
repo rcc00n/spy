@@ -190,3 +190,27 @@ class FacebookSessionRefreshRequestAdmin(admin.ModelAdmin):
         "expires_at",
         "started_at",
         "finished_at",
+        "created_session",
+    )
+    list_filter = ("status", "created_session", "requested_at")
+    search_fields = ("token_hint", "error_message", "session_path")
+    readonly_fields = (
+        "requested_by",
+        "status",
+        "token_hash",
+        "token_hint",
+        "operator_url",
+        "requested_at",
+        "expires_at",
+        "started_at",
+        "finished_at",
+        "error_message",
+        "session_path",
+        "created_session",
+        "updated_at",
+    )
+
+
+@admin.register(TelegramChat)
+class TelegramChatAdmin(admin.ModelAdmin):
+    list_display = ("chat_id", "user", "is_active", "created_at")
