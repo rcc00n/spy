@@ -166,3 +166,27 @@ class ManualCheckJobAdmin(admin.ModelAdmin):
         "post_limit",
         "status",
         "task_id",
+        "requested_at",
+        "started_at",
+        "finished_at",
+        "accounts_checked",
+        "posts_found",
+        "new_posts_found",
+        "matches_found",
+        "errors",
+        "auth_required",
+        "summary",
+        "error_message",
+    )
+
+
+@admin.register(FacebookSessionRefreshRequest)
+class FacebookSessionRefreshRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "status",
+        "requested_by",
+        "requested_at",
+        "expires_at",
+        "started_at",
+        "finished_at",
