@@ -274,3 +274,27 @@ class PlatformCredentialAdmin(admin.ModelAdmin):
         "last_session_refreshed_at",
         "last_error",
         "created_at",
+        "updated_at",
+    )
+    fieldsets = (
+        (
+            "Login",
+            {
+                "fields": (
+                    "platform",
+                    "username",
+                    "password",
+                    "is_active",
+                    "password_configured",
+                )
+            },
+        ),
+        (
+            "Session status",
+            {
+                "fields": (
+                    "last_session_refreshed_at",
+                    "last_error",
+                    "created_at",
+                    "updated_at",
+                )
