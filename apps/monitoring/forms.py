@@ -34,3 +34,18 @@ class PlatformCredentialForm(forms.ModelForm):
         }
 
     def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        if not password and not self.instance.password_configured:
+            self.add_error("password", "Enter a password for this credential.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        credential = super().save(commit=False)
+        password = self.cleaned_data.get("password")
+        if password:
+            credential.set_password(password)
+        if commit:
+            credential.save()
+            self.save_m2m()
+        return credential
