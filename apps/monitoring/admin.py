@@ -238,3 +238,39 @@ class TelegramMessageTemplateAdmin(admin.ModelAdmin):
                     "is_active",
                 )
             },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": (
+                    "created_at",
+                    "updated_at",
+                )
+            },
+        ),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if obj:
+            readonly_fields.append("key")
+        return readonly_fields
+
+
+@admin.register(PlatformCredential)
+class PlatformCredentialAdmin(admin.ModelAdmin):
+    form = PlatformCredentialForm
+    list_display = (
+        "platform",
+        "username",
+        "is_active",
+        "password_configured",
+        "last_session_refreshed_at",
+        "updated_at",
+    )
+    list_filter = ("platform", "is_active")
+    readonly_fields = (
+        "password_configured",
+        "last_session_refreshed_at",
+        "last_error",
+        "created_at",
