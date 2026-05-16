@@ -46,3 +46,39 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        email = options["email"] or settings.FACEBOOK_LOGIN_EMAIL
+        password = options["password"] or settings.FACEBOOK_LOGIN_PASSWORD
+        headless = options["headless"]
+        timeout_ms = max(1, options["timeout"]) * 1000
+        credential = None
+
+        if bool(email) != bool(password):
+            raise CommandError("Provide both Facebook email and password, or neither.")
+
+        if not email and not password:
+            email, password, credential = get_facebook_login_credentials()
+
+        try:
+            with sync_playwright() as playwright:
+                browser = playwright.chromium.launch(headless=headless)
+                try:
+                    if headless:
+                        state_path = refresh_facebook_storage_state_with_credentials(
+                            browser,
+                            username=email,
+                            password=password,
+                            timeout_ms=timeout_ms,
+                        )
+                    else:
+                        state_path = self._refresh_with_headed_browser(
+                            browser,
+                            email,
+                            password,
+                            timeout_ms,
+                        )
+                finally:
+                    browser.close()
+        except PlaywrightTimeoutError as exc:
+            record_facebook_credential_refresh_error(
+                getattr(credential, "pk", None),
+                str(exc),
