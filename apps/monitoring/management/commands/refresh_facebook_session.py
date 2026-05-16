@@ -22,3 +22,27 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--headless",
+            action="store_true",
+            help=(
+                "Run Chromium headless. Uses --email/--password, env credentials, "
+                "or active admin-stored credentials."
+            ),
+        )
+        parser.add_argument(
+            "--email",
+            default="",
+            help="Facebook login email. Defaults to FACEBOOK_LOGIN_EMAIL.",
+        )
+        parser.add_argument(
+            "--password",
+            default="",
+            help="Facebook login password. Defaults to FACEBOOK_LOGIN_PASSWORD.",
+        )
+        parser.add_argument(
+            "--timeout",
+            type=int,
+            default=180,
+            help="Seconds to wait for login completion.",
+        )
+
+    def handle(self, *args, **options):
