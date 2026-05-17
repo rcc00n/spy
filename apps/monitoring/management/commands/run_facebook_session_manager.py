@@ -46,3 +46,27 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = "Run the human-assisted Facebook session manager loop."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--once",
+            action="store_true",
+            help="Process one pending request and exit.",
+        )
+        parser.add_argument(
+            "--no-post-check",
+            action="store_true",
+            help="Do not run Facebook checks after a successful session refresh.",
+        )
+
+    def handle(self, *args, **options):
+        self.stdout.write("Facebook session manager started.")
+        if not os.environ.get("DISPLAY"):
+            self.stderr.write(
+                "DISPLAY is not set. In Docker, start this command through "
+                "scripts/facebook_session_manager.sh."
+            )
+
+        while True:
+            expire_stale_session_requests()
+            request = next_pending_session_request()
