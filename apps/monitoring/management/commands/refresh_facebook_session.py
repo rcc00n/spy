@@ -82,3 +82,27 @@ class Command(BaseCommand):
             record_facebook_credential_refresh_error(
                 getattr(credential, "pk", None),
                 str(exc),
+            )
+            raise CommandError(f"Timed out while loading Facebook: {exc}") from exc
+        except FacebookAuthError as exc:
+            record_facebook_credential_refresh_error(
+                getattr(credential, "pk", None),
+                str(exc),
+            )
+            raise CommandError(str(exc)) from exc
+        except Exception as exc:
+            record_facebook_credential_refresh_error(
+                getattr(credential, "pk", None),
+                str(exc),
+            )
+            raise
+
+        record_facebook_credential_refresh_success(getattr(credential, "pk", None))
+        self.stdout.write(self.style.SUCCESS(f"Saved Facebook session to {state_path}"))
+
+    def _context_kwargs_without_state(self) -> dict:
+        return facebook_base_context_kwargs()
+
+    def _refresh_with_headed_browser(
+        self,
+        browser,
