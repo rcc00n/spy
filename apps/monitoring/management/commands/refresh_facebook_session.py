@@ -106,3 +106,27 @@ class Command(BaseCommand):
     def _refresh_with_headed_browser(
         self,
         browser,
+        email: str,
+        password: str,
+        timeout_ms: int,
+    ):
+        context = browser.new_context(**self._context_kwargs_without_state())
+        page = context.new_page()
+        try:
+            page.goto(
+                "https://www.facebook.com/login",
+                wait_until="domcontentloaded",
+                timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+            )
+            if email and password:
+                submit_facebook_login(page, email, password)
+            else:
+                self.stdout.write(
+                    "A browser window opened. Log in to Facebook there; this command "
+                    "will save the session after login completes."
+                )
+
+            wait_for_facebook_authentication(page, timeout_ms=timeout_ms)
+            page.goto(
+                settings.FACEBOOK_AUTH_CHECK_URL,
+                wait_until="domcontentloaded",
