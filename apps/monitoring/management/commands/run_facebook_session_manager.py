@@ -70,3 +70,27 @@ class Command(BaseCommand):
         while True:
             expire_stale_session_requests()
             request = next_pending_session_request()
+            if request:
+                self._process_request(
+                    request,
+                    run_checks_after_success=(
+                        settings.FACEBOOK_SESSION_RUN_CHECKS_AFTER_SUCCESS
+                        and not options["no_post_check"]
+                    ),
+                )
+                if options["once"]:
+                    return
+            elif options["once"]:
+                self.stdout.write("No pending Facebook session requests.")
+                return
+
+            time.sleep(settings.FACEBOOK_SESSION_MANAGER_POLL_SECONDS)
+
+    def _process_request(self, request, *, run_checks_after_success: bool):
+        mark_session_request_running(request)
+        self.stdout.write(f"Processing Facebook session request #{request.pk}.")
+        chat_ids = active_chat_ids()
+        credentials = (
+            self._load_credentials()
+            if settings.FACEBOOK_SESSION_PREFILL_CREDENTIALS
+            else ("", "")
