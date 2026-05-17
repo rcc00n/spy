@@ -130,3 +130,10 @@ class Command(BaseCommand):
             page.goto(
                 settings.FACEBOOK_AUTH_CHECK_URL,
                 wait_until="domcontentloaded",
+                timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+            )
+            wait_for_facebook_authentication(page, timeout_ms=timeout_ms)
+            state_path = save_facebook_storage_state(context)
+            return state_path
+        finally:
+            context.close()
