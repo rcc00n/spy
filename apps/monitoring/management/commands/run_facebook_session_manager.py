@@ -94,3 +94,39 @@ class Command(BaseCommand):
             self._load_credentials()
             if settings.FACEBOOK_SESSION_PREFILL_CREDENTIALS
             else ("", "")
+        )
+
+        try:
+            with sync_playwright() as playwright:
+                profile_dir = settings.FACEBOOK_SESSION_BROWSER_PROFILE_DIR
+                profile_dir.mkdir(parents=True, exist_ok=True)
+                self._clear_stale_profile_locks(profile_dir)
+                context = playwright.chromium.launch_persistent_context(
+                    str(profile_dir),
+                    headless=False,
+                    **facebook_base_context_kwargs(),
+                )
+                try:
+                    self._complete_login(context, request, credentials, chat_ids)
+                finally:
+                    context.close()
+        except Exception as exc:
+            logger.exception("Facebook session request %s failed", request.pk)
+            mark_session_request_error(request, str(exc))
+            return
+
+        mark_session_request_success(request)
+        if run_checks_after_success:
+            self._run_facebook_checks()
+
+    def _clear_stale_profile_locks(self, profile_dir: Path) -> None:
+        for lock_name in ("SingletonCookie", "SingletonLock", "SingletonSocket"):
+            lock_path = profile_dir / lock_name
+            try:
+                if lock_path.exists() or lock_path.is_symlink():
+                    lock_path.unlink()
+            except OSError as exc:
+                logger.warning("Could not remove Chromium profile lock %s: %s", lock_path, exc)
+
+    def _complete_login(self, context, request, credentials, chat_ids) -> None:
+        page = context.new_page()
