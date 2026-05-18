@@ -178,3 +178,27 @@ class Command(BaseCommand):
                 [f"Error: {exc}", "Enter the login manually in the session browser."],
                 chat_ids,
             )
+
+    def _wait_for_operator_login(self, page, request, chat_ids) -> None:
+        notified_state = ""
+        while timezone.now() < request.expires_at:
+            state = facebook_session_state(page)
+            if state == "authenticated":
+                logger.info(
+                    "Facebook session request %s reached authenticated state at %s",
+                    request.pk,
+                    page.url,
+                )
+                return
+            if state != notified_state:
+                notified_state = state
+                logger.info(
+                    "Facebook session request %s waiting; state=%s url=%s",
+                    request.pk,
+                    state,
+                    page.url,
+                )
+                send_system_alert_to_chats(
+                    "Facebook session waiting for operator",
+                    [
+                        f"Request: #{request.pk}",
