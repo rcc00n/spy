@@ -130,3 +130,27 @@ class Command(BaseCommand):
 
     def _complete_login(self, context, request, credentials, chat_ids) -> None:
         page = context.new_page()
+        try:
+            page.goto(
+                "https://www.facebook.com/login",
+                wait_until="domcontentloaded",
+                timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+            )
+            self._try_prefill_credentials(page, credentials, chat_ids)
+            self._wait_for_operator_login(page, request, chat_ids)
+            page.goto(
+                settings.FACEBOOK_AUTH_CHECK_URL,
+                wait_until="domcontentloaded",
+                timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+            )
+            self._wait_for_operator_login(page, request, chat_ids)
+            save_facebook_storage_state(context)
+            self._validate_monitored_accounts(context, request, chat_ids)
+        finally:
+            context.close()
+
+    def _load_credentials(self) -> tuple[str, str]:
+        try:
+            username, password, _credential = get_facebook_login_credentials()
+        except FacebookAuthError as exc:
+            send_system_alert(
