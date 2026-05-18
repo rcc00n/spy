@@ -154,3 +154,27 @@ class Command(BaseCommand):
             username, password, _credential = get_facebook_login_credentials()
         except FacebookAuthError as exc:
             send_system_alert(
+                "Facebook credential could not be loaded",
+                [f"Error: {exc}"],
+            )
+            return "", ""
+        return username, password
+
+    def _try_prefill_credentials(self, page, credentials, chat_ids) -> None:
+        if not settings.FACEBOOK_SESSION_PREFILL_CREDENTIALS:
+            return
+
+        username, password = credentials
+
+        if not username or not password:
+            return
+
+        try:
+            page.locator('input[name="email"]').fill(username, timeout=10000)
+            page.locator('input[name="pass"]').fill(password, timeout=10000)
+        except PlaywrightTimeoutError as exc:
+            send_system_alert_to_chats(
+                "Facebook credential prefill failed",
+                [f"Error: {exc}", "Enter the login manually in the session browser."],
+                chat_ids,
+            )
