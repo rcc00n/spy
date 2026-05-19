@@ -202,3 +202,39 @@ class Command(BaseCommand):
                     "Facebook session waiting for operator",
                     [
                         f"Request: #{request.pk}",
+                        f"Facebook state: {state}",
+                        f"URL: {page.url}",
+                        "Complete login, 2FA, or checkpoint in the session-manager browser.",
+                    ],
+                    chat_ids,
+                )
+            page.wait_for_timeout(1000)
+
+        raise FacebookAuthError(
+            "The operator did not complete Facebook login before the request expired."
+        )
+
+    def _validate_monitored_accounts(self, context, request, chat_ids) -> None:
+        if not settings.FACEBOOK_SESSION_VALIDATE_MONITORED_ACCOUNTS:
+            return
+
+        accounts = call_sync_db(
+            lambda: list(
+                MonitoredAccount.objects.filter(
+                    platform=MonitoredAccount.Platform.FACEBOOK,
+                    is_active=True,
+                ).order_by("id")
+            )
+        )
+        if not accounts:
+            return
+
+        failures = []
+        successes = []
+        for account in accounts:
+            result = self._validate_monitored_account(context, account)
+            if result["ok"]:
+                successes.append(result)
+            else:
+                failures.append(result)
+
