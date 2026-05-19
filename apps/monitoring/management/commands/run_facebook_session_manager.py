@@ -262,3 +262,27 @@ class Command(BaseCommand):
                 lines,
                 chat_ids,
             )
+            failure_text = "; ".join(
+                f"{result['account_name']} state={result['state']} posts={result['post_count']}"
+                for result in failures[:5]
+            )
+            raise FacebookAuthError(
+                "Facebook session is authenticated but cannot read monitored "
+                f"Facebook pages: {failure_text}"
+            )
+
+        send_system_alert_to_chats(
+            "Facebook session preflight passed",
+            lines,
+            chat_ids,
+        )
+
+    def _validate_monitored_account(self, context, account: MonitoredAccount) -> dict:
+        page = context.new_page()
+        limit = max(
+            1,
+            min(
+                settings.FACEBOOK_SESSION_VALIDATE_POST_LIMIT,
+                account.max_posts_per_check,
+                20,
+            ),
