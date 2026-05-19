@@ -238,3 +238,27 @@ class Command(BaseCommand):
             else:
                 failures.append(result)
 
+        lines = [
+            f"Request: #{request.pk}",
+            f"Accounts checked: {len(accounts)}",
+            f"Readable: {len(successes)}",
+            f"Blocked/empty: {len(failures)}",
+        ]
+        for result in successes[:5]:
+            lines.append(
+                f"OK {result['account_name']}: posts={result['post_count']} "
+                f"route={result['route_url']}"
+            )
+        for result in failures[:10]:
+            lines.append(
+                f"FAIL {result['account_name']}: state={result['state']} "
+                f"posts={result['post_count']} url={result['account_url']} "
+                f"final={result['final_url']}"
+            )
+
+        if failures:
+            send_system_alert_to_chats(
+                "Facebook session preflight failed",
+                lines,
+                chat_ids,
+            )
