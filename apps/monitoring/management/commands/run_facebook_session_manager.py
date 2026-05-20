@@ -322,3 +322,27 @@ class Command(BaseCommand):
                             account.scroll_rounds,
                         )
                     )
+                    post_count = len(candidates)
+                result = {
+                    "ok": post_count > 0,
+                    "account_name": account.account_name,
+                    "account_url": account.account_url,
+                    "route_url": route_url,
+                    "final_url": page.url,
+                    "state": state,
+                    "post_count": post_count,
+                }
+                if post_count > best_result["post_count"] or not best_result["route_url"]:
+                    best_result = result
+                if result["ok"]:
+                    return result
+            return best_result
+        finally:
+            page.close()
+
+    def _run_facebook_checks(self) -> None:
+        accounts = list(
+            MonitoredAccount.objects.filter(
+                platform=MonitoredAccount.Platform.FACEBOOK,
+                is_active=True,
+            ).order_by("id")
