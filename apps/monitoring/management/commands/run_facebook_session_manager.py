@@ -346,3 +346,15 @@ class Command(BaseCommand):
                 platform=MonitoredAccount.Platform.FACEBOOK,
                 is_active=True,
             ).order_by("id")
+        )
+        if not accounts:
+            send_system_alert(
+                "Facebook session refreshed",
+                ["No active Facebook accounts are configured."],
+            )
+            return
+
+        for account in accounts:
+            account.last_checked_at = None
+            account.save(update_fields=["last_checked_at", "updated_at"])
+        run_account_checks(accounts, send_telegram=True)
