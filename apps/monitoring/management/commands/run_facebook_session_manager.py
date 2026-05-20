@@ -286,3 +286,39 @@ class Command(BaseCommand):
                 account.max_posts_per_check,
                 20,
             ),
+        )
+        best_result = {
+            "ok": False,
+            "account_name": account.account_name,
+            "account_url": account.account_url,
+            "route_url": "",
+            "final_url": "",
+            "state": "not_checked",
+            "post_count": 0,
+        }
+        try:
+            for route_url in facebook_route_urls(account.account_url):
+                response = page.goto(
+                    route_url,
+                    wait_until="domcontentloaded",
+                    timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+                )
+                page.wait_for_selector("body", timeout=settings.PLAYWRIGHT_TIMEOUT_MS)
+                page.wait_for_timeout(1500)
+                page_text = normalize_text(page.locator("body").inner_text(timeout=5000))
+                article_count, _link_count, post_count_before_extract = post_link_count(page)
+                state = detect_facebook_block_state(
+                    page_text,
+                    page.url,
+                    has_post_evidence=article_count > 0 and post_count_before_extract > 0,
+                )
+                post_count = 0
+                if state == "ok" and response and response.status < 400:
+                    candidates = real_post_candidates(
+                        extract_candidates_with_adaptive_scroll(
+                            page,
+                            account,
+                            limit,
+                            account.scroll_rounds,
+                        )
+                    )
