@@ -178,3 +178,27 @@ class Command(BaseCommand):
             )
 
         async def keywords(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(update, await list_keywords_text())
+
+            await guarded(update, action)
+
+        @sync_to_async
+        def add_keyword_text(text: str) -> str:
+            phrase = normalize_keyword_phrase(text)
+            keyword = Keyword.objects.filter(phrase__iexact=phrase).first()
+            created = False
+            if not keyword:
+                keyword = Keyword.objects.create(phrase=phrase, is_active=True)
+                created = True
+            elif not keyword.is_active:
+                keyword.is_active = True
+                keyword.save(update_fields=["is_active"])
+            action = "added" if created else "reactivated"
+            return render_telegram_template(
+                "bot_keyword_saved",
+                context={
+                    "keyword_id": keyword.pk,
+                    "keyword": keyword.phrase,
+                    "action": action,
+                },
