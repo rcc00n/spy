@@ -118,3 +118,39 @@ class Command(BaseCommand):
         ) -> None:
             await send_text(update, await render_message(key, default, context))
 
+        async def reply_error(update: Update, error: str) -> None:
+            await reply_template(
+                update,
+                "bot_error",
+                "Error: {error}",
+                {"error": error},
+            )
+
+        @sync_to_async
+        def register_chat(chat_id):
+            TelegramChat.objects.update_or_create(
+                chat_id=chat_id,
+                defaults={"is_active": True},
+            )
+
+        async def ensure_chat(update: Update) -> None:
+            chat = update.effective_chat
+            if chat:
+                await register_chat(chat.id)
+
+        async def guarded(update: Update, handler):
+            await ensure_chat(update)
+            try:
+                await handler()
+            except BotCommandError as exc:
+                await reply_error(update, str(exc))
+            except Exception as exc:
+                logger.exception("Telegram bot command failed")
+                await reply_error(update, f"Unexpected error: {exc}")
+
+        async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            await ensure_chat(update)
+            help_text = await render_message("bot_help", HELP_TEXT)
+            await reply_template(
+                update,
+                "bot_start",
