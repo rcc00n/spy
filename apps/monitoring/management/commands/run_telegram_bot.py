@@ -154,3 +154,27 @@ class Command(BaseCommand):
             await reply_template(
                 update,
                 "bot_start",
+                "Monitoring alerts are enabled for this chat.\n\n{help_text}",
+                {"help_text": help_text},
+            )
+
+        async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            await ensure_chat(update)
+            await reply_template(update, "bot_help", HELP_TEXT)
+
+        @sync_to_async
+        def list_keywords_text() -> str:
+            keywords = list(Keyword.objects.order_by("phrase")[:100])
+            if not keywords:
+                return render_telegram_template(
+                    "bot_keywords_empty",
+                    default="No keywords are configured.",
+                )
+            rows = "\n".join(keyword_label(keyword) for keyword in keywords)
+            return render_telegram_template(
+                "bot_keywords",
+                context={"keywords": rows, "keyword_count": len(keywords)},
+                default="{keywords}",
+            )
+
+        async def keywords(update: Update, context: ContextTypes.DEFAULT_TYPE):
