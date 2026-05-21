@@ -94,3 +94,27 @@ class Command(BaseCommand):
             raise CommandError("TELEGRAM_BOT_TOKEN is not configured.")
 
         try:
+            from telegram import Update
+            from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+        except ImportError as exc:
+            raise CommandError("python-telegram-bot is not installed.") from exc
+
+        @sync_to_async
+        def render_message(key: str, default: str, context: dict | None = None) -> str:
+            return render_telegram_template(key, context=context, default=default)
+
+        async def send_text(update: Update, text: str) -> None:
+            if not update.message:
+                return
+            text = text or ""
+            for start in range(0, max(len(text), 1), 3900):
+                await update.message.reply_text(text[start : start + 3900] or " ")
+
+        async def reply_template(
+            update: Update,
+            key: str,
+            default: str,
+            context: dict | None = None,
+        ) -> None:
+            await send_text(update, await render_message(key, default, context))
+
