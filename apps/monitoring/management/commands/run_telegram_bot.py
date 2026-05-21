@@ -70,3 +70,27 @@ def normalize_keyword_phrase(value: str) -> str:
 def keyword_label(keyword: Keyword) -> str:
     active = "active" if keyword.is_active else "paused"
     return f"#{keyword.pk} {active}: {keyword.phrase}"
+
+
+def keyword_lookup(identifier: str) -> Keyword:
+    normalized = normalize_keyword_phrase(identifier)
+    if normalized.isdigit():
+        try:
+            return Keyword.objects.get(pk=int(normalized))
+        except Keyword.DoesNotExist as exc:
+            raise BotCommandError(f"Keyword #{normalized} was not found.") from exc
+
+    try:
+        return Keyword.objects.get(phrase__iexact=normalized)
+    except Keyword.DoesNotExist as exc:
+        raise BotCommandError(f"Keyword '{normalized}' was not found.") from exc
+
+
+class Command(BaseCommand):
+    help = "Run the Telegram bot polling loop."
+
+    def handle(self, *args, **options):
+        if not settings.TELEGRAM_BOT_TOKEN:
+            raise CommandError("TELEGRAM_BOT_TOKEN is not configured.")
+
+        try:
