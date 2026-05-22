@@ -262,3 +262,27 @@ class Command(BaseCommand):
             accounts = accounts_for_check(force=True, account_id=account_id)
             if not accounts:
                 return render_telegram_template(
+                    "bot_check_no_accounts",
+                    default="No active monitored accounts were found.",
+                )
+
+            summary = run_account_checks(accounts, post_limit=limit)
+            return render_telegram_template(
+                "bot_check_finished",
+                context={
+                    "summary": format_check_summary(summary),
+                    "accounts_checked": summary["accounts_checked"],
+                    "posts_found": summary["posts_found"],
+                    "new_posts_found": summary["new_posts_found"],
+                    "matches_found": summary["matches_found"],
+                    "errors": summary["errors"],
+                    "auth_required": summary.get("auth_required", 0),
+                },
+                default="Check finished: {summary}",
+            )
+
+        async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(update, await check_text(context.args))
+
+            await guarded(update, action)
