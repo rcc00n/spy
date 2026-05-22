@@ -226,3 +226,39 @@ class Command(BaseCommand):
                 default="Keyword #{keyword_id} {keyword} is now {status}.",
             )
 
+        async def pausekeyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(
+                    update,
+                    await set_keyword_active_text(command_tail(context), active=False),
+                )
+
+            await guarded(update, action)
+
+        async def resumekeyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(
+                    update,
+                    await set_keyword_active_text(command_tail(context), active=True),
+                )
+
+            await guarded(update, action)
+
+        @sync_to_async
+        def check_text(args) -> str:
+            account_id = None
+            limit = None
+            if len(args) > 2:
+                raise BotCommandError("Usage: /check [account_id] [limit]")
+            if args:
+                if args[0].lower() != "all":
+                    try:
+                        account_id = int(args[0])
+                    except ValueError as exc:
+                        raise BotCommandError("Account ID must be a number.") from exc
+            if len(args) == 2:
+                limit = parse_limit(args[1], default=5, maximum=20)
+
+            accounts = accounts_for_check(force=True, account_id=account_id)
+            if not accounts:
+                return render_telegram_template(
