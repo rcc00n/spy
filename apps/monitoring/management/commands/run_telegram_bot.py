@@ -286,3 +286,27 @@ class Command(BaseCommand):
                 await send_text(update, await check_text(context.args))
 
             await guarded(update, action)
+
+        @sync_to_async
+        def matches_text(args) -> str:
+            limit = parse_limit(args[0] if args else None, default=5, maximum=20)
+            matches = list(
+                PostKeywordMatch.objects.select_related(
+                    "keyword",
+                    "post",
+                    "post__monitored_account",
+                ).order_by("-created_at")[:limit]
+            )
+            if not matches:
+                return render_telegram_template(
+                    "bot_matches_empty",
+                    default="No matches yet.",
+                )
+
+            rows = []
+            for match in matches:
+                account = match.post.monitored_account
+                rows.append(
+                    "\n".join(
+                        [
+                            f"#{match.pk} {match.created_at:%Y-%m-%d %H:%M}",
