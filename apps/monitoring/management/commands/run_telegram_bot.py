@@ -202,3 +202,27 @@ class Command(BaseCommand):
                     "keyword": keyword.phrase,
                     "action": action,
                 },
+                default="Keyword {action}: #{keyword_id} {keyword}",
+            )
+
+        async def addkeyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(update, await add_keyword_text(command_tail(context)))
+
+            await guarded(update, action)
+
+        @sync_to_async
+        def set_keyword_active_text(text: str, *, active: bool) -> str:
+            keyword = keyword_lookup(text)
+            keyword.is_active = active
+            keyword.save(update_fields=["is_active"])
+            return render_telegram_template(
+                "bot_keyword_status_changed",
+                context={
+                    "keyword_id": keyword.pk,
+                    "keyword": keyword.phrase,
+                    "status": "active" if active else "paused",
+                },
+                default="Keyword #{keyword_id} {keyword} is now {status}.",
+            )
+
