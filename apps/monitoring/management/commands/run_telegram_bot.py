@@ -394,3 +394,27 @@ class Command(BaseCommand):
                     "Saved session: {session_status}\n"
                     "Credential: {credential_status} {credential_username}\n"
                     "Last error: {last_error}\n"
+                    "Recent requests:\n{recent_requests}"
+                ),
+            )
+
+        async def session(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(update, await session_text())
+
+            await guarded(update, action)
+
+        @sync_to_async
+        def refresh_session_text() -> str:
+            request, _raw_token = create_facebook_session_request()
+            return render_telegram_template(
+                "bot_session_request_created",
+                context={
+                    "request_id": request.pk,
+                    "operator_url": request.operator_url,
+                    "expires_at": f"{request.expires_at:%Y-%m-%d %H:%M:%S %Z}",
+                    "token_hint": request.token_hint,
+                },
+                default=(
+                    "Facebook session refresh request created: #{request_id}\n"
+                    "Expires: {expires_at}\n"
