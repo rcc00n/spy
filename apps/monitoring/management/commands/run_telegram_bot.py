@@ -370,3 +370,27 @@ class Command(BaseCommand):
         @sync_to_async
         def session_text() -> str:
             credential = PlatformCredential.objects.filter(
+                platform=PlatformCredential.Platform.FACEBOOK,
+                is_active=True,
+            ).first()
+            requests = list(FacebookSessionRefreshRequest.objects.order_by("-requested_at")[:5])
+            request_lines = []
+            for request in requests:
+                request_lines.append(
+                    f"#{request.pk} {request.status} requested={request.requested_at:%Y-%m-%d %H:%M}"
+                )
+            if not request_lines:
+                request_lines.append("No session refresh requests yet.")
+            return render_telegram_template(
+                "bot_session",
+                context={
+                    "session_status": "present" if storage_state_path().exists() else "missing",
+                    "credential_status": "active" if credential else "missing",
+                    "credential_username": credential.username if credential else "",
+                    "last_error": credential.last_error if credential else "",
+                    "recent_requests": "\n".join(request_lines),
+                },
+                default=(
+                    "Saved session: {session_status}\n"
+                    "Credential: {credential_status} {credential_username}\n"
+                    "Last error: {last_error}\n"
