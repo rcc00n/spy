@@ -346,3 +346,27 @@ class Command(BaseCommand):
             for run in runs:
                 rows.append(
                     "\n".join(
+                        [
+                            f"#{run.pk} {run.started_at:%Y-%m-%d %H:%M} {run.status}",
+                            f"Account: {run.monitored_account.account_name}",
+                            f"Posts: {run.posts_found}, new: {run.new_posts_found}, matches: {run.matches_found}",
+                            f"State: {run.facebook_state or 'n/a'}",
+                            f"Error: {(run.error_message or '')[:180] or 'none'}",
+                        ]
+                    )
+                )
+            return render_telegram_template(
+                "bot_runs",
+                context={"runs": "\n\n".join(rows), "run_count": len(runs)},
+                default="{runs}",
+            )
+
+        async def runs(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(update, await runs_text(context.args))
+
+            await guarded(update, action)
+
+        @sync_to_async
+        def session_text() -> str:
+            credential = PlatformCredential.objects.filter(
