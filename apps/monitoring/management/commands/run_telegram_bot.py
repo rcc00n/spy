@@ -310,3 +310,39 @@ class Command(BaseCommand):
                     "\n".join(
                         [
                             f"#{match.pk} {match.created_at:%Y-%m-%d %H:%M}",
+                            f"Account: {account.account_name}",
+                            f"Keyword: {match.keyword.phrase}",
+                            f"Post: {match.post.post_url or account.account_url}",
+                            f"Preview: {match.matched_text_preview[:300]}",
+                        ]
+                    )
+                )
+            return render_telegram_template(
+                "bot_matches",
+                context={"matches": "\n\n".join(rows), "match_count": len(matches)},
+                default="{matches}",
+            )
+
+        async def matches(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(update, await matches_text(context.args))
+
+            await guarded(update, action)
+
+        @sync_to_async
+        def runs_text(args) -> str:
+            limit = parse_limit(args[0] if args else None, default=5, maximum=20)
+            runs = list(
+                CheckRun.objects.select_related("monitored_account").order_by("-started_at")[
+                    :limit
+                ]
+            )
+            if not runs:
+                return render_telegram_template(
+                    "bot_runs_empty",
+                    default="No check runs yet.",
+                )
+            rows = []
+            for run in runs:
+                rows.append(
+                    "\n".join(
