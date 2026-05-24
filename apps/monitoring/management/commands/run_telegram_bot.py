@@ -418,3 +418,28 @@ class Command(BaseCommand):
                 default=(
                     "Facebook session refresh request created: #{request_id}\n"
                     "Expires: {expires_at}\n"
+                    "Operator URL: {operator_url}"
+                ),
+            )
+
+        async def refreshsession(update: Update, context: ContextTypes.DEFAULT_TYPE):
+            async def action():
+                await send_text(update, await refresh_session_text())
+
+            await guarded(update, action)
+
+        app = ApplicationBuilder().token(settings.TELEGRAM_BOT_TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("help", help_command))
+        app.add_handler(CommandHandler("keywords", keywords))
+        app.add_handler(CommandHandler("addkeyword", addkeyword))
+        app.add_handler(CommandHandler("pausekeyword", pausekeyword))
+        app.add_handler(CommandHandler("resumekeyword", resumekeyword))
+        app.add_handler(CommandHandler("check", check))
+        app.add_handler(CommandHandler("matches", matches))
+        app.add_handler(CommandHandler("runs", runs))
+        app.add_handler(CommandHandler("session", session))
+        app.add_handler(CommandHandler("refreshsession", refreshsession))
+
+        self.stdout.write("Telegram bot polling started.")
+        app.run_polling()
