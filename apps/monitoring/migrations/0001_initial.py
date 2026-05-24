@@ -22,3 +22,27 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("phrase", models.CharField(max_length=255, unique=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+            ],
+            options={
+                "ordering": ["phrase"],
+                "indexes": [
+                    models.Index(
+                        fields=["is_active"], name="monitoring__is_acti_d0c77b_idx"
+                    ),
+                    models.Index(
+                        fields=["created_at"], name="monitoring__created_7bc4b7_idx"
+                    ),
+                ],
+            },
+        ),
+        migrations.CreateModel(
+            name="MonitoredAccount",
