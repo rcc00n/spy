@@ -130,3 +130,27 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ["-first_seen_at"],
             },
+        ),
+        migrations.CreateModel(
+            name="PostKeywordMatch",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("matched_text_preview", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("telegram_sent", models.BooleanField(default=False)),
+                (
+                    "keyword",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="post_matches",
+                        to="monitoring.keyword",
+                    ),
+                ),
