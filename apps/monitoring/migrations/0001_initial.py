@@ -82,3 +82,27 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ["platform", "account_name"],
                 "indexes": [
+                    models.Index(
+                        fields=["platform", "is_active"],
+                        name="monitoring__platfor_642e86_idx",
+                    ),
+                    models.Index(
+                        fields=["last_checked_at"],
+                        name="monitoring__last_ch_7b42a4_idx",
+                    ),
+                ],
+            },
+        ),
+        migrations.CreateModel(
+            name="Post",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
