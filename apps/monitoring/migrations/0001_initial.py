@@ -106,3 +106,27 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
+                    "platform",
+                    models.CharField(
+                        choices=[("facebook", "Facebook"), ("instagram", "Instagram")],
+                        max_length=20,
+                    ),
+                ),
+                ("external_post_id", models.CharField(max_length=255)),
+                ("post_url", models.URLField(blank=True, max_length=1000)),
+                ("text", models.TextField()),
+                ("published_at", models.DateTimeField(blank=True, null=True)),
+                ("first_seen_at", models.DateTimeField(auto_now_add=True)),
+                ("raw_snapshot", models.TextField(blank=True)),
+                (
+                    "monitored_account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="posts",
+                        to="monitoring.monitoredaccount",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["-first_seen_at"],
+            },
