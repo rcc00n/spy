@@ -154,3 +154,39 @@ class Migration(migrations.Migration):
                         to="monitoring.keyword",
                     ),
                 ),
+                (
+                    "post",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="keyword_matches",
+                        to="monitoring.post",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["-created_at"],
+            },
+        ),
+        migrations.CreateModel(
+            name="TelegramChat",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("chat_id", models.BigIntegerField(unique=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
