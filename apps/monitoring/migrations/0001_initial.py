@@ -274,3 +274,27 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="postkeywordmatch",
             index=models.Index(
+                fields=["created_at"], name="monitoring__created_79adac_idx"
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="postkeywordmatch",
+            index=models.Index(
+                fields=["telegram_sent"], name="monitoring__telegra_7a0b49_idx"
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="postkeywordmatch",
+            constraint=models.UniqueConstraint(
+                fields=("post", "keyword"), name="unique_post_keyword_match"
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="telegramchat",
+            index=models.Index(
+                fields=["is_active"], name="monitoring__is_acti_c52cab_idx"
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="telegramchat",
+            index=models.Index(
