@@ -214,3 +214,27 @@ class Migration(migrations.Migration):
                     "status",
                     models.CharField(
                         choices=[
+                            ("running", "Running"),
+                            ("success", "Success"),
+                            ("error", "Error"),
+                            ("skipped", "Skipped"),
+                        ],
+                        default="running",
+                        max_length=20,
+                    ),
+                ),
+                ("error_message", models.TextField(blank=True)),
+                ("posts_found", models.PositiveIntegerField(default=0)),
+                ("new_posts_found", models.PositiveIntegerField(default=0)),
+                ("matches_found", models.PositiveIntegerField(default=0)),
+                (
+                    "monitored_account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="check_runs",
+                        to="monitoring.monitoredaccount",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["-started_at"],
