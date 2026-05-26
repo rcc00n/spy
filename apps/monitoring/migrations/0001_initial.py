@@ -298,3 +298,7 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="telegramchat",
             index=models.Index(
+                fields=["created_at"], name="monitoring__created_d9a5a1_idx"
+            ),
+        ),
+    ]
