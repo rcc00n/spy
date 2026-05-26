@@ -238,3 +238,39 @@ class Migration(migrations.Migration):
             ],
             options={
                 "ordering": ["-started_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["status", "started_at"],
+                        name="monitoring__status_fae6e2_idx",
+                    ),
+                    models.Index(
+                        fields=["monitored_account", "started_at"],
+                        name="monitoring__monitor_64e456_idx",
+                    ),
+                ],
+            },
+        ),
+        migrations.AddIndex(
+            model_name="post",
+            index=models.Index(
+                fields=["platform", "first_seen_at"],
+                name="monitoring__platfor_685de7_idx",
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="post",
+            index=models.Index(
+                fields=["monitored_account", "first_seen_at"],
+                name="monitoring__monitor_796d08_idx",
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="post",
+            constraint=models.UniqueConstraint(
+                fields=("platform", "external_post_id"),
+                name="unique_platform_external_post",
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="postkeywordmatch",
+            index=models.Index(
