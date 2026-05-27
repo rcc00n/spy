@@ -34,3 +34,27 @@ class Migration(migrations.Migration):
                 (
                     "username",
                     models.CharField(
+                        help_text=(
+                            "Email address, phone number, or username used for "
+                            "platform login."
+                        ),
+                        max_length=255,
+                    ),
+                ),
+                ("encrypted_password", models.TextField(blank=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("last_session_refreshed_at", models.DateTimeField(blank=True, null=True)),
+                ("last_error", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+            ],
+            options={
+                "ordering": ["platform"],
+                "indexes": [
+                    models.Index(
+                        fields=["platform", "is_active"],
+                        name="monitoring__platfor_ce7325_idx",
+                    ),
+                ],
+            },
+        ),
