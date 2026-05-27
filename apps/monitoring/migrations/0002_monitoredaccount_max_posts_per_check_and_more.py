@@ -10,3 +10,27 @@ class Migration(migrations.Migration):
         ("monitoring", "0001_initial"),
     ]
 
+    operations = [
+        migrations.AddField(
+            model_name="monitoredaccount",
+            name="max_posts_per_check",
+            field=models.PositiveIntegerField(
+                default=5,
+                validators=[
+                    django.core.validators.MinValueValidator(1),
+                    django.core.validators.MaxValueValidator(20),
+                ],
+            ),
+        ),
+        migrations.AddField(
+            model_name="monitoredaccount",
+            name="scroll_rounds",
+            field=models.PositiveIntegerField(
+                default=2,
+                validators=[
+                    django.core.validators.MinValueValidator(0),
+                    django.core.validators.MaxValueValidator(5),
+                ],
+            ),
+        ),
+    ]
