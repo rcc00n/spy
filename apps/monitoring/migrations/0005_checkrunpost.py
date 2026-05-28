@@ -10,3 +10,39 @@ class Migration(migrations.Migration):
     dependencies = [
         ("monitoring", "0004_alter_checkrun_status_facebooksessionrefreshrequest"),
     ]
+
+    operations = [
+        migrations.CreateModel(
+            name="CheckRunPost",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("sequence", models.PositiveIntegerField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("stored", "Stored"), ("skipped", "Skipped")],
+                        default="stored",
+                        max_length=20,
+                    ),
+                ),
+                ("skip_reason", models.CharField(blank=True, max_length=255)),
+                ("external_post_id", models.CharField(max_length=255)),
+                ("post_url", models.URLField(blank=True, max_length=1000)),
+                ("source_type", models.CharField(blank=True, max_length=100)),
+                ("text", models.TextField()),
+                ("raw_snapshot", models.TextField(blank=True)),
+                ("is_new", models.BooleanField(default=False)),
+                (
+                    "observed_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                (
+                    "check_run",
