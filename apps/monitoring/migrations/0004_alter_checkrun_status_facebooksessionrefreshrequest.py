@@ -70,3 +70,27 @@ class Migration(migrations.Migration):
                 ("session_path", models.CharField(blank=True, max_length=1000)),
                 ("created_session", models.BooleanField(default=False)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "requested_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="facebook_session_requests",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["-requested_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["status", "expires_at"],
+                        name="monitoring__status_d782b4_idx",
+                    ),
+                    models.Index(
+                        fields=["requested_at"], name="monitoring__request_f5c5c9_idx"
+                    ),
+                ],
+            },
+        ),
