@@ -10,3 +10,39 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("monitoring", "0003_platformcredential"),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="checkrun",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("running", "Running"),
+                    ("success", "Success"),
+                    ("error", "Error"),
+                    ("auth_required", "Auth required"),
+                    ("skipped", "Skipped"),
+                ],
+                default="running",
+                max_length=20,
+            ),
+        ),
+        migrations.CreateModel(
+            name="FacebookSessionRefreshRequest",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
