@@ -46,3 +46,27 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "check_run",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="observed_posts",
+                        to="monitoring.checkrun",
+                    ),
+                ),
+                (
+                    "post",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="check_observations",
+                        to="monitoring.post",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["check_run", "sequence"],
+                "indexes": [
+                    models.Index(
+                        fields=["check_run", "sequence"],
+                        name="monitoring__check_r_c17602_idx",
+                    ),
