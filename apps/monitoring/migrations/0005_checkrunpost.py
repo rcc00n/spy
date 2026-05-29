@@ -70,3 +70,21 @@ class Migration(migrations.Migration):
                         fields=["check_run", "sequence"],
                         name="monitoring__check_r_c17602_idx",
                     ),
+                    models.Index(
+                        fields=["status", "observed_at"],
+                        name="monitoring__status_d4c558_idx",
+                    ),
+                    models.Index(
+                        fields=["external_post_id"],
+                        name="monitoring__externa_f3545a_idx",
+                    ),
+                ],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("check_run", "sequence"),
+                        name="unique_check_run_post_sequence",
+                    )
+                ],
+            },
+        ),
+    ]
