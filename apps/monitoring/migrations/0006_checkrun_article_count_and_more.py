@@ -58,3 +58,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="checkrun",
             name="route_url",
+            field=models.URLField(blank=True, max_length=2000),
+        ),
+        migrations.AddField(
+            model_name="checkrun",
+            name="screenshot_path",
+            field=models.CharField(blank=True, max_length=1000),
+        ),
+    ]
