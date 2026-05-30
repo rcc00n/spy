@@ -10,3 +10,27 @@ TELEGRAM_TEMPLATES = [
         "description": "Generic operational alert sent by the app.",
         "body": "Spy Monitor: {title}\n{lines}",
         "available_placeholders": "title, lines",
+    },
+    {
+        "key": "match_alert",
+        "name": "Keyword match alert",
+        "description": "Alert sent when a new keyword match is created.",
+        "body": (
+            "Platform: {platform}\n"
+            "Account: {account_name}\n"
+            "Keyword: {keyword}\n"
+            "Post: {post_url}\n"
+            "Preview: {preview}"
+        ),
+        "available_placeholders": (
+            "platform, account_name, keyword, post_url, preview"
+        ),
+    },
+    {
+        "key": "bot_help",
+        "name": "Bot help",
+        "description": "Command list returned by /help.",
+        "body": (
+            "Commands:\n"
+            "/help - show this help.\n"
+            "/accounts - list monitored accounts with IDs.\n"
