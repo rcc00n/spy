@@ -34,3 +34,27 @@ class Migration(migrations.Migration):
             model_name="checkrun",
             name="final_url",
             field=models.URLField(blank=True, max_length=2000),
+        ),
+        migrations.AddField(
+            model_name="checkrun",
+            name="http_status_code",
+            field=models.PositiveIntegerField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name="checkrun",
+            name="link_count",
+            field=models.PositiveIntegerField(default=0),
+        ),
+        migrations.AddField(
+            model_name="checkrun",
+            name="page_title",
+            field=models.CharField(blank=True, max_length=500),
+        ),
+        migrations.AddField(
+            model_name="checkrun",
+            name="post_link_count",
+            field=models.PositiveIntegerField(default=0),
+        ),
+        migrations.AddField(
+            model_name="checkrun",
+            name="route_url",
