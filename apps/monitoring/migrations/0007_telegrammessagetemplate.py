@@ -34,3 +34,39 @@ TELEGRAM_TEMPLATES = [
             "Commands:\n"
             "/help - show this help.\n"
             "/accounts - list monitored accounts with IDs.\n"
+            "/addaccount <facebook|instagram> <url> <name> - add an account.\n"
+            "/setaccount <id> <name|url|platform|interval|max_posts|scroll|active> <value> - edit an account.\n"
+            "/pauseaccount <id> - pause an account.\n"
+            "/resumeaccount <id> - resume an account.\n"
+            "/removeaccount <id> - deactivate an account.\n"
+            "/keywords - list keywords with IDs.\n"
+            "/addkeyword <phrase> - add or reactivate a keyword.\n"
+            "/removekeyword <id|phrase> - deactivate a keyword.\n"
+            "/pausekeyword <id|phrase> - deactivate a keyword.\n"
+            "/resumekeyword <id|phrase> - reactivate a keyword.\n"
+            "/check [account_id] [limit] - run checks now. Limit must be 1-20.\n"
+            "/matches [limit] - show latest keyword matches.\n"
+            "/runs [limit] - show latest check runs.\n"
+            "/session - show Facebook session status.\n"
+            "/refreshsession - create a Facebook session refresh request."
+        ),
+        "available_placeholders": "",
+    },
+    {
+        "key": "bot_start",
+        "name": "Bot start",
+        "description": "Response returned by /start.",
+        "body": "Monitoring alerts are enabled for this chat.\n\n{help_text}",
+        "available_placeholders": "help_text",
+    },
+    {
+        "key": "bot_error",
+        "name": "Bot error",
+        "description": "Response returned when a command fails.",
+        "body": "Error: {error}",
+        "available_placeholders": "error",
+    },
+    {
+        "key": "bot_accounts_empty",
+        "name": "Accounts empty",
+        "description": "Response when no monitored accounts exist.",
