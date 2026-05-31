@@ -118,3 +118,39 @@ TELEGRAM_TEMPLATES = [
         "available_placeholders": "keywords, keyword_count",
     },
     {
+        "key": "bot_keyword_saved",
+        "name": "Keyword saved",
+        "description": "Response after /addkeyword succeeds.",
+        "body": "Keyword {action}: #{keyword_id} {keyword}",
+        "available_placeholders": "keyword_id, keyword, action",
+    },
+    {
+        "key": "bot_keyword_status_changed",
+        "name": "Keyword status changed",
+        "description": "Response after pausing or resuming a keyword.",
+        "body": "Keyword #{keyword_id} {keyword} is now {status}.",
+        "available_placeholders": "keyword_id, keyword, status",
+    },
+    {
+        "key": "bot_check_no_accounts",
+        "name": "Check no accounts",
+        "description": "Response when /check has no active accounts to run.",
+        "body": "No active monitored accounts were found.",
+        "available_placeholders": "",
+    },
+    {
+        "key": "bot_check_finished",
+        "name": "Check finished",
+        "description": "Response after /check completes.",
+        "body": "Check finished: {summary}",
+        "available_placeholders": (
+            "summary, accounts_checked, posts_found, new_posts_found, "
+            "matches_found, errors, auth_required"
+        ),
+    },
+    {
+        "key": "bot_matches_empty",
+        "name": "Matches empty",
+        "description": "Response when no keyword matches exist.",
+        "body": "No matches yet.",
+        "available_placeholders": "",
