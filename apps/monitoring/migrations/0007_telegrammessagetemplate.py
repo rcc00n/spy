@@ -70,3 +70,27 @@ TELEGRAM_TEMPLATES = [
         "key": "bot_accounts_empty",
         "name": "Accounts empty",
         "description": "Response when no monitored accounts exist.",
+        "body": "No monitored accounts are configured.",
+        "available_placeholders": "",
+    },
+    {
+        "key": "bot_accounts",
+        "name": "Accounts list",
+        "description": "Response for /accounts.",
+        "body": "{accounts}",
+        "available_placeholders": "accounts, account_count",
+    },
+    {
+        "key": "bot_account_added",
+        "name": "Account added",
+        "description": "Response after /addaccount succeeds.",
+        "body": "Account added: #{account_id} {account_name} ({platform})",
+        "available_placeholders": (
+            "account_id, account_name, platform, account_url"
+        ),
+    },
+    {
+        "key": "bot_account_updated",
+        "name": "Account updated",
+        "description": "Response after /setaccount succeeds.",
+        "body": "Account updated: #{account_id} {account_name} ({field}={value})",
