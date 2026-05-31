@@ -94,3 +94,27 @@ TELEGRAM_TEMPLATES = [
         "name": "Account updated",
         "description": "Response after /setaccount succeeds.",
         "body": "Account updated: #{account_id} {account_name} ({field}={value})",
+        "available_placeholders": "account_id, account_name, field, value",
+    },
+    {
+        "key": "bot_account_status_changed",
+        "name": "Account status changed",
+        "description": "Response after pausing or resuming an account.",
+        "body": "Account #{account_id} {account_name} is now {status}.",
+        "available_placeholders": "account_id, account_name, status",
+    },
+    {
+        "key": "bot_keywords_empty",
+        "name": "Keywords empty",
+        "description": "Response when no keywords exist.",
+        "body": "No keywords are configured.",
+        "available_placeholders": "",
+    },
+    {
+        "key": "bot_keywords",
+        "name": "Keywords list",
+        "description": "Response for /keywords.",
+        "body": "{keywords}",
+        "available_placeholders": "keywords, keyword_count",
+    },
+    {
