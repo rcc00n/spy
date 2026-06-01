@@ -202,3 +202,27 @@ TELEGRAM_TEMPLATES = [
         ),
         "available_placeholders": (
             "request_id, operator_url, expires_at, token_hint"
+        ),
+    },
+]
+
+
+def seed_telegram_templates(apps, _schema_editor):
+    template_model = apps.get_model("monitoring", "TelegramMessageTemplate")
+    for template in TELEGRAM_TEMPLATES:
+        template_model.objects.update_or_create(
+            key=template["key"],
+            defaults={
+                "name": template["name"],
+                "description": template["description"],
+                "body": template["body"],
+                "available_placeholders": template["available_placeholders"],
+                "is_active": True,
+            },
+        )
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("monitoring", "0006_checkrun_article_count_and_more"),
