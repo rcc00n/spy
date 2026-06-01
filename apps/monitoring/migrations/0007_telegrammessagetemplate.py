@@ -154,3 +154,27 @@ TELEGRAM_TEMPLATES = [
         "description": "Response when no keyword matches exist.",
         "body": "No matches yet.",
         "available_placeholders": "",
+    },
+    {
+        "key": "bot_matches",
+        "name": "Matches list",
+        "description": "Response for /matches.",
+        "body": "{matches}",
+        "available_placeholders": "matches, match_count",
+    },
+    {
+        "key": "bot_runs_empty",
+        "name": "Runs empty",
+        "description": "Response when no check runs exist.",
+        "body": "No check runs yet.",
+        "available_placeholders": "",
+    },
+    {
+        "key": "bot_runs",
+        "name": "Runs list",
+        "description": "Response for /runs.",
+        "body": "{runs}",
+        "available_placeholders": "runs, run_count",
+    },
+    {
+        "key": "bot_session",
