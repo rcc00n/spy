@@ -178,3 +178,27 @@ TELEGRAM_TEMPLATES = [
     },
     {
         "key": "bot_session",
+        "name": "Facebook session status",
+        "description": "Response for /session.",
+        "body": (
+            "Saved session: {session_status}\n"
+            "Credential: {credential_status} {credential_username}\n"
+            "Last error: {last_error}\n"
+            "Recent requests:\n{recent_requests}"
+        ),
+        "available_placeholders": (
+            "session_status, credential_status, credential_username, "
+            "last_error, recent_requests"
+        ),
+    },
+    {
+        "key": "bot_session_request_created",
+        "name": "Facebook session request created",
+        "description": "Response after /refreshsession creates a request.",
+        "body": (
+            "Facebook session refresh request created: #{request_id}\n"
+            "Expires: {expires_at}\n"
+            "Operator URL: {operator_url}"
+        ),
+        "available_placeholders": (
+            "request_id, operator_url, expires_at, token_hint"
