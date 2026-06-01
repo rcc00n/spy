@@ -226,3 +226,39 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("monitoring", "0006_checkrun_article_count_and_more"),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name="TelegramMessageTemplate",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "key",
+                    models.CharField(
+                        help_text="Stable template key used by the Telegram bot.",
+                        max_length=120,
+                        unique=True,
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "body",
+                    models.TextField(
+                        help_text="Use placeholders like {account_name}, {keyword}, or {summary}."
+                    ),
+                ),
+                (
+                    "available_placeholders",
+                    models.TextField(
+                        blank=True,
+                        help_text="Comma-separated placeholders available for this template.",
