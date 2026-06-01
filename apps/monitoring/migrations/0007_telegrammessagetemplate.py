@@ -262,3 +262,23 @@ class Migration(migrations.Migration):
                     models.TextField(
                         blank=True,
                         help_text="Comma-separated placeholders available for this template.",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+            ],
+            options={
+                "ordering": ["key"],
+                "indexes": [
+                    models.Index(
+                        fields=["key", "is_active"], name="monitoring__key_b14ad2_idx"
+                    ),
+                    models.Index(
+                        fields=["updated_at"], name="monitoring__updated_495ae5_idx"
+                    ),
+                ],
+            },
+        ),
+        migrations.RunPython(seed_telegram_templates, migrations.RunPython.noop),
+    ]
