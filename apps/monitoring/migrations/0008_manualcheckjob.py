@@ -82,3 +82,27 @@ class Migration(migrations.Migration):
                 ("auth_required", models.PositiveIntegerField(default=0)),
                 ("summary", models.TextField(blank=True)),
                 ("error_message", models.TextField(blank=True)),
+                (
+                    "account",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="manual_check_jobs",
+                        to="monitoring.monitoredaccount",
+                    ),
+                ),
+                (
+                    "requested_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="manual_check_jobs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["-requested_at"],
+                "indexes": [
