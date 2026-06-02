@@ -22,3 +22,39 @@ REMOVED_TEMPLATE_KEYS = [
     "bot_accounts_empty",
     "bot_accounts",
     "bot_account_added",
+    "bot_account_updated",
+    "bot_account_status_changed",
+]
+
+
+def update_telegram_help(apps, _schema_editor):
+    template_model = apps.get_model("monitoring", "TelegramMessageTemplate")
+    template_model.objects.filter(key="bot_help").update(body=BOT_HELP)
+    template_model.objects.filter(key__in=REMOVED_TEMPLATE_KEYS).update(is_active=False)
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("monitoring", "0007_telegrammessagetemplate"),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name="ManualCheckJob",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("post_limit", models.PositiveIntegerField(blank=True, null=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
