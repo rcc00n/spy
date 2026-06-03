@@ -106,3 +106,15 @@ class Migration(migrations.Migration):
             options={
                 "ordering": ["-requested_at"],
                 "indexes": [
+                    models.Index(
+                        fields=["status", "requested_at"],
+                        name="monitoring__status_94d31f_idx",
+                    ),
+                    models.Index(
+                        fields=["task_id"], name="monitoring__task_id_7059a0_idx"
+                    ),
+                ],
+            },
+        ),
+        migrations.RunPython(update_telegram_help, migrations.RunPython.noop),
+    ]
