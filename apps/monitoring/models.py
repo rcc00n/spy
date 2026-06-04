@@ -142,3 +142,27 @@ class PostKeywordMatch(models.Model):
         indexes = [
             models.Index(fields=["created_at"]),
             models.Index(fields=["telegram_sent"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.keyword.phrase} in {self.post}"
+
+
+class CheckRun(models.Model):
+    class Status(models.TextChoices):
+        RUNNING = "running", "Running"
+        SUCCESS = "success", "Success"
+        ERROR = "error", "Error"
+        AUTH_REQUIRED = "auth_required", "Auth required"
+        SKIPPED = "skipped", "Skipped"
+
+    monitored_account = models.ForeignKey(
+        MonitoredAccount,
+        on_delete=models.CASCADE,
+        related_name="check_runs",
+    )
+    started_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
