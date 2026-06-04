@@ -5,6 +5,7 @@ import threading
 from django.conf import settings
 
 from apps.monitoring.models import TelegramChat
+from apps.monitoring.services.telegram_templates import render_telegram_template
 
 
 logger = logging.getLogger(__name__)
@@ -84,10 +85,15 @@ def send_telegram_message(text: str, *, disable_web_page_preview: bool = True) -
 
 
 def send_system_alert(title: str, lines: list[str] | None = None) -> int:
-    body = [f"Spy Monitor: {title}"]
-    if lines:
-        body.extend(lines)
-    return send_telegram_message("\n".join(body))
+    text = render_telegram_template(
+        "system_alert",
+        context={
+            "title": title,
+            "lines": "\n".join(lines or []),
+        },
+        default="Spy Monitor: {title}\n{lines}",
+    )
+    return send_telegram_message(text)
 
 
 def send_system_alert_to_chats(
@@ -95,24 +101,38 @@ def send_system_alert_to_chats(
     lines: list[str] | None,
     chat_ids: list[int],
 ) -> int:
-    body = [f"Spy Monitor: {title}"]
-    if lines:
-        body.extend(lines)
-    return send_telegram_message_to_chats("\n".join(body), chat_ids)
+    text = render_telegram_template(
+        "system_alert",
+        context={
+            "title": title,
+            "lines": "\n".join(lines or []),
+        },
+        default="Spy Monitor: {title}\n{lines}",
+    )
+    return send_telegram_message_to_chats(text, chat_ids)
 
 
 def format_match_alert(match) -> str:
     post = match.post
     account = post.monitored_account
     preview = match.matched_text_preview[:500]
-    lines = [
-        f"Platform: {account.get_platform_display()}",
-        f"Account: {account.account_name}",
-        f"Keyword: {match.keyword.phrase}",
-        f"Post: {post.post_url or account.account_url}",
-        f"Preview: {preview}",
-    ]
-    return "\n".join(lines)
+    return render_telegram_template(
+        "match_alert",
+        context={
+            "platform": account.get_platform_display(),
+            "account_name": account.account_name,
+            "keyword": match.keyword.phrase,
+            "post_url": post.post_url or account.account_url,
+            "preview": preview,
+        },
+        default=(
+            "Platform: {platform}\n"
+            "Account: {account_name}\n"
+            "Keyword: {keyword}\n"
+            "Post: {post_url}\n"
+            "Preview: {preview}"
+        ),
+    )
 
 
 def send_match_alert(match) -> int:

@@ -375,6 +375,8 @@ def facebook_post_url_matches_account(account_url: str, post_url: str) -> bool:
         return True
     if post_kind == "unknown" or not post_value:
         return True
+    if account_kind != post_kind:
+        return True
     return account_kind == post_kind and account_value == post_value
 
 

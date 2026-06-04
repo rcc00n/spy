@@ -5,7 +5,14 @@ from unittest.mock import patch
 from django.test import TestCase, override_settings
 
 from apps.monitoring.forms import PlatformCredentialForm
-from apps.monitoring.models import CheckRun, Keyword, MonitoredAccount, Post, PostKeywordMatch
+from apps.monitoring.models import (
+    CheckRun,
+    Keyword,
+    MonitoredAccount,
+    Post,
+    PostKeywordMatch,
+    TelegramMessageTemplate,
+)
 from apps.monitoring.models import PlatformCredential
 from apps.monitoring.services.checker import run_account_check, store_post_candidates
 from apps.monitoring.services.facebook_auth import (
@@ -20,12 +27,14 @@ from apps.monitoring.services.facebook_checker import (
     detect_facebook_block_state,
     external_post_id_for,
     extract_candidates_from_html,
+    facebook_post_url_matches_account,
     facebook_route_urls,
     is_low_information_candidate_text,
     is_post_url,
     is_unavailable_only_candidate_text,
     normalize_facebook_url,
 )
+from apps.monitoring.services.telegram_templates import render_telegram_template
 
 
 FIXTURES = Path(__file__).resolve().parents[3] / "tests" / "fixtures"
@@ -157,6 +166,20 @@ class FacebookCheckerTests(TestCase):
             text="different ignored text",
         )
         self.assertEqual(first, second)
+
+    def test_slug_account_allows_permalink_profile_id_post(self):
+        self.assertTrue(
+            facebook_post_url_matches_account(
+                "https://www.facebook.com/SamplePage",
+                "https://www.facebook.com/permalink.php?id=333&story_fbid=222",
+            )
+        )
+        self.assertFalse(
+            facebook_post_url_matches_account(
+                "https://www.facebook.com/SamplePage",
+                "https://www.facebook.com/OtherPage/posts/222",
+            )
+        )
 
     def test_parser_returns_multiple_post_candidates(self):
         candidates = extract_candidates_from_html(
@@ -436,3 +459,18 @@ class FacebookCheckerTests(TestCase):
         self.assertEqual(username, "operator@example.com")
         self.assertEqual(password, "secret-password")
         self.assertEqual(stored_credential.pk, credential.pk)
+
+    def test_telegram_template_renders_placeholders(self):
+        TelegramMessageTemplate.objects.create(
+            key="test_template",
+            name="Test template",
+            body="Account {account_name}: {status}. Unknown {missing}",
+        )
+
+        rendered = render_telegram_template(
+            "test_template",
+            context={"account_name": "Sample Page", "status": "active"},
+            default="fallback",
+        )
+
+        self.assertEqual(rendered, "Account Sample Page: active. Unknown {missing}")

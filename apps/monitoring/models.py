@@ -274,6 +274,36 @@ class TelegramChat(models.Model):
         return f"{self.chat_id} ({user_label})"
 
 
+class TelegramMessageTemplate(models.Model):
+    key = models.CharField(
+        max_length=120,
+        unique=True,
+        help_text="Stable template key used by the Telegram bot.",
+    )
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    body = models.TextField(
+        help_text="Use placeholders like {account_name}, {keyword}, or {summary}."
+    )
+    available_placeholders = models.TextField(
+        blank=True,
+        help_text="Comma-separated placeholders available for this template.",
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["key"]
+        indexes = [
+            models.Index(fields=["key", "is_active"]),
+            models.Index(fields=["updated_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return self.key
+
+
 class PlatformCredential(models.Model):
     class Platform(models.TextChoices):
         FACEBOOK = "facebook", "Facebook"
