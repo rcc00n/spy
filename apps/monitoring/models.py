@@ -118,3 +118,27 @@ class Post(models.Model):
 
 class PostKeywordMatch(models.Model):
     post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name="keyword_matches",
+    )
+    keyword = models.ForeignKey(
+        Keyword,
+        on_delete=models.CASCADE,
+        related_name="post_matches",
+    )
+    matched_text_preview = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    telegram_sent = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["post", "keyword"],
+                name="unique_post_keyword_match",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["telegram_sent"]),
