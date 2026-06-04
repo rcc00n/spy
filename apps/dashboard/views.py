@@ -17,10 +17,12 @@ from apps.monitoring.models import (
     CheckRunPost,
     FacebookSessionRefreshRequest,
     Keyword,
+    ManualCheckJob,
     MonitoredAccount,
     PlatformCredential,
     PostKeywordMatch,
 )
+from apps.monitoring.tasks import run_manual_check_job
 from apps.monitoring.services.facebook_auth import (
     facebook_auth_enabled,
     storage_state_path,
@@ -30,10 +32,7 @@ from apps.monitoring.services.facebook_session_requests import (
 )
 from apps.monitoring.services.runner import (
     accounts_for_check,
-    format_check_summary,
-    run_account_checks,
 )
-from apps.monitoring.services.telegram import send_system_alert
 
 
 def paginate(request, queryset, per_page=25):
@@ -76,6 +75,10 @@ def index(request):
         "recent_runs": CheckRun.objects.select_related("monitored_account").order_by(
             "-started_at"
         )[:10],
+        "recent_manual_jobs": ManualCheckJob.objects.select_related(
+            "account",
+            "requested_by",
+        ).order_by("-requested_at")[:10],
         "error_runs": CheckRun.objects.filter(status=CheckRun.Status.ERROR).count(),
         "accounts_status": MonitoredAccount.objects.annotate(
             match_count=Count("posts__keyword_matches")
@@ -102,22 +105,21 @@ def run_check_now(request):
         messages.info(request, "No active monitored accounts found for manual check.")
         return redirect(request.POST.get("next") or "dashboard:index")
 
-    send_system_alert(
-        "Manual monitoring check requested",
-        [
-            f"User: {request.user.get_username()}",
-            f"Accounts: {len(accounts)}",
-            f"Limit: {form.cleaned_data.get('limit') or 'default'}",
-        ],
-    )
-    summary = run_account_checks(
-        accounts,
+    job = ManualCheckJob.objects.create(
+        requested_by=request.user,
+        account=accounts[0] if account_id else None,
         post_limit=form.cleaned_data.get("limit"),
     )
-    if summary["errors"]:
-        messages.error(request, f"Manual check completed with errors: {format_check_summary(summary)}")
-    else:
-        messages.success(request, f"Manual check completed: {format_check_summary(summary)}")
+    async_result = run_manual_check_job.delay(job.pk)
+    job.task_id = async_result.id or ""
+    job.save(update_fields=["task_id"])
+    messages.success(
+        request,
+        (
+            f"Manual check queued as job #{job.pk} for {len(accounts)} account(s). "
+            "Refresh the dashboard to see status."
+        ),
+    )
     return redirect(request.POST.get("next") or "dashboard:index")
 
 

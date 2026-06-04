@@ -1,17 +1,13 @@
 import logging
-from urllib.parse import urlparse
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
-from django.db import IntegrityError
 
 from apps.monitoring.models import (
     CheckRun,
     FacebookSessionRefreshRequest,
     Keyword,
-    MonitoredAccount,
     PlatformCredential,
     PostKeywordMatch,
     TelegramChat,
@@ -32,15 +28,8 @@ logger = logging.getLogger(__name__)
 
 HELP_TEXT = """Commands:
 /help - show this help.
-/accounts - list monitored accounts with IDs.
-/addaccount <facebook|instagram> <url> <name> - add a monitored account.
-/setaccount <id> <name|url|platform|interval|max_posts|scroll|active> <value> - edit an account.
-/pauseaccount <id> - pause an account.
-/resumeaccount <id> - resume an account.
-/removeaccount <id> - deactivate an account.
 /keywords - list keywords with IDs.
 /addkeyword <phrase> - add or reactivate a keyword.
-/removekeyword <id|phrase> - deactivate a keyword.
 /pausekeyword <id|phrase> - deactivate a keyword.
 /resumekeyword <id|phrase> - reactivate a keyword.
 /check [account_id] [limit] - run checks now. Limit must be 1-20.
@@ -71,60 +60,11 @@ def parse_limit(value: str | None, *, default: int = 5, maximum: int = 20) -> in
     return limit
 
 
-def parse_int_value(value: str, *, label: str) -> int:
-    try:
-        return int(value)
-    except ValueError as exc:
-        raise BotCommandError(f"{label} must be a number.") from exc
-
-
-def parse_bool(value: str) -> bool:
-    normalized = value.strip().lower()
-    if normalized in {"1", "true", "yes", "on", "active", "enabled"}:
-        return True
-    if normalized in {"0", "false", "no", "off", "paused", "disabled"}:
-        return False
-    raise BotCommandError("Boolean value must be true/false, yes/no, or active/paused.")
-
-
-def parse_platform(value: str) -> str:
-    normalized = value.strip().lower()
-    valid_values = {choice[0] for choice in MonitoredAccount.Platform.choices}
-    if normalized not in valid_values:
-        raise BotCommandError("Platform must be facebook or instagram.")
-    return normalized
-
-
-def validate_account_url(platform: str, account_url: str) -> None:
-    host = urlparse(account_url).netloc.lower().removeprefix("www.")
-    if platform == MonitoredAccount.Platform.FACEBOOK and not (
-        host == "facebook.com" or host.endswith(".facebook.com")
-    ):
-        raise BotCommandError("Facebook accounts must use a facebook.com URL.")
-    if platform == MonitoredAccount.Platform.INSTAGRAM and not (
-        host == "instagram.com" or host.endswith(".instagram.com")
-    ):
-        raise BotCommandError("Instagram accounts must use an instagram.com URL.")
-
-
 def normalize_keyword_phrase(value: str) -> str:
     phrase = " ".join((value or "").split())
     if not phrase:
         raise BotCommandError("Keyword phrase is required.")
     return phrase
-
-
-def account_label(account: MonitoredAccount) -> str:
-    active = "active" if account.is_active else "paused"
-    status = account.last_status or "pending"
-    return (
-        f"#{account.pk} {account.get_platform_display()} {active}: "
-        f"{account.account_name}\n"
-        f"  URL: {account.account_url}\n"
-        f"  interval={account.check_interval_minutes}m "
-        f"max_posts={account.max_posts_per_check} "
-        f"scroll={account.scroll_rounds} status={status}"
-    )
 
 
 def keyword_label(keyword: Keyword) -> str:
@@ -144,17 +84,6 @@ def keyword_lookup(identifier: str) -> Keyword:
         return Keyword.objects.get(phrase__iexact=normalized)
     except Keyword.DoesNotExist as exc:
         raise BotCommandError(f"Keyword '{normalized}' was not found.") from exc
-
-
-def validation_error_text(exc: Exception) -> str:
-    if isinstance(exc, ValidationError):
-        if hasattr(exc, "message_dict"):
-            parts = []
-            for field, errors in exc.message_dict.items():
-                parts.append(f"{field}: {', '.join(errors)}")
-            return "; ".join(parts)
-        return "; ".join(exc.messages)
-    return str(exc)
 
 
 class Command(BaseCommand):
@@ -232,175 +161,6 @@ class Command(BaseCommand):
         async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await ensure_chat(update)
             await reply_template(update, "bot_help", HELP_TEXT)
-
-        @sync_to_async
-        def list_accounts_text() -> str:
-            accounts = list(MonitoredAccount.objects.order_by("platform", "account_name")[:50])
-            if not accounts:
-                return render_telegram_template(
-                    "bot_accounts_empty",
-                    default="No monitored accounts are configured.",
-                )
-            rows = "\n\n".join(account_label(account) for account in accounts)
-            return render_telegram_template(
-                "bot_accounts",
-                context={"accounts": rows, "account_count": len(accounts)},
-                default="{accounts}",
-            )
-
-        async def accounts(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            async def action():
-                await send_text(update, await list_accounts_text())
-
-            await guarded(update, action)
-
-        @sync_to_async
-        def add_account_text(args) -> str:
-            if len(args) < 3:
-                raise BotCommandError(
-                    "Usage: /addaccount <facebook|instagram> <url> <name>"
-                )
-            platform = parse_platform(args[0])
-            account_url = args[1].strip()
-            account_name = " ".join(args[2:]).strip()
-            if not account_name:
-                raise BotCommandError("Account name is required.")
-            validate_account_url(platform, account_url)
-            account = MonitoredAccount(
-                platform=platform,
-                account_url=account_url,
-                account_name=account_name,
-                is_active=True,
-            )
-            try:
-                account.full_clean()
-                account.save()
-            except (IntegrityError, ValidationError) as exc:
-                raise BotCommandError(validation_error_text(exc)) from exc
-            return render_telegram_template(
-                "bot_account_added",
-                context={
-                    "account_id": account.pk,
-                    "account_name": account.account_name,
-                    "platform": account.get_platform_display(),
-                    "account_url": account.account_url,
-                },
-                default="Account added: #{account_id} {account_name} ({platform})",
-            )
-
-        async def addaccount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            async def action():
-                await send_text(update, await add_account_text(context.args))
-
-            await guarded(update, action)
-
-        @sync_to_async
-        def set_account_text(args) -> str:
-            if len(args) < 3:
-                raise BotCommandError(
-                    "Usage: /setaccount <id> <name|url|platform|interval|max_posts|scroll|active> <value>"
-                )
-            try:
-                account = MonitoredAccount.objects.get(pk=int(args[0]))
-            except (ValueError, MonitoredAccount.DoesNotExist) as exc:
-                raise BotCommandError(f"Account #{args[0]} was not found.") from exc
-
-            field = args[1].strip().lower()
-            value = " ".join(args[2:]).strip()
-            if not value:
-                raise BotCommandError("Value is required.")
-
-            if field in {"name", "account_name"}:
-                account.account_name = value
-            elif field in {"url", "account_url"}:
-                validate_account_url(account.platform, value)
-                account.account_url = value
-            elif field == "platform":
-                account.platform = parse_platform(value)
-                validate_account_url(account.platform, account.account_url)
-            elif field in {"interval", "check_interval", "check_interval_minutes"}:
-                account.check_interval_minutes = parse_int_value(
-                    value,
-                    label="Interval",
-                )
-            elif field in {"max_posts", "max_posts_per_check", "limit"}:
-                account.max_posts_per_check = parse_int_value(
-                    value,
-                    label="Max posts",
-                )
-            elif field in {"scroll", "scroll_rounds"}:
-                account.scroll_rounds = parse_int_value(value, label="Scroll rounds")
-            elif field in {"active", "is_active"}:
-                account.is_active = parse_bool(value)
-            else:
-                raise BotCommandError(
-                    "Field must be name, url, platform, interval, max_posts, scroll, or active."
-                )
-
-            try:
-                account.full_clean()
-                account.save()
-            except (IntegrityError, ValidationError, ValueError) as exc:
-                raise BotCommandError(validation_error_text(exc)) from exc
-
-            return render_telegram_template(
-                "bot_account_updated",
-                context={
-                    "account_id": account.pk,
-                    "account_name": account.account_name,
-                    "field": field,
-                    "value": value,
-                },
-                default="Account updated: #{account_id} {account_name} ({field}={value})",
-            )
-
-        async def setaccount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            async def action():
-                await send_text(update, await set_account_text(context.args))
-
-            await guarded(update, action)
-
-        @sync_to_async
-        def set_account_active_text(args, *, active: bool) -> str:
-            if len(args) != 1:
-                command = "resumeaccount" if active else "pauseaccount"
-                raise BotCommandError(f"Usage: /{command} <id>")
-            try:
-                account = MonitoredAccount.objects.get(pk=int(args[0]))
-            except (ValueError, MonitoredAccount.DoesNotExist) as exc:
-                raise BotCommandError(f"Account #{args[0]} was not found.") from exc
-            account.is_active = active
-            account.save(update_fields=["is_active", "updated_at"])
-            return render_telegram_template(
-                "bot_account_status_changed",
-                context={
-                    "account_id": account.pk,
-                    "account_name": account.account_name,
-                    "status": "active" if active else "paused",
-                },
-                default="Account #{account_id} {account_name} is now {status}.",
-            )
-
-        async def pauseaccount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            async def action():
-                await send_text(
-                    update,
-                    await set_account_active_text(context.args, active=False),
-                )
-
-            await guarded(update, action)
-
-        async def resumeaccount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            async def action():
-                await send_text(
-                    update,
-                    await set_account_active_text(context.args, active=True),
-                )
-
-            await guarded(update, action)
-
-        async def removeaccount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            await pauseaccount(update, context)
 
         @sync_to_async
         def list_keywords_text() -> str:
@@ -483,9 +243,6 @@ class Command(BaseCommand):
                 )
 
             await guarded(update, action)
-
-        async def removekeyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
-            await pausekeyword(update, context)
 
         @sync_to_async
         def check_text(args) -> str:
@@ -674,15 +431,8 @@ class Command(BaseCommand):
         app = ApplicationBuilder().token(settings.TELEGRAM_BOT_TOKEN).build()
         app.add_handler(CommandHandler("start", start))
         app.add_handler(CommandHandler("help", help_command))
-        app.add_handler(CommandHandler("accounts", accounts))
-        app.add_handler(CommandHandler("addaccount", addaccount))
-        app.add_handler(CommandHandler("setaccount", setaccount))
-        app.add_handler(CommandHandler("pauseaccount", pauseaccount))
-        app.add_handler(CommandHandler("resumeaccount", resumeaccount))
-        app.add_handler(CommandHandler("removeaccount", removeaccount))
         app.add_handler(CommandHandler("keywords", keywords))
         app.add_handler(CommandHandler("addkeyword", addkeyword))
-        app.add_handler(CommandHandler("removekeyword", removekeyword))
         app.add_handler(CommandHandler("pausekeyword", pausekeyword))
         app.add_handler(CommandHandler("resumekeyword", resumekeyword))
         app.add_handler(CommandHandler("check", check))

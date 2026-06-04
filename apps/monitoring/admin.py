@@ -7,6 +7,7 @@ from .models import (
     CheckRunPost,
     FacebookSessionRefreshRequest,
     Keyword,
+    ManualCheckJob,
     MonitoredAccount,
     PlatformCredential,
     Post,
@@ -143,6 +144,39 @@ class CheckRunPostAdmin(admin.ModelAdmin):
         "raw_snapshot",
         "is_new",
         "observed_at",
+    )
+
+
+@admin.register(ManualCheckJob)
+class ManualCheckJobAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "status",
+        "account",
+        "requested_by",
+        "requested_at",
+        "finished_at",
+        "summary",
+    )
+    list_filter = ("status", "requested_at", "finished_at")
+    search_fields = ("task_id", "summary", "error_message", "account__account_name")
+    readonly_fields = (
+        "requested_by",
+        "account",
+        "post_limit",
+        "status",
+        "task_id",
+        "requested_at",
+        "started_at",
+        "finished_at",
+        "accounts_checked",
+        "posts_found",
+        "new_posts_found",
+        "matches_found",
+        "errors",
+        "auth_required",
+        "summary",
+        "error_message",
     )
 
 
