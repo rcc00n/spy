@@ -1,0 +1,132 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-spy}
+      POSTGRES_USER: ${POSTGRES_USER:-spy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spy} -d ${POSTGRES_DB:-spy}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      RUN_MIGRATIONS: "0"
+      COLLECT_STATIC: "0"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - static_volume:/app/staticfiles
+      - facebook_auth_state:/app/runtime
+    ports:
+      - "127.0.0.1:${SPY_WEB_PORT:-18010}:8000"
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+
+  celery-worker:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - facebook_auth_state:/app/runtime:ro
+    command: celery -A config worker --loglevel=info
+
+  celery-beat:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A config beat --loglevel=info
+
+  telegram-bot:
+    build: .
+    restart: unless-stopped
+    profiles:
+      - bot
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: python manage.py run_telegram_bot
+
+  facebook-session-manager:
+    build: .
+    restart: unless-stopped
+    profiles:
+      - session
+    env_file:
+      - .env
+    environment:
+      WAIT_FOR_POSTGRES: "1"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - facebook_auth_state:/app/runtime
+    ports:
+      - "127.0.0.1:${SPY_FACEBOOK_SESSION_PORT:-18011}:7900"
+    command: /app/scripts/facebook_session_manager.sh
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  facebook_auth_state:

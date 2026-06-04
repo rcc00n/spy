@@ -1,0 +1,85 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Spy Monitor{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="{% if request.user.is_authenticated %}app-body{% else %}auth-body{% endif %}">
+  {% if request.user.is_authenticated %}
+    {% with url_name=request.resolver_match.url_name %}
+    <div class="app-shell">
+      <aside class="site-sidebar">
+        <a class="brand" href="{% url 'dashboard:index' %}" aria-label="Spy Monitor dashboard">
+          <span class="brand-mark">SM</span>
+          <span>
+            <strong>Spy Monitor</strong>
+            <small>Monitoring console</small>
+          </span>
+        </a>
+
+        <nav class="nav" aria-label="Primary navigation">
+          <a class="{% if url_name == 'index' %}is-active{% endif %}" href="{% url 'dashboard:index' %}">
+            <span aria-hidden="true">01</span> Dashboard
+          </a>
+          <a class="{% if url_name == 'accounts' or url_name == 'account_create' or url_name == 'account_edit' %}is-active{% endif %}" href="{% url 'dashboard:accounts' %}">
+            <span aria-hidden="true">02</span> Accounts
+          </a>
+          <a class="{% if url_name == 'keywords' or url_name == 'keyword_create' or url_name == 'keyword_edit' %}is-active{% endif %}" href="{% url 'dashboard:keywords' %}">
+            <span aria-hidden="true">03</span> Keywords
+          </a>
+          <a class="{% if url_name == 'matches' %}is-active{% endif %}" href="{% url 'dashboard:matches' %}">
+            <span aria-hidden="true">04</span> Matches
+          </a>
+          <a class="{% if url_name == 'check_runs' %}is-active{% endif %}" href="{% url 'dashboard:check_runs' %}">
+            <span aria-hidden="true">05</span> Runs
+          </a>
+          {% if request.user.is_staff %}
+            <a class="{% if url_name == 'facebook_login' %}is-active{% endif %}" href="{% url 'dashboard:facebook_login' %}">
+              <span aria-hidden="true">06</span> Facebook Login
+            </a>
+            <a href="{% url 'admin:index' %}">
+              <span aria-hidden="true">07</span> Django Admin
+            </a>
+          {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+          <span>Signed in as</span>
+          <strong>{{ request.user.get_username }}</strong>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <header class="site-header">
+          <div>
+            <span class="topbar-label">Operations</span>
+            <strong>Live monitoring workspace</strong>
+          </div>
+          <form class="logout-form" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="button button-secondary button-small" type="submit">Logout</button>
+          </form>
+        </header>
+    {% endwith %}
+  {% endif %}
+
+  <main class="page {% if not request.user.is_authenticated %}auth-page{% endif %}">
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="message message-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if request.user.is_authenticated %}
+      </div>
+    </div>
+  {% endif %}
+</body>
+</html>

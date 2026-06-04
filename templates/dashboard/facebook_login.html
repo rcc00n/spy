@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Facebook Login - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Facebook login</h1>
+    <p>Human-assisted session refresh for Facebook monitoring.</p>
+  </div>
+  <form method="post" action="{% url 'dashboard:facebook_session_request_create' %}">
+    {% csrf_token %}
+    <button type="submit">Create session request</button>
+  </form>
+</section>
+
+<section class="session-status-grid">
+  <article class="session-status-card">
+    <span>Auth mode</span>
+    <strong>{{ facebook_auth_enabled|yesno:"Enabled,Disabled" }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Saved session</span>
+    <strong>{{ facebook_session_exists|yesno:"Present,Missing" }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Session manager</span>
+    <strong>{{ facebook_session_manager_url|yesno:"Configured,Not configured" }}</strong>
+  </article>
+</section>
+
+<section class="settings-grid">
+  <div class="form-panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Credentials</h2>
+        <p>Credentials only prefill the first screen. The operator still completes Facebook checks manually.</p>
+      </div>
+    </div>
+    <form method="post" class="stacked-form">
+      {% csrf_token %}
+      {% include "dashboard/form_fields.html" %}
+      <div class="form-actions">
+        <button type="submit">Save credentials</button>
+      </div>
+    </form>
+
+    <section class="panel command-panel session-flow-panel">
+      <h2>Operator flow</h2>
+      <ol class="session-flow">
+        <li>
+          <span>1</span>
+          <div>
+            <strong>Create a session request</strong>
+            <small>Telegram receives the request, token hint, expiration, and operator URL.</small>
+          </div>
+        </li>
+        <li>
+          <span>2</span>
+          <div>
+            <strong>Complete login in the session browser</strong>
+            <small>The session-manager container opens headed Chromium through noVNC.</small>
+          </div>
+        </li>
+        <li>
+          <span>3</span>
+          <div>
+            <strong>Worker uses the saved session</strong>
+            <small>Checks run with read-only access to the saved browser state and report results to Telegram.</small>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </div>
+
+  <aside class="status-stack">
+    <section class="panel">
+      <div class="panel-heading panel-heading-stacked">
+        <div>
+          <h2>Session state</h2>
+          <p>Saving active credentials enables authenticated checks and clears the stale browser session.</p>
+        </div>
+      </div>
+      <dl class="detail-list">
+        <div>
+          <dt>Auth active</dt>
+          <dd><span class="status status-{{ facebook_auth_enabled|yesno:'success,error' }}">{{ facebook_auth_enabled|yesno:"Enabled,Disabled" }}</span></dd>
+        </div>
+        <div>
+          <dt>Saved session</dt>
+          <dd><span class="status status-{{ facebook_session_exists|yesno:'success,skipped' }}">{{ facebook_session_exists|yesno:"Present,Missing" }}</span></dd>
+        </div>
+        <div>
+          <dt>Storage path</dt>
+          <dd><code>{{ facebook_storage_state_path }}</code></dd>
+        </div>
+        <div>
+          <dt>Manager URL</dt>
+          <dd>
+            {% if facebook_session_manager_url %}
+              <a href="{{ facebook_session_manager_url }}" target="_blank" rel="noopener">{{ facebook_session_manager_url }}</a>
+            {% else %}
+              Not configured
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Last refresh</dt>
+          <dd>{{ credential.last_session_refreshed_at|default:"Never" }}</dd>
+        </div>
+        <div>
+          <dt>Last error</dt>
+          <dd>{{ credential.last_error|default:"None"|truncatechars:180 }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel command-panel">
+      <h2>Session request</h2>
+      <p>Create a one-time request for the session-manager browser. Telegram receives the request, progress, and final result.</p>
+      <form method="post" action="{% url 'dashboard:facebook_session_request_create' %}">
+        {% csrf_token %}
+        <button type="submit">Create session request</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading panel-heading-stacked">
+        <div>
+          <h2>Recent requests</h2>
+          <p>Pending and running requests are handled by the dedicated Docker service.</p>
+        </div>
+      </div>
+      <div class="request-list">
+        {% for request in recent_session_requests %}
+          <article class="request-row">
+            <div class="request-row-main">
+              <strong>#{{ request.id }} <span class="status status-{{ request.status }}">{{ request.get_status_display }}</span></strong>
+              <span>Requested {{ request.requested_at }}; expires {{ request.expires_at }}</span>
+              {% if request.error_message %}<p>{{ request.error_message|truncatechars:160 }}</p>{% endif %}
+            </div>
+            {% if request.operator_url and request.status == "pending" %}
+              <a class="button button-secondary button-small" href="{{ request.operator_url }}" target="_blank" rel="noopener">Open</a>
+            {% endif %}
+          </article>
+        {% empty %}
+          <p class="empty">No session requests yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </aside>
+</section>
+{% endblock %}

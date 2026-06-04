@@ -1,0 +1,375 @@
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.core.paginator import Paginator
+from django.db.models import Count
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth.decorators import user_passes_test
+
+from .forms import (
+    KeywordForm,
+    ManualCheckForm,
+    MonitoredAccountForm,
+    PlatformCredentialForm,
+)
+from apps.monitoring.models import (
+    CheckRun,
+    CheckRunPost,
+    FacebookSessionRefreshRequest,
+    Keyword,
+    MonitoredAccount,
+    PlatformCredential,
+    PostKeywordMatch,
+)
+from apps.monitoring.services.facebook_auth import (
+    facebook_auth_enabled,
+    storage_state_path,
+)
+from apps.monitoring.services.facebook_session_requests import (
+    create_facebook_session_request,
+)
+from apps.monitoring.services.runner import (
+    accounts_for_check,
+    format_check_summary,
+    run_account_checks,
+)
+from apps.monitoring.services.telegram import send_system_alert
+
+
+def paginate(request, queryset, per_page=25):
+    paginator = Paginator(queryset, per_page)
+    return paginator.get_page(request.GET.get("page"))
+
+
+def staff_required(view_func):
+    return user_passes_test(lambda user: user.is_staff)(view_func)
+
+
+def facebook_credential_status():
+    credential = PlatformCredential.objects.filter(
+        platform=PlatformCredential.Platform.FACEBOOK,
+        is_active=True,
+    ).first()
+    return {
+        "facebook_auth_enabled": facebook_auth_enabled(),
+        "facebook_auth_setting_enabled": settings.FACEBOOK_AUTH_ENABLED,
+        "facebook_credential": credential,
+        "facebook_session_exists": storage_state_path().exists(),
+        "facebook_storage_state_path": storage_state_path(),
+        "facebook_session_manager_url": settings.FACEBOOK_SESSION_MANAGER_URL,
+        "recent_session_requests": FacebookSessionRefreshRequest.objects.order_by(
+            "-requested_at"
+        )[:10],
+    }
+
+
+@login_required
+def index(request):
+    context = {
+        "active_accounts": MonitoredAccount.objects.filter(is_active=True).count(),
+        "active_keywords": Keyword.objects.filter(is_active=True).count(),
+        "total_matches": PostKeywordMatch.objects.count(),
+        "recent_matches": PostKeywordMatch.objects.select_related(
+            "keyword",
+            "post__monitored_account",
+        ).order_by("-created_at")[:10],
+        "recent_runs": CheckRun.objects.select_related("monitored_account").order_by(
+            "-started_at"
+        )[:10],
+        "error_runs": CheckRun.objects.filter(status=CheckRun.Status.ERROR).count(),
+        "accounts_status": MonitoredAccount.objects.annotate(
+            match_count=Count("posts__keyword_matches")
+        ).order_by("platform", "account_name"),
+        "manual_check_form": ManualCheckForm(),
+    }
+    context.update(facebook_credential_status())
+    return render(request, "dashboard/index.html", context)
+
+
+@login_required
+def run_check_now(request):
+    if request.method != "POST":
+        return redirect("dashboard:index")
+
+    form = ManualCheckForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Manual check limit must be between 1 and 20.")
+        return redirect(request.POST.get("next") or "dashboard:index")
+
+    account_id = request.POST.get("account_id") or None
+    accounts = accounts_for_check(force=True, account_id=account_id)
+    if not accounts:
+        messages.info(request, "No active monitored accounts found for manual check.")
+        return redirect(request.POST.get("next") or "dashboard:index")
+
+    send_system_alert(
+        "Manual monitoring check requested",
+        [
+            f"User: {request.user.get_username()}",
+            f"Accounts: {len(accounts)}",
+            f"Limit: {form.cleaned_data.get('limit') or 'default'}",
+        ],
+    )
+    summary = run_account_checks(
+        accounts,
+        post_limit=form.cleaned_data.get("limit"),
+    )
+    if summary["errors"]:
+        messages.error(request, f"Manual check completed with errors: {format_check_summary(summary)}")
+    else:
+        messages.success(request, f"Manual check completed: {format_check_summary(summary)}")
+    return redirect(request.POST.get("next") or "dashboard:index")
+
+
+@login_required
+def accounts(request):
+    queryset = MonitoredAccount.objects.order_by("platform", "account_name")
+    return render(
+        request,
+        "dashboard/accounts.html",
+        {"page_obj": paginate(request, queryset), "manual_check_form": ManualCheckForm()},
+    )
+
+
+@login_required
+def account_create(request):
+    if request.method == "POST":
+        form = MonitoredAccountForm(request.POST)
+        if form.is_valid():
+            account = form.save()
+            messages.success(request, f"Added monitored account {account.account_name}.")
+            return redirect("dashboard:accounts")
+    else:
+        form = MonitoredAccountForm(initial={"is_active": True})
+
+    return render(
+        request,
+        "dashboard/account_form.html",
+        {"form": form, "title": "Add monitored account", "submit_label": "Add account"},
+    )
+
+
+@login_required
+def account_edit(request, pk):
+    account = get_object_or_404(MonitoredAccount, pk=pk)
+    if request.method == "POST":
+        form = MonitoredAccountForm(request.POST, instance=account)
+        if form.is_valid():
+            account = form.save()
+            messages.success(request, f"Updated monitored account {account.account_name}.")
+            return redirect("dashboard:accounts")
+    else:
+        form = MonitoredAccountForm(instance=account)
+
+    return render(
+        request,
+        "dashboard/account_form.html",
+        {"form": form, "title": "Edit monitored account", "submit_label": "Save changes"},
+    )
+
+
+@login_required
+def account_deactivate(request, pk):
+    account = get_object_or_404(MonitoredAccount, pk=pk)
+    if request.method == "POST":
+        account.is_active = False
+        account.save(update_fields=["is_active", "updated_at"])
+        messages.success(request, f"Deactivated monitored account {account.account_name}.")
+        return redirect("dashboard:accounts")
+
+    return render(
+        request,
+        "dashboard/confirm_deactivate.html",
+        {
+            "title": "Deactivate monitored account",
+            "object_label": account.account_name,
+            "cancel_url": "dashboard:accounts",
+        },
+    )
+
+
+@login_required
+def keywords(request):
+    queryset = Keyword.objects.order_by("phrase")
+    return render(
+        request,
+        "dashboard/keywords.html",
+        {"page_obj": paginate(request, queryset)},
+    )
+
+
+@login_required
+def keyword_create(request):
+    if request.method == "POST":
+        form = KeywordForm(request.POST)
+        if form.is_valid():
+            keyword = form.save()
+            messages.success(request, f"Added keyword {keyword.phrase}.")
+            return redirect("dashboard:keywords")
+    else:
+        form = KeywordForm(initial={"is_active": True})
+
+    return render(
+        request,
+        "dashboard/keyword_form.html",
+        {"form": form, "title": "Add keyword", "submit_label": "Add keyword"},
+    )
+
+
+@login_required
+def keyword_edit(request, pk):
+    keyword = get_object_or_404(Keyword, pk=pk)
+    if request.method == "POST":
+        form = KeywordForm(request.POST, instance=keyword)
+        if form.is_valid():
+            keyword = form.save()
+            messages.success(request, f"Updated keyword {keyword.phrase}.")
+            return redirect("dashboard:keywords")
+    else:
+        form = KeywordForm(instance=keyword)
+
+    return render(
+        request,
+        "dashboard/keyword_form.html",
+        {"form": form, "title": "Edit keyword", "submit_label": "Save changes"},
+    )
+
+
+@login_required
+def keyword_deactivate(request, pk):
+    keyword = get_object_or_404(Keyword, pk=pk)
+    if request.method == "POST":
+        keyword.is_active = False
+        keyword.save(update_fields=["is_active"])
+        messages.success(request, f"Deactivated keyword {keyword.phrase}.")
+        return redirect("dashboard:keywords")
+
+    return render(
+        request,
+        "dashboard/confirm_deactivate.html",
+        {
+            "title": "Deactivate keyword",
+            "object_label": keyword.phrase,
+            "cancel_url": "dashboard:keywords",
+        },
+    )
+
+
+@login_required
+def matches(request):
+    queryset = PostKeywordMatch.objects.select_related(
+        "keyword",
+        "post",
+        "post__monitored_account",
+    ).order_by("-created_at")
+    return render(
+        request,
+        "dashboard/matches.html",
+        {"page_obj": paginate(request, queryset)},
+    )
+
+
+@login_required
+def check_runs(request):
+    queryset = CheckRun.objects.select_related("monitored_account").order_by(
+        "-started_at"
+    ).annotate(observed_count=Count("observed_posts"))
+    return render(
+        request,
+        "dashboard/check_runs.html",
+        {"page_obj": paginate(request, queryset)},
+    )
+
+
+@login_required
+def check_run_detail(request, pk):
+    run = get_object_or_404(
+        CheckRun.objects.select_related("monitored_account"),
+        pk=pk,
+    )
+    observed_posts = CheckRunPost.objects.select_related("post").filter(check_run=run)
+    return render(
+        request,
+        "dashboard/check_run_detail.html",
+        {
+            "run": run,
+            "observed_posts": observed_posts,
+        },
+    )
+
+
+@login_required
+@staff_required
+def facebook_login_settings(request):
+    credential = PlatformCredential.objects.filter(
+        platform=PlatformCredential.Platform.FACEBOOK,
+    ).first()
+
+    if request.method == "POST":
+        form = PlatformCredentialForm(request.POST, instance=credential)
+        if form.is_valid():
+            credential = form.save()
+            try:
+                storage_state_path().unlink(missing_ok=True)
+            except OSError as exc:
+                messages.warning(
+                    request,
+                    f"Saved credentials, but could not clear the old session: {exc}",
+                )
+            else:
+                credential.last_session_refreshed_at = None
+                credential.last_error = ""
+                credential.save(
+                    update_fields=[
+                        "last_session_refreshed_at",
+                        "last_error",
+                        "updated_at",
+                    ]
+                )
+            send_system_alert(
+                "Facebook credentials saved",
+                [
+                    f"User: {request.user.get_username()}",
+                    "The saved browser session was cleared; create a session refresh request next.",
+                ],
+            )
+            messages.success(
+                request,
+                (
+                    f"Saved Facebook login credentials for {credential.username}. "
+                    "Create a session refresh request so an operator can complete login."
+                ),
+            )
+            return redirect("dashboard:facebook_login")
+    else:
+        form = PlatformCredentialForm(
+            instance=credential,
+            initial={
+                "platform": PlatformCredential.Platform.FACEBOOK,
+                "is_active": True,
+            },
+        )
+
+    context = {
+        "form": form,
+        "credential": credential,
+    }
+    context.update(facebook_credential_status())
+    return render(request, "dashboard/facebook_login.html", context)
+
+
+@login_required
+@staff_required
+def facebook_session_request_create(request):
+    if request.method != "POST":
+        return redirect("dashboard:facebook_login")
+
+    session_request, _raw_token = create_facebook_session_request(user=request.user)
+    messages.success(
+        request,
+        (
+            f"Created Facebook session request #{session_request.pk}. "
+            "The request was sent to Telegram."
+        ),
+    )
+    return redirect("dashboard:facebook_login")

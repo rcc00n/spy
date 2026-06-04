@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Accounts</h1>
+    <p>Public Facebook Pages and Instagram accounts configured for monitoring.</p>
+  </div>
+  <div class="page-actions">
+    <form class="inline-check-form" method="post" action="{% url 'dashboard:run_check_now' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'dashboard:accounts' %}">
+      <button type="submit">Run all active checks now</button>
+    </form>
+    <a class="button" href="{% url 'dashboard:account_create' %}">Add account</a>
+  </div>
+</section>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Platform</th>
+        <th>Interval</th>
+        <th>Max posts</th>
+        <th>Scrolls</th>
+        <th>Active</th>
+        <th>Last checked</th>
+        <th>Status</th>
+        <th>Latest run</th>
+        <th>Last error</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for account in page_obj %}
+        <tr>
+          <td><a href="{{ account.account_url }}" target="_blank" rel="noopener">{{ account.account_name }}</a></td>
+          <td>{{ account.get_platform_display }}</td>
+          <td>{{ account.check_interval_minutes }} min</td>
+          <td>{{ account.max_posts_per_check }}</td>
+          <td>{{ account.scroll_rounds }}</td>
+          <td><span class="status status-{{ account.is_active|yesno:'success,skipped' }}">{{ account.is_active|yesno:"Active,Paused" }}</span></td>
+          <td>{{ account.last_checked_at|default:"Never" }}</td>
+          <td><span class="status status-{{ account.last_status|default:'skipped' }}">{{ account.last_status|default:"pending" }}</span></td>
+          <td>
+            {% with latest_run=account.check_runs.first %}
+              {% if latest_run %}
+                posts {{ latest_run.posts_found }},
+                new {{ latest_run.new_posts_found }},
+                matches {{ latest_run.matches_found }}
+              {% else %}
+                No runs
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td>{{ account.last_error|truncatechars:120 }}</td>
+          <td class="row-actions">
+            <a class="button button-secondary button-small" href="{% url 'dashboard:account_edit' account.pk %}">Edit</a>
+            {% if account.is_active %}
+              <a class="button button-danger button-small" href="{% url 'dashboard:account_deactivate' account.pk %}">Deactivate</a>
+              <form class="inline-check-form compact-check-form" method="post" action="{% url 'dashboard:run_check_now' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'dashboard:accounts' %}">
+                <input type="hidden" name="account_id" value="{{ account.pk }}">
+                <button class="button-small" type="submit">Check now</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="11">No accounts configured.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "dashboard/pagination.html" %}
+{% endblock %}

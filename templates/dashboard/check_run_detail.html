@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Check Run #{{ run.id }} - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Check run #{{ run.id }}</h1>
+    <p>{{ run.monitored_account.account_name }} - {{ run.started_at|date:"Y-m-d H:i" }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="button button-secondary" href="{% url 'dashboard:check_runs' %}">Back to runs</a>
+  </div>
+</section>
+
+<section class="run-summary-grid">
+  <article class="session-status-card">
+    <span>Status</span>
+    <strong><span class="status status-{{ run.status }}">{{ run.get_status_display }}</span></strong>
+  </article>
+  <article class="session-status-card">
+    <span>Stored posts</span>
+    <strong>{{ run.posts_found }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>New posts</span>
+    <strong>{{ run.new_posts_found }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Observed</span>
+    <strong>{{ observed_posts|length }}</strong>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading panel-heading-stacked">
+    <div>
+      <h2>Diagnostics</h2>
+      <p>Last route snapshot captured while loading Facebook for this run.</p>
+    </div>
+  </div>
+  <dl class="detail-list compact-detail-list">
+    <div>
+      <dt>Facebook state</dt>
+      <dd>{{ run.facebook_state|default:"unknown" }}</dd>
+    </div>
+    <div>
+      <dt>HTTP</dt>
+      <dd>{{ run.http_status_code|default:"unknown" }}</dd>
+    </div>
+    <div>
+      <dt>Articles</dt>
+      <dd>{{ run.article_count }}</dd>
+    </div>
+    <div>
+      <dt>Links</dt>
+      <dd>{{ run.link_count }}</dd>
+    </div>
+    <div>
+      <dt>Post links</dt>
+      <dd>{{ run.post_link_count }}</dd>
+    </div>
+    <div>
+      <dt>Title</dt>
+      <dd>{{ run.page_title|default:"None" }}</dd>
+    </div>
+    <div>
+      <dt>Route URL</dt>
+      <dd>{% if run.route_url %}<a href="{{ run.route_url }}" target="_blank" rel="noopener">{{ run.route_url }}</a>{% else %}None{% endif %}</dd>
+    </div>
+    <div>
+      <dt>Final URL</dt>
+      <dd>{% if run.final_url %}<a href="{{ run.final_url }}" target="_blank" rel="noopener">{{ run.final_url }}</a>{% else %}None{% endif %}</dd>
+    </div>
+    <div>
+      <dt>Screenshot</dt>
+      <dd>{{ run.screenshot_path|default:"None" }}</dd>
+    </div>
+  </dl>
+  {% if run.diagnostic_text %}
+    <details class="raw-snapshot">
+      <summary>Visible text</summary>
+      <pre>{{ run.diagnostic_text|truncatechars:5000 }}</pre>
+    </details>
+  {% endif %}
+  {% if run.diagnostic_html_snapshot %}
+    <details class="raw-snapshot">
+      <summary>HTML snapshot</summary>
+      <pre>{{ run.diagnostic_html_snapshot|truncatechars:5000 }}</pre>
+    </details>
+  {% endif %}
+</section>
+
+{% if run.error_message %}
+  <section class="panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Error</h2>
+        <p>{{ run.error_message }}</p>
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-heading panel-heading-stacked">
+    <div>
+      <h2>Observed posts</h2>
+      <p>Every candidate returned by the extractor for this run.</p>
+    </div>
+  </div>
+
+  {% if observed_posts %}
+    <div class="observed-post-list">
+      {% for item in observed_posts %}
+        <article class="observed-post">
+          <header class="observed-post-header">
+            <div>
+              <strong>#{{ item.sequence }}</strong>
+              <span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>
+              {% if item.is_new %}<span class="status status-success">New</span>{% endif %}
+            </div>
+            <small>{{ item.source_type|default:"unknown" }}</small>
+          </header>
+
+          {% if item.post_url %}
+            <a class="observed-post-url" href="{{ item.post_url }}" target="_blank" rel="noopener">{{ item.post_url }}</a>
+          {% endif %}
+          {% if item.skip_reason %}<p class="observed-post-note">Skipped: {{ item.skip_reason }}</p>{% endif %}
+          <p class="observed-post-text">{{ item.text|truncatechars:1200 }}</p>
+
+          <dl class="detail-list compact-detail-list">
+            <div>
+              <dt>External id</dt>
+              <dd>{{ item.external_post_id }}</dd>
+            </div>
+            <div>
+              <dt>Observed</dt>
+              <dd>{{ item.observed_at|date:"Y-m-d H:i:s" }}</dd>
+            </div>
+          </dl>
+
+          {% if item.raw_snapshot %}
+            <details class="raw-snapshot">
+              <summary>Raw snapshot</summary>
+              <pre>{{ item.raw_snapshot|truncatechars:5000 }}</pre>
+            </details>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No observed posts were recorded for this run. Older runs only have aggregate counters.</p>
+  {% endif %}
+</section>
+{% endblock %}

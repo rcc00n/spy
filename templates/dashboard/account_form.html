@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>{{ title }}</h1>
+    <p>Only add public Facebook Pages and public Instagram accounts.</p>
+  </div>
+</section>
+
+<section class="form-panel">
+  <form method="post" class="stacked-form">
+    {% csrf_token %}
+    {% include "dashboard/form_fields.html" %}
+    <div class="form-actions">
+      <button type="submit">{{ submit_label }}</button>
+      <a class="button button-secondary" href="{% url 'dashboard:accounts' %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
