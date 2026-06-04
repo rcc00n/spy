@@ -58,3 +58,27 @@ class MonitoredAccount(models.Model):
         return f"{self.get_platform_display()}: {self.account_name}"
 
     def is_due(self, at_time=None) -> bool:
+        if not self.is_active:
+            return False
+        if self.last_checked_at is None:
+            return True
+        at_time = at_time or timezone.now()
+        due_at = self.last_checked_at + timezone.timedelta(
+            minutes=self.check_interval_minutes
+        )
+        return due_at <= at_time
+
+
+class Keyword(models.Model):
+    phrase = models.CharField(max_length=255, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["phrase"]
+        indexes = [
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self) -> str:
