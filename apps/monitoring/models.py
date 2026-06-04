@@ -82,3 +82,39 @@ class Keyword(models.Model):
         ]
 
     def __str__(self) -> str:
+        return self.phrase
+
+
+class Post(models.Model):
+    monitored_account = models.ForeignKey(
+        MonitoredAccount,
+        on_delete=models.CASCADE,
+        related_name="posts",
+    )
+    platform = models.CharField(max_length=20, choices=MonitoredAccount.Platform.choices)
+    external_post_id = models.CharField(max_length=255)
+    post_url = models.URLField(max_length=1000, blank=True)
+    text = models.TextField()
+    published_at = models.DateTimeField(null=True, blank=True)
+    first_seen_at = models.DateTimeField(auto_now_add=True)
+    raw_snapshot = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-first_seen_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["platform", "external_post_id"],
+                name="unique_platform_external_post",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["platform", "first_seen_at"]),
+            models.Index(fields=["monitored_account", "first_seen_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.platform}:{self.external_post_id}"
+
+
+class PostKeywordMatch(models.Model):
+    post = models.ForeignKey(
