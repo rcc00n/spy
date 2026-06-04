@@ -34,3 +34,27 @@ class MonitoredAccount(models.Model):
         validators=[MinValueValidator(5)],
     )
     max_posts_per_check = models.PositiveIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(20)],
+    )
+    scroll_rounds = models.PositiveIntegerField(
+        default=2,
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+    )
+    last_checked_at = models.DateTimeField(null=True, blank=True)
+    last_status = models.CharField(max_length=50, blank=True)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["platform", "account_name"]
+        indexes = [
+            models.Index(fields=["platform", "is_active"]),
+            models.Index(fields=["last_checked_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_platform_display()}: {self.account_name}"
+
+    def is_due(self, at_time=None) -> bool:
