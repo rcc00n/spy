@@ -66,7 +66,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - facebook_auth_state:/app/runtime:ro
+      - facebook_auth_state:/app/runtime
     command: celery -A config worker --loglevel=info
 
   celery-beat:

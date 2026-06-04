@@ -65,7 +65,7 @@ services:
         condition: service_healthy
     command: celery -A config worker --loglevel=info
     volumes:
-      - facebook_auth_state:/app/runtime:ro
+      - facebook_auth_state:/app/runtime
 
   celery-beat:
     build: .
