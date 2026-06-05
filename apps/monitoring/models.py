@@ -250,3 +250,27 @@ class CheckRunPost(models.Model):
     def __str__(self) -> str:
         return f"run={self.check_run_id} seq={self.sequence} {self.status}"
 
+
+class ManualCheckJob(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        RUNNING = "running", "Running"
+        SUCCESS = "success", "Success"
+        ERROR = "error", "Error"
+
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="manual_check_jobs",
+    )
+    account = models.ForeignKey(
+        MonitoredAccount,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="manual_check_jobs",
+    )
+    post_limit = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(
