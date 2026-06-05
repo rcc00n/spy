@@ -226,3 +226,27 @@ class CheckRunPost(models.Model):
     )
     skip_reason = models.CharField(max_length=255, blank=True)
     external_post_id = models.CharField(max_length=255)
+    post_url = models.URLField(max_length=1000, blank=True)
+    source_type = models.CharField(max_length=100, blank=True)
+    text = models.TextField()
+    raw_snapshot = models.TextField(blank=True)
+    is_new = models.BooleanField(default=False)
+    observed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["check_run", "sequence"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["check_run", "sequence"],
+                name="unique_check_run_post_sequence",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["check_run", "sequence"]),
+            models.Index(fields=["status", "observed_at"]),
+            models.Index(fields=["external_post_id"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"run={self.check_run_id} seq={self.sequence} {self.status}"
+
