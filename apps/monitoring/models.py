@@ -274,3 +274,39 @@ class ManualCheckJob(models.Model):
     )
     post_limit = models.PositiveIntegerField(null=True, blank=True)
     status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.QUEUED,
+    )
+    task_id = models.CharField(max_length=255, blank=True)
+    requested_at = models.DateTimeField(default=timezone.now)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    accounts_checked = models.PositiveIntegerField(default=0)
+    posts_found = models.PositiveIntegerField(default=0)
+    new_posts_found = models.PositiveIntegerField(default=0)
+    matches_found = models.PositiveIntegerField(default=0)
+    errors = models.PositiveIntegerField(default=0)
+    auth_required = models.PositiveIntegerField(default=0)
+    summary = models.TextField(blank=True)
+    error_message = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-requested_at"]
+        indexes = [
+            models.Index(fields=["status", "requested_at"]),
+            models.Index(fields=["task_id"]),
+        ]
+
+    def __str__(self) -> str:
+        account_label = self.account.account_name if self.account else "all accounts"
+        return f"Manual check {self.pk} {self.status} ({account_label})"
+
+
+class TelegramChat(models.Model):
+    chat_id = models.BigIntegerField(unique=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
