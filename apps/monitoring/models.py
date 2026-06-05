@@ -166,3 +166,27 @@ class CheckRun(models.Model):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
+        default=Status.RUNNING,
+    )
+    error_message = models.TextField(blank=True)
+    posts_found = models.PositiveIntegerField(default=0)
+    new_posts_found = models.PositiveIntegerField(default=0)
+    matches_found = models.PositiveIntegerField(default=0)
+    final_url = models.URLField(max_length=2000, blank=True)
+    route_url = models.URLField(max_length=2000, blank=True)
+    page_title = models.CharField(max_length=500, blank=True)
+    http_status_code = models.PositiveIntegerField(null=True, blank=True)
+    facebook_state = models.CharField(max_length=100, blank=True)
+    article_count = models.PositiveIntegerField(default=0)
+    link_count = models.PositiveIntegerField(default=0)
+    post_link_count = models.PositiveIntegerField(default=0)
+    diagnostic_text = models.TextField(blank=True)
+    diagnostic_html_snapshot = models.TextField(blank=True)
+    screenshot_path = models.CharField(max_length=1000, blank=True)
+
+    class Meta:
+        ordering = ["-started_at"]
+        indexes = [
+            models.Index(fields=["status", "started_at"]),
+            models.Index(fields=["monitored_account", "started_at"]),
+        ]
