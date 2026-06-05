@@ -190,3 +190,39 @@ class CheckRun(models.Model):
             models.Index(fields=["status", "started_at"]),
             models.Index(fields=["monitored_account", "started_at"]),
         ]
+
+    def __str__(self) -> str:
+        return f"{self.monitored_account} {self.status} at {self.started_at:%Y-%m-%d %H:%M}"
+
+    @property
+    def duration_seconds(self):
+        if not self.finished_at:
+            return None
+        return (self.finished_at - self.started_at).total_seconds()
+
+
+class CheckRunPost(models.Model):
+    class Status(models.TextChoices):
+        STORED = "stored", "Stored"
+        SKIPPED = "skipped", "Skipped"
+
+    check_run = models.ForeignKey(
+        CheckRun,
+        on_delete=models.CASCADE,
+        related_name="observed_posts",
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="check_observations",
+    )
+    sequence = models.PositiveIntegerField()
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.STORED,
+    )
+    skip_reason = models.CharField(max_length=255, blank=True)
+    external_post_id = models.CharField(max_length=255)
