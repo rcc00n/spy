@@ -358,3 +358,27 @@ class TelegramMessageTemplate(models.Model):
 
 class PlatformCredential(models.Model):
     class Platform(models.TextChoices):
+        FACEBOOK = "facebook", "Facebook"
+
+    platform = models.CharField(
+        max_length=20,
+        choices=Platform.choices,
+        unique=True,
+        default=Platform.FACEBOOK,
+    )
+    username = models.CharField(
+        max_length=255,
+        help_text="Email address, phone number, or username used for platform login.",
+    )
+    encrypted_password = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    last_session_refreshed_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["platform"]
+        indexes = [
+            models.Index(fields=["platform", "is_active"]),
+        ]
