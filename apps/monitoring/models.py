@@ -418,3 +418,27 @@ class FacebookSessionRefreshRequest(models.Model):
         RUNNING = "running", "Running"
         SUCCESS = "success", "Success"
         ERROR = "error", "Error"
+        EXPIRED = "expired", "Expired"
+        CANCELLED = "cancelled", "Cancelled"
+
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="facebook_session_requests",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    token_hint = models.CharField(max_length=12, blank=True)
+    operator_url = models.URLField(max_length=1000, blank=True)
+    requested_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    error_message = models.TextField(blank=True)
+    session_path = models.CharField(max_length=1000, blank=True)
