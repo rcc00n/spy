@@ -310,3 +310,27 @@ class TelegramChat(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        user_label = self.user or "unlinked"
+        return f"{self.chat_id} ({user_label})"
+
+
+class TelegramMessageTemplate(models.Model):
+    key = models.CharField(
+        max_length=120,
+        unique=True,
+        help_text="Stable template key used by the Telegram bot.",
+    )
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
