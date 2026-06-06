@@ -382,3 +382,39 @@ class PlatformCredential(models.Model):
         indexes = [
             models.Index(fields=["platform", "is_active"]),
         ]
+
+    def __str__(self) -> str:
+        return f"{self.get_platform_display()} login ({self.username})"
+
+    @property
+    def password_configured(self) -> bool:
+        return bool(self.encrypted_password)
+
+    def set_password(self, raw_password: str) -> None:
+        raw_password = raw_password or ""
+        if not raw_password:
+            return
+        self.encrypted_password = facebook_credential_fernet().encrypt(
+            raw_password.encode("utf-8")
+        ).decode("utf-8")
+
+    def get_password(self) -> str:
+        if not self.encrypted_password:
+            return ""
+        try:
+            return facebook_credential_fernet().decrypt(
+                self.encrypted_password.encode("utf-8")
+            ).decode("utf-8")
+        except (InvalidToken, ValueError) as exc:
+            raise ValidationError(
+                "Stored password could not be decrypted. Check SECRET_KEY or "
+                "FACEBOOK_CREDENTIAL_ENCRYPTION_KEY."
+            ) from exc
+
+
+class FacebookSessionRefreshRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        RUNNING = "running", "Running"
+        SUCCESS = "success", "Success"
+        ERROR = "error", "Error"
