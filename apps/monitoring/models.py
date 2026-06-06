@@ -442,3 +442,25 @@ class FacebookSessionRefreshRequest(models.Model):
     finished_at = models.DateTimeField(null=True, blank=True)
     error_message = models.TextField(blank=True)
     session_path = models.CharField(max_length=1000, blank=True)
+    created_session = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-requested_at"]
+        indexes = [
+            models.Index(fields=["status", "expires_at"]),
+            models.Index(fields=["requested_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"Facebook session request {self.pk} ({self.status})"
+
+    @property
+    def is_active(self) -> bool:
+        return self.status in {self.Status.PENDING, self.Status.RUNNING}
+
+    @property
+    def duration_seconds(self):
+        if not self.started_at or not self.finished_at:
+            return None
+        return (self.finished_at - self.started_at).total_seconds()
