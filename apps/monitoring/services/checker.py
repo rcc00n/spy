@@ -22,3 +22,27 @@ from apps.monitoring.services.facebook_checker import (
     FacebookBlocked,
     FacebookPostCandidate,
     detect_facebook_block_state,
+    extract_public_facebook_posts,
+    facebook_post_url_matches_account,
+    is_low_information_candidate_text,
+    is_post_url,
+    is_unavailable_only_candidate_text,
+)
+from apps.monitoring.services.telegram import send_match_alert, send_system_alert
+from apps.monitoring.services.text import keyword_matches, normalize_text
+
+
+logger = logging.getLogger(__name__)
+
+PROTECTION_MARKERS = (
+    "confirm you're not a robot",
+    "confirm you are not a robot",
+    "captcha",
+    "temporarily blocked",
+    "checkpoint",
+    "this account is private",
+    "private account",
+)
+
+
+@dataclass
