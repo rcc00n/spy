@@ -46,3 +46,27 @@ PROTECTION_MARKERS = (
 
 
 @dataclass
+class FetchedPage:
+    final_url: str
+    visible_text: str
+    raw_snapshot: str
+    status_code: int | None = None
+
+
+class PublicFetchBlocked(RuntimeError):
+    pass
+
+
+def bounded(value: str, max_length: int) -> str:
+    return (value or "")[:max_length]
+
+
+def random_delay() -> None:
+    min_delay = settings.MONITORING_MIN_DELAY_SECONDS
+    max_delay = settings.MONITORING_MAX_DELAY_SECONDS
+    if max_delay <= 0:
+        return
+    if min_delay > max_delay:
+        min_delay, max_delay = max_delay, min_delay
+    time.sleep(random.uniform(min_delay, max_delay))
+
