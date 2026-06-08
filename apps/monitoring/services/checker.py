@@ -178,3 +178,39 @@ def external_id_for(account: MonitoredAccount, fetched: FetchedPage) -> str:
         ]
     )
     return hashlib.sha256(digest_source.encode("utf-8")).hexdigest()
+
+
+@transaction.atomic
+def store_post_candidates(
+    account: MonitoredAccount,
+    candidates: list[FacebookPostCandidate],
+    *,
+    run: CheckRun | None = None,
+) -> tuple[int, int, int, list[int]]:
+    if not candidates:
+        return 0, 0, 0, []
+
+    active_keywords = list(Keyword.objects.filter(is_active=True))
+    posts_found = 0
+    new_posts_found = 0
+    matches_created = 0
+    alert_match_ids = []
+
+    for sequence, candidate in enumerate(candidates, start=1):
+        if not candidate.text:
+            record_check_run_post(
+                run,
+                candidate,
+                sequence=sequence,
+                status=CheckRunPost.Status.SKIPPED,
+                skip_reason="empty_text",
+            )
+            continue
+        if account.platform == MonitoredAccount.Platform.FACEBOOK:
+            if not is_post_url(candidate.post_url):
+                logger.warning(
+                    "Skipping Facebook candidate for account_id=%s because it has no post URL",
+                    account.pk,
+                )
+                record_check_run_post(
+                    run,
