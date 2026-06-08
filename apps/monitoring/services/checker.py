@@ -154,3 +154,27 @@ def fetch_account_candidates(
     run: CheckRun | None = None,
 ) -> list[FacebookPostCandidate]:
     if account.platform == MonitoredAccount.Platform.FACEBOOK:
+        return extract_public_facebook_posts(account, post_limit=post_limit, run=run)
+
+    fetched = fetch_account(account)
+    return [
+        FacebookPostCandidate(
+            external_post_id=external_id_for(account, fetched),
+            post_url=fetched.final_url or account.account_url,
+            text=fetched.visible_text,
+            published_at=None,
+            raw_snapshot=fetched.raw_snapshot,
+            source_type="fallback_snapshot",
+        )
+    ]
+
+
+def external_id_for(account: MonitoredAccount, fetched: FetchedPage) -> str:
+    digest_source = "|".join(
+        [
+            account.platform,
+            account.account_url,
+            normalize_text(fetched.visible_text),
+        ]
+    )
+    return hashlib.sha256(digest_source.encode("utf-8")).hexdigest()
