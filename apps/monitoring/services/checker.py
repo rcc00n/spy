@@ -130,3 +130,27 @@ def fetch_public_page(url: str) -> FetchedPage:
 
 
 def check_facebook_account(account: MonitoredAccount) -> FetchedPage:
+    logger.info("Checking public Facebook account %s", account.account_url)
+    return fetch_public_page(account.account_url)
+
+
+def check_instagram_account(account: MonitoredAccount) -> FetchedPage:
+    logger.info("Checking public Instagram account %s", account.account_url)
+    return fetch_public_page(account.account_url)
+
+
+def fetch_account(account: MonitoredAccount) -> FetchedPage:
+    if account.platform == MonitoredAccount.Platform.FACEBOOK:
+        return check_facebook_account(account)
+    if account.platform == MonitoredAccount.Platform.INSTAGRAM:
+        return check_instagram_account(account)
+    raise ValueError(f"Unsupported platform: {account.platform}")
+
+
+def fetch_account_candidates(
+    account: MonitoredAccount,
+    *,
+    post_limit: int | None = None,
+    run: CheckRun | None = None,
+) -> list[FacebookPostCandidate]:
+    if account.platform == MonitoredAccount.Platform.FACEBOOK:
