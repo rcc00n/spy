@@ -94,3 +94,39 @@ def fetch_public_page(url: str) -> FetchedPage:
             html_snapshot = page.content()
             status_code = response.status if response else None
             final_url = page.url
+        finally:
+            context.close()
+            browser.close()
+
+    normalized_text = normalize_text(visible_text)
+    lowered = normalized_text.lower()
+    if status_code and status_code >= 400:
+        raise PublicFetchBlocked(
+            f"Public fetch returned HTTP {status_code}; no bypass attempted."
+        )
+    if any(marker in lowered for marker in PROTECTION_MARKERS):
+        raise PublicFetchBlocked(
+            "Public fetch stopped because the page appears protected or private."
+        )
+
+    return FetchedPage(
+        final_url=final_url,
+        visible_text=bounded(normalized_text, settings.MONITORING_TEXT_MAX_LENGTH),
+        raw_snapshot=bounded(
+            "\n".join(
+                [
+                    f"status={status_code}",
+                    f"url={final_url}",
+                    "visible_text:",
+                    normalized_text,
+                    "html_snapshot:",
+                    html_snapshot,
+                ]
+            ),
+            settings.MONITORING_SNAPSHOT_MAX_LENGTH,
+        ),
+        status_code=status_code,
+    )
+
+
+def check_facebook_account(account: MonitoredAccount) -> FetchedPage:
