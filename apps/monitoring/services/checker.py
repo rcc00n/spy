@@ -70,3 +70,27 @@ def random_delay() -> None:
         min_delay, max_delay = max_delay, min_delay
     time.sleep(random.uniform(min_delay, max_delay))
 
+
+def fetch_public_page(url: str) -> FetchedPage:
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent=settings.MONITORING_USER_AGENT,
+            viewport={"width": 1366, "height": 900},
+            locale="en-US",
+        )
+        page = context.new_page()
+        try:
+            response = page.goto(
+                url,
+                wait_until="domcontentloaded",
+                timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+            )
+            page.wait_for_timeout(random.randint(1200, 3000))
+            try:
+                visible_text = page.locator("body").inner_text(timeout=5000)
+            except Exception:
+                visible_text = page.evaluate("document.body ? document.body.innerText : ''")
+            html_snapshot = page.content()
+            status_code = response.status if response else None
+            final_url = page.url
