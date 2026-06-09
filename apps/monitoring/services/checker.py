@@ -322,3 +322,27 @@ def store_post_candidates(
         record_check_run_post(
             run,
             candidate,
+            sequence=sequence,
+            status=CheckRunPost.Status.STORED,
+            post=post,
+            is_new=post_created,
+        )
+
+        for keyword, preview in keyword_matches(candidate.text, active_keywords):
+            match, match_created = PostKeywordMatch.objects.get_or_create(
+                post=post,
+                keyword=keyword,
+                defaults={"matched_text_preview": preview},
+            )
+            if match_created:
+                matches_created += 1
+                alert_match_ids.append(match.pk)
+
+    return posts_found, new_posts_found, matches_created, alert_match_ids
+
+
+def record_check_run_post(
+    run: CheckRun | None,
+    candidate: FacebookPostCandidate,
+    *,
+    sequence: int,
