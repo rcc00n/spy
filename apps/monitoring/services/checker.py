@@ -286,3 +286,39 @@ def store_post_candidates(
                 continue
         posts_found += 1
         post, post_created = Post.objects.get_or_create(
+            platform=account.platform,
+            external_post_id=candidate.external_post_id,
+            defaults={
+                "monitored_account": account,
+                "post_url": candidate.post_url or account.account_url,
+                "text": candidate.text,
+                "published_at": candidate.published_at,
+                "raw_snapshot": candidate.raw_snapshot,
+            },
+        )
+
+        if post_created:
+            new_posts_found += 1
+        else:
+            update_fields = []
+            if post.monitored_account_id != account.pk:
+                post.monitored_account = account
+                update_fields.append("monitored_account")
+            if post.post_url != (candidate.post_url or account.account_url):
+                post.post_url = candidate.post_url or account.account_url
+                update_fields.append("post_url")
+            if post.text != candidate.text:
+                post.text = candidate.text
+                update_fields.append("text")
+            if candidate.published_at and post.published_at != candidate.published_at:
+                post.published_at = candidate.published_at
+                update_fields.append("published_at")
+            if post.raw_snapshot != candidate.raw_snapshot:
+                post.raw_snapshot = candidate.raw_snapshot
+                update_fields.append("raw_snapshot")
+            if update_fields:
+                post.save(update_fields=update_fields)
+
+        record_check_run_post(
+            run,
+            candidate,
