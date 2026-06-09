@@ -238,3 +238,27 @@ def store_post_candidates(
                 account_name=account.account_name,
             ):
                 logger.warning(
+                    "Skipping Facebook candidate for account_id=%s because it is unavailable-only",
+                    account.pk,
+                )
+                record_check_run_post(
+                    run,
+                    candidate,
+                    sequence=sequence,
+                    status=CheckRunPost.Status.SKIPPED,
+                    skip_reason="unavailable_only",
+                )
+                continue
+            if is_low_information_candidate_text(
+                candidate.text,
+                account_name=account.account_name,
+            ):
+                logger.warning(
+                    "Skipping Facebook candidate for account_id=%s because it has low information text",
+                    account.pk,
+                )
+                record_check_run_post(
+                    run,
+                    candidate,
+                    sequence=sequence,
+                    status=CheckRunPost.Status.SKIPPED,
