@@ -214,3 +214,27 @@ def store_post_candidates(
                 )
                 record_check_run_post(
                     run,
+                    candidate,
+                    sequence=sequence,
+                    status=CheckRunPost.Status.SKIPPED,
+                    skip_reason="missing_post_url",
+                )
+                continue
+            if not facebook_post_url_matches_account(account.account_url, candidate.post_url):
+                logger.warning(
+                    "Skipping Facebook candidate for account_id=%s because it belongs to another account",
+                    account.pk,
+                )
+                record_check_run_post(
+                    run,
+                    candidate,
+                    sequence=sequence,
+                    status=CheckRunPost.Status.SKIPPED,
+                    skip_reason="external_account_post",
+                )
+                continue
+            if is_unavailable_only_candidate_text(
+                candidate.text,
+                account_name=account.account_name,
+            ):
+                logger.warning(
