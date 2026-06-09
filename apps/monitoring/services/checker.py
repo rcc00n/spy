@@ -262,3 +262,27 @@ def store_post_candidates(
                     candidate,
                     sequence=sequence,
                     status=CheckRunPost.Status.SKIPPED,
+                    skip_reason="low_information_text",
+                )
+                continue
+            state = detect_facebook_block_state(
+                candidate.text,
+                candidate.post_url,
+                has_post_evidence=is_post_url(candidate.post_url),
+            )
+            if state != "ok":
+                logger.warning(
+                    "Skipping Facebook candidate for account_id=%s because state=%s",
+                    account.pk,
+                    state,
+                )
+                record_check_run_post(
+                    run,
+                    candidate,
+                    sequence=sequence,
+                    status=CheckRunPost.Status.SKIPPED,
+                    skip_reason=state,
+                )
+                continue
+        posts_found += 1
+        post, post_created = Post.objects.get_or_create(
