@@ -346,3 +346,27 @@ def record_check_run_post(
     candidate: FacebookPostCandidate,
     *,
     sequence: int,
+    status: str,
+    post: Post | None = None,
+    is_new: bool = False,
+    skip_reason: str = "",
+) -> None:
+    if not run:
+        return
+
+    CheckRunPost.objects.update_or_create(
+        check_run=run,
+        sequence=sequence,
+        defaults={
+            "post": post,
+            "status": status,
+            "skip_reason": bounded(skip_reason, 255),
+            "external_post_id": bounded(candidate.external_post_id, 255),
+            "post_url": candidate.post_url,
+            "source_type": bounded(candidate.source_type, 100),
+            "text": candidate.text,
+            "raw_snapshot": candidate.raw_snapshot,
+            "is_new": is_new,
+            "observed_at": timezone.now(),
+        },
+    )
