@@ -370,3 +370,39 @@ def record_check_run_post(
             "observed_at": timezone.now(),
         },
     )
+
+
+def run_account_check(
+    account: MonitoredAccount,
+    *,
+    send_telegram: bool = True,
+    post_limit: int | None = None,
+) -> CheckRun:
+    run = CheckRun.objects.create(
+        monitored_account=account,
+        status=CheckRun.Status.RUNNING,
+    )
+    try:
+        logger.info(
+            "Starting account check id=%s name=%s url=%s limit=%s",
+            account.pk,
+            account.account_name,
+            account.account_url,
+            post_limit or account.max_posts_per_check,
+        )
+        candidates = fetch_account_candidates(account, post_limit=post_limit, run=run)
+        posts_found, new_posts_found, matches_found, alert_match_ids = (
+            store_post_candidates(account, candidates, run=run)
+        )
+        logger.info(
+            "Finished account check id=%s candidates=%s posts=%s new=%s matches=%s",
+            account.pk,
+            len(candidates),
+            posts_found,
+            new_posts_found,
+            matches_found,
+        )
+        if send_telegram and alert_match_ids:
+            matches_to_alert = PostKeywordMatch.objects.select_related(
+                "keyword",
+                "post",
