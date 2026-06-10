@@ -406,3 +406,27 @@ def run_account_check(
             matches_to_alert = PostKeywordMatch.objects.select_related(
                 "keyword",
                 "post",
+                "post__monitored_account",
+            ).filter(pk__in=alert_match_ids)
+            for match in matches_to_alert:
+                send_match_alert(match)
+    except PlaywrightTimeoutError as exc:
+        _finish_error(run, account, f"Timed out loading public page: {exc}")
+        send_check_run_summary(run, account, send_telegram=send_telegram)
+    except FacebookBlocked as exc:
+        if exc.state in {"login_required", "captcha_or_checkpoint"}:
+            _finish_auth_required(run, account, str(exc))
+        else:
+            _finish_error(run, account, str(exc))
+        send_check_run_summary(run, account, send_telegram=send_telegram)
+    except PublicFetchBlocked as exc:
+        _finish_error(run, account, str(exc))
+        send_check_run_summary(run, account, send_telegram=send_telegram)
+    except Exception as exc:
+        logger.exception("Monitoring check failed for account %s", account.pk)
+        _finish_error(run, account, str(exc))
+        send_check_run_summary(run, account, send_telegram=send_telegram)
+    else:
+        now = timezone.now()
+        run.status = CheckRun.Status.SUCCESS
+        run.finished_at = now
