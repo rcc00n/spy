@@ -454,3 +454,27 @@ def send_check_run_summary(
     run: CheckRun,
     account: MonitoredAccount,
     *,
+    send_telegram: bool,
+) -> None:
+    if not send_telegram or not settings.TELEGRAM_SEND_CHECK_RUN_SUMMARY:
+        return
+
+    observed_count = run.observed_posts.count()
+    lines = [
+        f"Account: {account.account_name}",
+        f"Platform: {account.get_platform_display()}",
+        f"Status: {run.status}",
+        f"Posts found: {run.posts_found}",
+        f"New posts: {run.new_posts_found}",
+        f"Matches: {run.matches_found}",
+        f"Observed candidates: {observed_count}",
+    ]
+    if run.error_message:
+        lines.append(f"Error: {run.error_message[:700]}")
+    if run.facebook_state:
+        lines.append(f"Facebook state: {run.facebook_state}")
+    if run.route_url:
+        lines.append(f"Route: {run.route_url}")
+    if run.final_url:
+        lines.append(f"Final URL: {run.final_url}")
+    if run.article_count or run.post_link_count:
