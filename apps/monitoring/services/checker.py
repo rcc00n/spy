@@ -430,3 +430,27 @@ def run_account_check(
         now = timezone.now()
         run.status = CheckRun.Status.SUCCESS
         run.finished_at = now
+        run.posts_found = posts_found
+        run.new_posts_found = new_posts_found
+        run.matches_found = matches_found
+        run.save(
+            update_fields=[
+                "status",
+                "finished_at",
+                "posts_found",
+                "new_posts_found",
+                "matches_found",
+            ]
+        )
+        account.last_checked_at = now
+        account.last_status = CheckRun.Status.SUCCESS
+        account.last_error = ""
+        account.save(update_fields=["last_checked_at", "last_status", "last_error"])
+        send_check_run_summary(run, account, send_telegram=send_telegram)
+    return run
+
+
+def send_check_run_summary(
+    run: CheckRun,
+    account: MonitoredAccount,
+    *,
