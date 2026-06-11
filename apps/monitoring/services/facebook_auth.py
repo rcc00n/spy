@@ -22,3 +22,27 @@ CHECKPOINT_MARKERS = (
     "two step verification",
     "two-factor authentication",
     "two factor authentication",
+    "authentication code",
+    "login code",
+    "approve your login",
+    "check your notifications",
+    "confirm you're not a robot",
+    "confirm you are not a robot",
+)
+LOGIN_MARKERS = (
+    "email or phone",
+    "forgot password",
+    "you must log in",
+    "log in to facebook",
+    "log into facebook",
+    "create an account or log in",
+)
+
+
+class FacebookAuthError(RuntimeError):
+    pass
+
+
+def facebook_auth_enabled() -> bool:
+    if bool(settings.FACEBOOK_AUTH_ENABLED):
+        return True
