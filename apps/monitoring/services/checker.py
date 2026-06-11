@@ -478,3 +478,39 @@ def send_check_run_summary(
     if run.final_url:
         lines.append(f"Final URL: {run.final_url}")
     if run.article_count or run.post_link_count:
+        lines.append(
+            f"DOM: articles={run.article_count}, post_links={run.post_link_count}"
+        )
+    if run.screenshot_path:
+        lines.append(f"Screenshot: {run.screenshot_path}")
+
+    try:
+        send_system_alert(f"Check run #{run.pk} {run.status}", lines)
+    except Exception:
+        logger.exception("Failed sending check run summary for run %s", run.pk)
+
+
+def _finish_error(run: CheckRun, account: MonitoredAccount, message: str) -> None:
+    now = timezone.now()
+    run.status = CheckRun.Status.ERROR
+    run.finished_at = now
+    run.error_message = bounded(message, 4000)
+    run.save(update_fields=["status", "finished_at", "error_message"])
+
+    account.last_checked_at = now
+    account.last_status = CheckRun.Status.ERROR
+    account.last_error = run.error_message
+    account.save(update_fields=["last_checked_at", "last_status", "last_error"])
+
+
+def _finish_auth_required(run: CheckRun, account: MonitoredAccount, message: str) -> None:
+    now = timezone.now()
+    run.status = CheckRun.Status.AUTH_REQUIRED
+    run.finished_at = now
+    run.error_message = bounded(message, 4000)
+    run.save(update_fields=["status", "finished_at", "error_message"])
+
+    account.last_checked_at = now
+    account.last_status = CheckRun.Status.AUTH_REQUIRED
+    account.last_error = run.error_message
+    account.save(update_fields=["last_checked_at", "last_status", "last_error"])
