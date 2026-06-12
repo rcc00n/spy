@@ -82,3 +82,27 @@ def facebook_context_kwargs(*, auth_enabled: bool | None = None) -> dict:
     if not auth_enabled:
         return kwargs
 
+    state_path = storage_state_path()
+    if not state_path.exists():
+        raise FacebookAuthError(
+            "Facebook auth is enabled but the Facebook session file does not exist. "
+            "Run `python manage.py refresh_facebook_session`, or add active "
+            "Facebook credentials in the admin panel so the checker can refresh it."
+        )
+    kwargs["storage_state"] = str(state_path)
+    return kwargs
+
+
+def new_facebook_context(
+    browser,
+    *,
+    auth_enabled: bool | None = None,
+    username: str = "",
+    password: str = "",
+):
+    return browser.new_context(**facebook_context_kwargs(auth_enabled=auth_enabled))
+
+
+def authenticated_session_required_message() -> str:
+    return (
+        "Facebook authenticated session is missing, expired, or was rejected. "
