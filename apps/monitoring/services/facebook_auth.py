@@ -130,3 +130,27 @@ def facebook_session_state(page) -> str:
     if host != "facebook.com" and not host.endswith(".facebook.com"):
         return "unknown"
 
+    if (
+        "checkpoint" in url
+        or "two_step_verification" in url
+        or any(marker in text for marker in CHECKPOINT_MARKERS)
+    ):
+        return "checkpoint"
+    if "/login" in url or any(marker in text for marker in LOGIN_MARKERS):
+        return "login_required"
+    # A loading/empty page is not evidence of an authenticated session.
+    cookies = {
+        cookie["name"]: cookie.get("value")
+        for cookie in page.context.cookies("https://www.facebook.com")
+    }
+    if text and cookies.get("c_user") and cookies.get("xs"):
+        return "authenticated"
+    return "unknown"
+
+
+def get_stored_facebook_credential():
+    from apps.monitoring.models import PlatformCredential
+
+    return (
+        PlatformCredential.objects.filter(
+            platform=PlatformCredential.Platform.FACEBOOK,
