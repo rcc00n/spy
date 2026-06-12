@@ -106,3 +106,27 @@ def new_facebook_context(
 def authenticated_session_required_message() -> str:
     return (
         "Facebook authenticated session is missing, expired, or was rejected. "
+        "Refresh it with `python manage.py refresh_facebook_session`; the checker "
+        "will not solve CAPTCHA/checkpoint challenges."
+    )
+
+
+def visible_text(page) -> str:
+    try:
+        return normalize_text(page.locator("body").inner_text(timeout=5000))
+    except Exception:
+        try:
+            return normalize_text(
+                page.evaluate("document.body ? document.body.innerText : ''")
+            )
+        except Exception:
+            return ""
+
+
+def facebook_session_state(page) -> str:
+    text = visible_text(page).lower()
+    url = (page.url or "").lower()
+    host = urlparse(url).hostname or ""
+    if host != "facebook.com" and not host.endswith(".facebook.com"):
+        return "unknown"
+
