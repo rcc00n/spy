@@ -154,3 +154,39 @@ def get_stored_facebook_credential():
     return (
         PlatformCredential.objects.filter(
             platform=PlatformCredential.Platform.FACEBOOK,
+            is_active=True,
+        )
+        .order_by("-updated_at")
+        .first()
+    )
+
+
+def get_facebook_login_credentials() -> tuple[str, str, object | None]:
+    if settings.FACEBOOK_LOGIN_EMAIL and settings.FACEBOOK_LOGIN_PASSWORD:
+        return settings.FACEBOOK_LOGIN_EMAIL, settings.FACEBOOK_LOGIN_PASSWORD, None
+
+    credential = get_stored_facebook_credential()
+    if not credential:
+        return "", "", None
+
+    try:
+        password = credential.get_password()
+    except Exception as exc:
+        credential.last_error = str(exc)
+        credential.save(update_fields=["last_error", "updated_at"])
+        raise FacebookAuthError(str(exc)) from exc
+    return credential.username, password, credential
+
+
+def record_facebook_credential_refresh_success(credential_id: int | None) -> None:
+    if not credential_id:
+        return
+
+    from apps.monitoring.models import PlatformCredential
+
+    now = timezone.now()
+    PlatformCredential.objects.filter(pk=credential_id).update(
+        last_session_refreshed_at=now,
+        last_error="",
+        updated_at=now,
+    )
