@@ -214,3 +214,27 @@ def submit_facebook_login(page, username: str, password: str) -> None:
         page.locator(
             'button[name="login"], button[type="submit"], input[type="submit"]'
         ).first.click(timeout=5000)
+    except PlaywrightTimeoutError:
+        page.locator('input[name="pass"]').press("Enter", timeout=5000)
+    try:
+        page.wait_for_load_state("domcontentloaded", timeout=10000)
+    except PlaywrightTimeoutError:
+        pass
+
+
+def wait_for_facebook_authentication(page, *, timeout_ms: int) -> None:
+    deadline = time.monotonic() + (timeout_ms / 1000)
+    last_state = "unknown"
+
+    while time.monotonic() < deadline:
+        last_state = facebook_session_state(page)
+        if last_state == "authenticated":
+            return
+        if last_state == "checkpoint":
+            raise FacebookAuthError(
+                "Facebook login requires two-step verification, checkpoint, or "
+                "another interactive approval. Complete that manually and refresh "
+                "the saved browser session; the checker will not bypass it."
+            )
+        page.wait_for_timeout(1000)
+
