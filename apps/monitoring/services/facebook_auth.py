@@ -190,3 +190,27 @@ def record_facebook_credential_refresh_success(credential_id: int | None) -> Non
         last_error="",
         updated_at=now,
     )
+
+
+def record_facebook_credential_refresh_error(
+    credential_id: int | None,
+    error_message: str,
+) -> None:
+    if not credential_id:
+        return
+
+    from apps.monitoring.models import PlatformCredential
+
+    PlatformCredential.objects.filter(pk=credential_id).update(
+        last_error=error_message,
+        updated_at=timezone.now(),
+    )
+
+
+def submit_facebook_login(page, username: str, password: str) -> None:
+    page.locator('input[name="email"]').fill(username, timeout=10000)
+    page.locator('input[name="pass"]').fill(password, timeout=10000)
+    try:
+        page.locator(
+            'button[name="login"], button[type="submit"], input[type="submit"]'
+        ).first.click(timeout=5000)
