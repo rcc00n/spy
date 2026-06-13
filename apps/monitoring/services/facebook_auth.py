@@ -298,3 +298,19 @@ def ensure_facebook_storage_state(
         browser,
         username=username,
         password=password,
+    )
+
+
+def save_facebook_storage_state(context) -> Path:
+    state_path = storage_state_path()
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    # Workers must never read a partially written session file.
+    fd, temporary_path = tempfile.mkstemp(prefix=".facebook-session-", dir=state_path.parent)
+    os.close(fd)
+    try:
+        context.storage_state(path=temporary_path)
+        os.chmod(temporary_path, 0o600)
+        os.replace(temporary_path, state_path)
+    finally:
+        Path(temporary_path).unlink(missing_ok=True)
+    return state_path
