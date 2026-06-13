@@ -274,3 +274,27 @@ def refresh_facebook_storage_state_with_credentials(
             timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
         )
         wait_for_facebook_authentication(page, timeout_ms=timeout_ms)
+        state_path = save_facebook_storage_state(context)
+        return state_path
+    finally:
+        context.close()
+
+
+def ensure_facebook_storage_state(
+    browser,
+    *,
+    auth_enabled: bool | None = None,
+    username: str = "",
+    password: str = "",
+) -> None:
+    auth_enabled = facebook_auth_enabled() if auth_enabled is None else auth_enabled
+    if not auth_enabled:
+        return
+    if storage_state_path().exists():
+        return
+
+    logger.info("Facebook storage state missing; attempting credential login refresh.")
+    refresh_facebook_storage_state_with_credentials(
+        browser,
+        username=username,
+        password=password,
