@@ -238,3 +238,39 @@ def wait_for_facebook_authentication(page, *, timeout_ms: int) -> None:
             )
         page.wait_for_timeout(1000)
 
+    raise FacebookAuthError(
+        f"Facebook login did not complete before timeout; last state={last_state}."
+    )
+
+
+def refresh_facebook_storage_state_with_credentials(
+    browser,
+    *,
+    username: str,
+    password: str,
+    timeout_ms: int | None = None,
+) -> Path:
+    if not username or not password:
+        raise FacebookAuthError(
+            "No Facebook login credentials are configured. Add active Facebook "
+            "credentials in the admin panel or set FACEBOOK_LOGIN_EMAIL and "
+            "FACEBOOK_LOGIN_PASSWORD."
+        )
+
+    timeout_ms = timeout_ms or (settings.FACEBOOK_LOGIN_TIMEOUT_SECONDS * 1000)
+    context = browser.new_context(**facebook_base_context_kwargs())
+    page = context.new_page()
+    try:
+        page.goto(
+            "https://www.facebook.com/login",
+            wait_until="domcontentloaded",
+            timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+        )
+        submit_facebook_login(page, username, password)
+        wait_for_facebook_authentication(page, timeout_ms=timeout_ms)
+        page.goto(
+            settings.FACEBOOK_AUTH_CHECK_URL,
+            wait_until="domcontentloaded",
+            timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+        )
+        wait_for_facebook_authentication(page, timeout_ms=timeout_ms)
