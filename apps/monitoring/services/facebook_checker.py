@@ -142,3 +142,27 @@ UNAVAILABLE_ONLY_STOPWORDS = {
     "статус",
     "февраль",
     "январь",
+}
+LOW_INFORMATION_STOPWORDS = UNAVAILABLE_ONLY_STOPWORDS | {
+    "all",
+    "ago",
+    "больше",
+    "все",
+    "мин",
+    "назад",
+    "нравится",
+    "перевод",
+    "показать",
+    "поделиться",
+    "смотреть",
+    "ч",
+}
+
+
+@dataclass(frozen=True)
+class FacebookPostCandidate:
+    external_post_id: str
+    post_url: str
+    text: str
+    published_at: object | None
+    raw_snapshot: str
