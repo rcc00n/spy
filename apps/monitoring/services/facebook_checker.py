@@ -22,3 +22,39 @@ from playwright.sync_api import Page
 
 from apps.monitoring.models import MonitoredAccount
 from apps.monitoring.services.facebook_auth import (
+    FacebookAuthError,
+    authenticated_session_required_message,
+    facebook_auth_enabled,
+    facebook_base_context_kwargs,
+    new_facebook_context,
+)
+from apps.monitoring.services.text import normalize_text
+
+
+logger = logging.getLogger(__name__)
+
+FACEBOOK_BASE_URL = "https://www.facebook.com/"
+POST_URL_MARKERS = (
+    "/posts/",
+    "/permalink/",
+    "story_fbid=",
+    "/photos/",
+    "/videos/",
+    "/reel/",
+)
+TRACKING_QUERY_PARAMS = {
+    "__cft__",
+    "__tn__",
+    "ref",
+    "refid",
+    "mibextid",
+    "paipv",
+    "eav",
+    "fbclid",
+    "locale",
+}
+STABLE_QUERY_PARAMS = {"story_fbid", "id", "fbid", "set", "type", "v"}
+UI_TEXT_LINES = {
+    "like",
+    "comment",
+    "share",
