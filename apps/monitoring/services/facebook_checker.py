@@ -250,3 +250,27 @@ def detect_facebook_block_state(
 
     return "ok"
 
+
+def is_unavailable_only_candidate_text(
+    text: str,
+    *,
+    account_name: str = "",
+) -> bool:
+    normalized = normalize_text(text).lower()
+    if not any(marker in normalized for marker in UNAVAILABLE_MARKERS):
+        return False
+
+    cleaned = normalized
+    for marker in sorted(UNAVAILABLE_MARKERS, key=len, reverse=True):
+        cleaned = cleaned.replace(marker, " ")
+
+    return len(meaningful_content_tokens(cleaned, account_name=account_name)) < 3
+
+
+def meaningful_content_tokens(text: str, *, account_name: str = "") -> list[str]:
+    account_tokens = set(re.findall(r"[\w]+", normalize_text(account_name).lower()))
+    tokens = []
+    for token in re.findall(r"[\w]+", normalize_text(text).lower(), flags=re.UNICODE):
+        if token.isdigit():
+            continue
+        if len(token) <= 1:
