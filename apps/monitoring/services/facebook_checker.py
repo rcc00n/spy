@@ -214,3 +214,39 @@ def detect_facebook_block_state(
             "authentication code",
             "login code",
             "approve your login",
+            "check your notifications",
+            "confirm you're not a robot",
+            "confirm you are not a robot",
+        )
+    ) or "two_step_verification" in url:
+        return "captcha_or_checkpoint"
+
+    if any(
+        marker in text
+        for marker in (
+            "temporarily blocked",
+            "try again later",
+            "you can't use this feature right now",
+            "we limit how often",
+        )
+    ):
+        return "rate_limited_or_blocked"
+
+    if any(marker in text for marker in UNAVAILABLE_MARKERS):
+        if has_post_evidence:
+            return "ok"
+        return "private_or_unavailable"
+
+    if any(
+        marker in text
+        for marker in (
+            "you must log in",
+            "log in to facebook",
+            "log into facebook",
+            "create an account or log in",
+        )
+    ):
+        return "login_required"
+
+    return "ok"
+
