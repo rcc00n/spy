@@ -166,3 +166,27 @@ class FacebookPostCandidate:
     text: str
     published_at: object | None
     raw_snapshot: str
+    source_type: str
+
+
+@dataclass(frozen=True)
+class FacebookPageDiagnostics:
+    route_url: str
+    final_url: str
+    page_title: str
+    http_status_code: int | None
+    facebook_state: str
+    article_count: int
+    link_count: int
+    post_link_count: int
+    visible_text: str
+    html_snapshot: str
+    screenshot_path: str = ""
+
+
+class FacebookBlocked(RuntimeError):
+    def __init__(self, state: str, message: str):
+        self.state = state
+        super().__init__(message)
+
+
