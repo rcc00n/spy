@@ -190,3 +190,27 @@ class FacebookBlocked(RuntimeError):
         super().__init__(message)
 
 
+def detect_facebook_block_state(
+    page_text: str,
+    page_url: str = "",
+    *,
+    has_post_evidence: bool = False,
+) -> str:
+    text = normalize_text(page_text).lower()
+    url = (page_url or "").lower()
+    if not text:
+        return "empty_response"
+
+    if "checkpoint" in url or any(
+        marker in text
+        for marker in (
+            "captcha",
+            "security check",
+            "checkpoint",
+            "two-step verification",
+            "two step verification",
+            "two-factor authentication",
+            "two factor authentication",
+            "authentication code",
+            "login code",
+            "approve your login",
