@@ -382,3 +382,27 @@ def facebook_post_url_matches_account(account_url: str, post_url: str) -> bool:
 
 def external_post_id_for(
     account: MonitoredAccount,
+    *,
+    post_url: str = "",
+    text: str = "",
+) -> str:
+    if post_url:
+        source = normalize_facebook_url(post_url) or post_url
+        prefix = "facebook-url"
+    else:
+        source = "|".join([account.platform, str(account.pk or account.account_url), normalize_text(text)])
+        prefix = "facebook-text"
+    digest = hashlib.sha256(source.encode("utf-8")).hexdigest()
+    return f"{prefix}:{digest}"
+
+
+def clean_post_text(text: str) -> str:
+    lines = []
+    for raw_line in (text or "").splitlines():
+        line = normalize_text(raw_line)
+        if not line:
+            continue
+        if line.lower() in UI_TEXT_LINES:
+            continue
+        lines.append(line)
+    return normalize_text(" ".join(lines))
