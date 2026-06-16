@@ -298,3 +298,39 @@ def block_message(state: str) -> str:
         "private_or_unavailable": "Facebook public fetch stopped: private or unavailable content detected.",
         "rate_limited_or_blocked": "Facebook public fetch stopped: rate limit or temporary block detected.",
         "empty_response": "Facebook public fetch stopped: empty public response.",
+    }.get(state, "Facebook public fetch stopped.")
+
+
+def normalize_facebook_url(href: str, base_url: str = FACEBOOK_BASE_URL) -> str:
+    if not href:
+        return ""
+    absolute = urljoin(base_url, href)
+    parsed = urlparse(absolute)
+    if "facebook.com" not in parsed.netloc.lower():
+        return ""
+
+    query_pairs = []
+    for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+        if key in TRACKING_QUERY_PARAMS:
+            continue
+        if key in STABLE_QUERY_PARAMS or key.startswith("story_"):
+            query_pairs.append((key, value))
+    query_pairs.sort()
+
+    path = re.sub(r"/+", "/", parsed.path).rstrip("/") or "/"
+    return urlunparse(
+        (
+            "https",
+            "www.facebook.com",
+            path,
+            "",
+            urlencode(query_pairs),
+            "",
+        )
+    )
+
+
+def is_post_url(url: str) -> bool:
+    lowered = url.lower()
+    if "facebook.com" not in lowered:
+        return False
