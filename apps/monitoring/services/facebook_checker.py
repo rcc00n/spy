@@ -334,3 +334,27 @@ def is_post_url(url: str) -> bool:
     lowered = url.lower()
     if "facebook.com" not in lowered:
         return False
+    if "/reel/" in lowered:
+        return bool(re.search(r"/reel/\d+", lowered))
+    return any(marker in lowered for marker in POST_URL_MARKERS if marker != "/reel/")
+
+
+def facebook_account_identity(account_url: str) -> tuple[str, str]:
+    parsed = urlparse(normalize_facebook_url(account_url) or account_url)
+    path = (parsed.path or "").strip("/")
+    if path.lower() == "profile.php":
+        query = dict(parse_qsl(parsed.query))
+        return ("profile_id", query.get("id", "").lower())
+    if path:
+        return ("slug", path.split("/", 1)[0].lower())
+    return ("", "")
+
+
+def facebook_post_owner_identity(post_url: str) -> tuple[str, str]:
+    parsed = urlparse(normalize_facebook_url(post_url) or post_url)
+    path = (parsed.path or "").strip("/")
+    lowered_path = path.lower()
+    query = dict(parse_qsl(parsed.query))
+    if lowered_path in {"permalink.php", "story.php", "photo.php"} and query.get("id"):
+        return ("profile_id", query.get("id", "").lower())
+    if lowered_path == "profile.php" and query.get("id"):
