@@ -358,3 +358,27 @@ def facebook_post_owner_identity(post_url: str) -> tuple[str, str]:
     if lowered_path in {"permalink.php", "story.php", "photo.php"} and query.get("id"):
         return ("profile_id", query.get("id", "").lower())
     if lowered_path == "profile.php" and query.get("id"):
+        return ("profile_id", query.get("id", "").lower())
+    if lowered_path.startswith("reel/"):
+        return ("unknown", "")
+    if path:
+        first_segment = path.split("/", 1)[0].lower()
+        if first_segment not in {"posts", "photos", "videos", "permalink.php"}:
+            return ("slug", first_segment)
+    return ("unknown", "")
+
+
+def facebook_post_url_matches_account(account_url: str, post_url: str) -> bool:
+    account_kind, account_value = facebook_account_identity(account_url)
+    post_kind, post_value = facebook_post_owner_identity(post_url)
+    if not account_kind or not account_value:
+        return True
+    if post_kind == "unknown" or not post_value:
+        return True
+    if account_kind != post_kind:
+        return True
+    return account_kind == post_kind and account_value == post_value
+
+
+def external_post_id_for(
+    account: MonitoredAccount,
