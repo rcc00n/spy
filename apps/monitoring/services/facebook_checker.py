@@ -274,3 +274,27 @@ def meaningful_content_tokens(text: str, *, account_name: str = "") -> list[str]
         if token.isdigit():
             continue
         if len(token) <= 1:
+            continue
+        if token in account_tokens:
+            continue
+        if token in LOW_INFORMATION_STOPWORDS:
+            continue
+        tokens.append(token)
+    return tokens
+
+
+def is_low_information_candidate_text(
+    text: str,
+    *,
+    account_name: str = "",
+) -> bool:
+    return len(meaningful_content_tokens(text, account_name=account_name)) < 3
+
+
+def block_message(state: str) -> str:
+    return {
+        "login_required": "Facebook public fetch stopped: login wall detected.",
+        "captcha_or_checkpoint": "Facebook public fetch stopped: captcha/checkpoint detected.",
+        "private_or_unavailable": "Facebook public fetch stopped: private or unavailable content detected.",
+        "rate_limited_or_blocked": "Facebook public fetch stopped: rate limit or temporary block detected.",
+        "empty_response": "Facebook public fetch stopped: empty public response.",
