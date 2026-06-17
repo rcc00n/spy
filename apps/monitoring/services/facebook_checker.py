@@ -406,3 +406,39 @@ def clean_post_text(text: str) -> str:
             continue
         lines.append(line)
     return normalize_text(" ".join(lines))
+
+
+def parse_visible_timestamp(value: str):
+    value = normalize_text(value)
+    if not value:
+        return None
+    parsed = parse_datetime(value)
+    if parsed:
+        return parsed
+    return None
+
+
+def bounded_snapshot(value: str) -> str:
+    return (value or "")[: settings.MONITORING_SNAPSHOT_MAX_LENGTH]
+
+
+def candidate_from_parts(
+    account: MonitoredAccount,
+    *,
+    text: str,
+    links: list[str],
+    raw_snapshot: str,
+    source_type: str,
+    timestamp_text: str = "",
+    require_post_url: bool = False,
+) -> FacebookPostCandidate | None:
+    cleaned_text = clean_post_text(text)
+    normalized_links = [normalize_facebook_url(link, account.account_url) for link in links]
+    post_url = next((link for link in normalized_links if is_post_url(link)), "")
+
+    if require_post_url and not post_url:
+        return None
+
+    if len(cleaned_text) < 20 and not post_url:
+        return None
+
