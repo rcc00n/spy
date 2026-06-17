@@ -550,3 +550,27 @@ def extract_candidates_from_html(
     limit = limit or account.max_posts_per_check
     blocks = []
     article_pattern = re.compile(
+        r"""<(?P<tag>article|div)\b[^>]*(?:role=["']article["']|role=article)[^>]*>.*?</(?P=tag)>""",
+        re.I | re.S,
+    )
+    blocks.extend(match.group(0) for match in article_pattern.finditer(html or ""))
+    if not blocks:
+        link_pattern = re.compile(
+            r"""<a\b[^>]*href=["'][^"']*(?:/posts/|/permalink/|story_fbid=|/photos/|/videos/|/reel/)[^"']*["'][^>]*>.*?</a>""",
+            re.I | re.S,
+        )
+        blocks.extend(match.group(0) for match in link_pattern.finditer(html or ""))
+
+    candidates = []
+    for block in blocks:
+        source_type = "post_container" if "role" in block.lower() else "permalink_link"
+        candidate = candidate_from_parts(
+            account,
+            text=_strip_tags(block),
+            links=_extract_hrefs(block),
+            raw_snapshot=block,
+            source_type=source_type,
+        )
+        if candidate:
+            candidates.append(candidate)
+
