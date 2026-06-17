@@ -442,3 +442,27 @@ def candidate_from_parts(
     if len(cleaned_text) < 20 and not post_url:
         return None
 
+    external_post_id = external_post_id_for(account, post_url=post_url, text=cleaned_text)
+    snapshot = "\n".join(
+        [
+            f"source_type={source_type}",
+            f"post_url={post_url or account.account_url}",
+            "text:",
+            cleaned_text,
+            "raw:",
+            normalize_text(raw_snapshot),
+        ]
+    )
+    return FacebookPostCandidate(
+        external_post_id=external_post_id,
+        post_url=post_url or account.account_url,
+        text=cleaned_text,
+        published_at=parse_visible_timestamp(timestamp_text),
+        raw_snapshot=bounded_snapshot(snapshot),
+        source_type=source_type,
+    )
+
+
+def dedupe_and_limit(
+    candidates: list[FacebookPostCandidate],
+    limit: int,
