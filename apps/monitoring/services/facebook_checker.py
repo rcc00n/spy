@@ -526,3 +526,27 @@ def extract_candidates_from_page(
         if candidate:
             candidates.append(candidate)
     return dedupe_and_limit(candidates, limit)
+
+
+def _strip_tags(value: str) -> str:
+    value = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", value, flags=re.I | re.S)
+    value = re.sub(r"<br\s*/?>", "\n", value, flags=re.I)
+    value = re.sub(r"<[^>]+>", " ", value)
+    return unescape(value)
+
+
+def _extract_hrefs(value: str) -> list[str]:
+    return [
+        unescape(match.group(1))
+        for match in re.finditer(r"""href=["']([^"']+)["']""", value, flags=re.I)
+    ]
+
+
+def extract_candidates_from_html(
+    html: str,
+    account: MonitoredAccount,
+    limit: int | None = None,
+) -> list[FacebookPostCandidate]:
+    limit = limit or account.max_posts_per_check
+    blocks = []
+    article_pattern = re.compile(
