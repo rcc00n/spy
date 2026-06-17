@@ -466,3 +466,27 @@ def candidate_from_parts(
 def dedupe_and_limit(
     candidates: list[FacebookPostCandidate],
     limit: int,
+) -> list[FacebookPostCandidate]:
+    seen = set()
+    deduped = []
+    for candidate in candidates:
+        key = candidate.external_post_id
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(candidate)
+        if len(deduped) >= limit:
+            break
+    return deduped
+
+
+def extract_candidates_from_page(
+    page: Page,
+    account: MonitoredAccount,
+    limit: int,
+) -> list[FacebookPostCandidate]:
+    rows = page.evaluate(
+        """
+        () => {
+          const markers = ['/posts/', '/permalink/', 'story_fbid=', '/photos/', '/videos/', '/reel/'];
+          const hasPostLink = (href) => href && markers.some(marker => href.includes(marker));
