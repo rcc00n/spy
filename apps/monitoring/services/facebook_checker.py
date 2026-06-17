@@ -490,3 +490,39 @@ def extract_candidates_from_page(
         () => {
           const markers = ['/posts/', '/permalink/', 'story_fbid=', '/photos/', '/videos/', '/reel/'];
           const hasPostLink = (href) => href && markers.some(marker => href.includes(marker));
+          const clean = (value) => (value || '').replace(/\\s+/g, ' ').trim();
+          const nodes = new Set();
+          document.querySelectorAll('[role="article"], article').forEach(node => nodes.add(node));
+          document.querySelectorAll('a[href]').forEach(anchor => {
+            if (!hasPostLink(anchor.href || anchor.getAttribute('href'))) return;
+            const article = anchor.closest('[role="article"], article');
+            nodes.add(article || anchor.closest('div') || anchor.parentElement);
+          });
+          return Array.from(nodes).filter(Boolean).slice(0, 50).map(node => {
+            const links = Array.from(node.querySelectorAll('a[href]')).map(anchor => anchor.href || anchor.getAttribute('href'));
+            const timestampNode = node.querySelector('abbr, time, [aria-label]');
+            return {
+              text: node.innerText || '',
+              links,
+              html: node.outerHTML || '',
+              timestampText: timestampNode ? (timestampNode.getAttribute('aria-label') || timestampNode.getAttribute('title') || timestampNode.getAttribute('datetime') || timestampNode.textContent || '') : '',
+              sourceType: node.getAttribute('role') === 'article' || node.tagName.toLowerCase() === 'article' ? 'post_container' : 'permalink_link'
+            };
+          });
+        }
+        """
+    )
+
+    candidates = []
+    for row in rows:
+        candidate = candidate_from_parts(
+            account,
+            text=row.get("text") or "",
+            links=row.get("links") or [],
+            raw_snapshot=row.get("html") or "",
+            source_type=row.get("sourceType") or "post_container",
+            timestamp_text=row.get("timestampText") or "",
+        )
+        if candidate:
+            candidates.append(candidate)
+    return dedupe_and_limit(candidates, limit)
