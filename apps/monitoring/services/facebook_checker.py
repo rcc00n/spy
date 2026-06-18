@@ -634,3 +634,27 @@ def real_post_candidates(
 ) -> list[FacebookPostCandidate]:
     return [candidate for candidate in candidates if is_post_url(candidate.post_url)]
 
+
+def extract_candidates_with_adaptive_scroll(
+    page: Page,
+    account: MonitoredAccount,
+    limit: int,
+    scroll_rounds: int,
+) -> list[FacebookPostCandidate]:
+    target_rounds = effective_scroll_rounds(scroll_rounds, limit)
+    collected: list[FacebookPostCandidate] = []
+
+    for round_index in range(target_rounds + 1):
+        candidates = real_post_candidates(
+            extract_candidates_from_page(page, account, limit * 2)
+        )
+        collected = dedupe_and_limit([*collected, *candidates], limit)
+        logger.info(
+            "Facebook candidates after scroll account_id=%s round=%s/%s candidate_count=%s",
+            account.pk,
+            round_index,
+            target_rounds,
+            len(collected),
+        )
+        if len(collected) >= limit or round_index >= target_rounds:
+            break
