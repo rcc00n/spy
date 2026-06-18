@@ -574,3 +574,27 @@ def extract_candidates_from_html(
         if candidate:
             candidates.append(candidate)
 
+    if not candidates:
+        text = _strip_tags(html or "")
+        state = detect_facebook_block_state(text)
+        if state == "ok":
+            candidate = candidate_from_parts(
+                account,
+                text=text,
+                links=_extract_hrefs(html or ""),
+                raw_snapshot=html or "",
+                source_type="fallback_snapshot",
+                require_post_url=True,
+            )
+            if candidate:
+                candidates.append(candidate)
+    return dedupe_and_limit(candidates, limit)
+
+
+def effective_scroll_rounds(configured_rounds: int, limit: int) -> int:
+    if limit <= 1:
+        return configured_rounds
+    return max(configured_rounds, min(5, max(2, limit - 1)))
+
+
+def scroll_facebook_feed_once(page: Page, round_index: int, total_rounds: int) -> None:
