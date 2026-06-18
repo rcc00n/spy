@@ -598,3 +598,39 @@ def effective_scroll_rounds(configured_rounds: int, limit: int) -> int:
 
 
 def scroll_facebook_feed_once(page: Page, round_index: int, total_rounds: int) -> None:
+    logger.info("Facebook scroll round %s of %s", round_index, total_rounds)
+    page.mouse.wheel(0, random.randint(1600, 2400))
+    try:
+        page.evaluate(
+            """
+            () => {
+              const amount = Math.max(window.innerHeight || 900, 1200);
+              const scrollables = [
+                document.scrollingElement,
+                ...Array.from(document.querySelectorAll('div')).filter((node) => (
+                  node.scrollHeight > node.clientHeight + 300
+                )),
+              ].filter(Boolean);
+              scrollables
+                .sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight))
+                .slice(0, 3)
+                .forEach((node) => node.scrollBy(0, amount));
+              window.scrollBy(0, amount);
+            }
+            """
+        )
+    except Exception as exc:
+        logger.debug("Facebook JS scroll helper failed: %s", exc)
+    page.wait_for_timeout(random.randint(2200, 4200))
+
+
+def safe_scroll(page: Page, scroll_rounds: int) -> None:
+    for round_index in range(scroll_rounds):
+        scroll_facebook_feed_once(page, round_index + 1, scroll_rounds)
+
+
+def real_post_candidates(
+    candidates: list[FacebookPostCandidate],
+) -> list[FacebookPostCandidate]:
+    return [candidate for candidate in candidates if is_post_url(candidate.post_url)]
+
