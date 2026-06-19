@@ -706,3 +706,39 @@ def post_link_count(page: Page) -> tuple[int, int, int]:
     for index in range(min(link_count, 500)):
         href = anchors.nth(index).get_attribute("href") or ""
         normalized_href = normalize_facebook_url(href, page.url) or href
+        if is_post_url(normalized_href):
+            post_count += 1
+    return article_count, link_count, post_count
+
+
+def diagnostics_dir() -> Path:
+    return settings.BASE_DIR / "runtime" / "check_diagnostics"
+
+
+def collect_page_diagnostics(
+    page: Page,
+    *,
+    route_url: str,
+    response,
+    state: str,
+    visible_text: str,
+    run=None,
+    attempt_index: int = 0,
+) -> FacebookPageDiagnostics:
+    article_count, link_count, post_count = post_link_count(page)
+    screenshot_path = ""
+    if run and getattr(run, "pk", None):
+        path = diagnostics_dir() / f"check_run_{run.pk}_attempt_{attempt_index}.png"
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            page.screenshot(path=str(path), full_page=True, timeout=10000)
+            screenshot_path = str(path)
+        except Exception as exc:
+            logger.warning("Could not save Facebook diagnostic screenshot: %s", exc)
+    try:
+        html_snapshot = page.content()
+    except Exception:
+        html_snapshot = ""
+    return FacebookPageDiagnostics(
+        route_url=route_url,
+        final_url=page.url,
