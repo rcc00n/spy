@@ -658,3 +658,27 @@ def extract_candidates_with_adaptive_scroll(
         )
         if len(collected) >= limit or round_index >= target_rounds:
             break
+        scroll_facebook_feed_once(page, round_index + 1, target_rounds)
+
+    return collected
+
+
+def facebook_route_urls(account_url: str) -> list[str]:
+    parsed = urlparse(account_url)
+    path = (parsed.path or "/").rstrip("/")
+    if not path:
+        path = "/"
+    is_profile_php = path.lower() == "/profile.php"
+
+    routes = [normalize_facebook_url(account_url) or account_url]
+    if is_profile_php:
+        query = parsed.query
+        sk_query = f"{query}&sk=posts" if query else "sk=posts"
+        routes.append(urlunparse(("https", "www.facebook.com", "/profile.php", "", sk_query, "")))
+        routes.append(urlunparse(("https", "m.facebook.com", "/profile.php", "", query, "")))
+        routes.append(urlunparse(("https", "m.facebook.com", "/profile.php", "", sk_query, "")))
+        routes.append(urlunparse(("https", "mbasic.facebook.com", "/profile.php", "", query, "")))
+        routes.append(urlunparse(("https", "mbasic.facebook.com", "/profile.php", "", sk_query, "")))
+        routes.append(urlunparse(("https", "mbasic.facebook.com", "/profile.php", "", f"{query}&v=timeline" if query else "v=timeline", "")))
+    elif path != "/":
+        routes.append(urlunparse(("https", "www.facebook.com", f"{path}/posts", "", "", "")))
