@@ -742,3 +742,27 @@ def collect_page_diagnostics(
     return FacebookPageDiagnostics(
         route_url=route_url,
         final_url=page.url,
+        page_title=page.title(),
+        http_status_code=response.status if response else None,
+        facebook_state=state,
+        article_count=article_count,
+        link_count=link_count,
+        post_link_count=post_count,
+        visible_text=visible_text,
+        html_snapshot=html_snapshot,
+        screenshot_path=screenshot_path,
+    )
+
+
+def diagnostics_score(diagnostics: FacebookPageDiagnostics | None) -> tuple[int, int, int]:
+    if not diagnostics:
+        return (-1, -1, -1)
+    state_score = 1 if diagnostics.facebook_state == "ok" else 0
+    return (state_score, diagnostics.post_link_count, diagnostics.article_count)
+
+
+def update_check_run_diagnostics(run, diagnostics: FacebookPageDiagnostics | None) -> None:
+    if not run or not diagnostics:
+        return
+    values = {
+        "final_url": diagnostics.final_url[:2000],
