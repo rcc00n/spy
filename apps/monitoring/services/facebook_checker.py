@@ -682,3 +682,27 @@ def facebook_route_urls(account_url: str) -> list[str]:
         routes.append(urlunparse(("https", "mbasic.facebook.com", "/profile.php", "", f"{query}&v=timeline" if query else "v=timeline", "")))
     elif path != "/":
         routes.append(urlunparse(("https", "www.facebook.com", f"{path}/posts", "", "", "")))
+        routes.append(urlunparse(("https", "www.facebook.com", path, "", "sk=posts", "")))
+        routes.append(urlunparse(("https", "m.facebook.com", path, "", "", "")))
+        routes.append(urlunparse(("https", "m.facebook.com", f"{path}/posts", "", "", "")))
+        routes.append(urlunparse(("https", "mbasic.facebook.com", path, "", "", "")))
+        routes.append(urlunparse(("https", "mbasic.facebook.com", path, "", "v=timeline", "")))
+
+    deduped = []
+    seen = set()
+    for route in routes:
+        if not route or route in seen:
+            continue
+        seen.add(route)
+        deduped.append(route)
+    return deduped
+
+
+def post_link_count(page: Page) -> tuple[int, int, int]:
+    article_count = page.locator("[role='article'], article").count()
+    anchors = page.locator("a[href]")
+    link_count = anchors.count()
+    post_count = 0
+    for index in range(min(link_count, 500)):
+        href = anchors.nth(index).get_attribute("href") or ""
+        normalized_href = normalize_facebook_url(href, page.url) or href
