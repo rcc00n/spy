@@ -790,3 +790,39 @@ def update_check_run_diagnostics(run, diagnostics: FacebookPageDiagnostics | Non
     except RuntimeError:
         update()
         return
+
+    result = {"error": None}
+
+    def runner() -> None:
+        try:
+            update()
+        except Exception as exc:
+            result["error"] = exc
+
+    thread = threading.Thread(target=runner, daemon=True)
+    thread.start()
+    thread.join()
+    if result["error"]:
+        raise result["error"]
+
+
+def copy_browser_profile(source_dir: Path) -> tempfile.TemporaryDirectory | None:
+    if not source_dir.exists():
+        return None
+    temp_dir = tempfile.TemporaryDirectory()
+    target = Path(temp_dir.name) / "profile"
+
+    def ignore(_dir, names):
+        return [
+            name
+            for name in names
+            if name.startswith("Singleton") or name.endswith(".lock")
+        ]
+
+    try:
+        shutil.copytree(source_dir, target, ignore=ignore)
+    except Exception:
+        temp_dir.cleanup()
+        raise
+    return temp_dir
+
