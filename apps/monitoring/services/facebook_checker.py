@@ -850,3 +850,27 @@ def virtual_display():
     time.sleep(0.5)
     try:
         yield display
+    finally:
+        if old_display is None:
+            os.environ.pop("DISPLAY", None)
+        else:
+            os.environ["DISPLAY"] = old_display
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+
+
+def extract_public_facebook_posts(
+    account: MonitoredAccount,
+    *,
+    post_limit: int | None = None,
+    run=None,
+) -> list[FacebookPostCandidate]:
+    limit = max(1, min(post_limit or account.max_posts_per_check, 20))
+    scroll_rounds = max(0, min(account.scroll_rounds, 5))
+    logger.info(
+        "Checking Facebook account id=%s name=%s url=%s limit=%s scroll_rounds=%s",
+        account.pk,
