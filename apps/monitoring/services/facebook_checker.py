@@ -766,3 +766,27 @@ def update_check_run_diagnostics(run, diagnostics: FacebookPageDiagnostics | Non
         return
     values = {
         "final_url": diagnostics.final_url[:2000],
+        "route_url": diagnostics.route_url[:2000],
+        "page_title": diagnostics.page_title[:500],
+        "http_status_code": diagnostics.http_status_code,
+        "facebook_state": diagnostics.facebook_state[:100],
+        "article_count": diagnostics.article_count,
+        "link_count": diagnostics.link_count,
+        "post_link_count": diagnostics.post_link_count,
+        "diagnostic_text": bounded_snapshot(diagnostics.visible_text),
+        "diagnostic_html_snapshot": bounded_snapshot(diagnostics.html_snapshot),
+        "screenshot_path": diagnostics.screenshot_path[:1000],
+    }
+
+    def update() -> None:
+        close_old_connections()
+        run.__class__.objects.filter(pk=run.pk).update(**values)
+        for field, value in values.items():
+            setattr(run, field, value)
+        close_old_connections()
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        update()
+        return
