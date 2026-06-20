@@ -826,3 +826,27 @@ def copy_browser_profile(source_dir: Path) -> tempfile.TemporaryDirectory | None
         raise
     return temp_dir
 
+
+@contextmanager
+def virtual_display():
+    existing_display = os.environ.get("DISPLAY")
+    if existing_display:
+        yield existing_display
+        return
+
+    xvfb = shutil.which("Xvfb")
+    if not xvfb:
+        yield ""
+        return
+
+    display = f":{random.randint(120, 220)}"
+    process = subprocess.Popen(
+        [xvfb, display, "-screen", "0", "1366x900x24"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    old_display = os.environ.get("DISPLAY")
+    os.environ["DISPLAY"] = display
+    time.sleep(0.5)
+    try:
+        yield display
