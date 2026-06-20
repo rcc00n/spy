@@ -874,3 +874,27 @@ def extract_public_facebook_posts(
     logger.info(
         "Checking Facebook account id=%s name=%s url=%s limit=%s scroll_rounds=%s",
         account.pk,
+        account.account_name,
+        account.account_url,
+        limit,
+        scroll_rounds,
+    )
+
+    auth_active = facebook_auth_enabled()
+
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as playwright:
+        if (
+            auth_active
+            and getattr(settings, "FACEBOOK_CHECK_USE_PERSISTENT_PROFILE", False)
+            and settings.FACEBOOK_SESSION_BROWSER_PROFILE_DIR.exists()
+        ):
+            profile_copy = copy_browser_profile(settings.FACEBOOK_SESSION_BROWSER_PROFILE_DIR)
+            if profile_copy:
+                try:
+                    with virtual_display() as display:
+                        context = playwright.chromium.launch_persistent_context(
+                            str(Path(profile_copy.name) / "profile"),
+                            headless=not bool(display),
+                            env={"DISPLAY": display} if display else None,
