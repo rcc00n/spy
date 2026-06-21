@@ -898,3 +898,39 @@ def extract_public_facebook_posts(
                             str(Path(profile_copy.name) / "profile"),
                             headless=not bool(display),
                             env={"DISPLAY": display} if display else None,
+                            **facebook_base_context_kwargs(),
+                        )
+                        try:
+                            candidates = _extract_public_facebook_posts_from_context(
+                                context,
+                                account,
+                                limit,
+                                scroll_rounds,
+                                auth_active=auth_active,
+                                run=run,
+                            )
+                            if candidates:
+                                return candidates
+                        finally:
+                            context.close()
+                except Exception as exc:
+                    logger.warning("Facebook persistent profile check failed: %s", exc)
+                finally:
+                    profile_copy.cleanup()
+
+        browser = playwright.chromium.launch(headless=True)
+        try:
+            return _extract_public_facebook_posts_with_retry(
+                browser,
+                account,
+                limit,
+                scroll_rounds,
+                auth_active=auth_active,
+                run=run,
+            )
+        finally:
+            browser.close()
+
+
+def _extract_public_facebook_posts_with_retry(
+    browser,
