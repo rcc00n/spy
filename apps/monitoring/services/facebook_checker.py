@@ -1018,3 +1018,27 @@ def _extract_public_facebook_posts_from_context(
             state = "private_or_unavailable"
             last_blocked_state = state
             last_blocked_message = (
+                f"Facebook public fetch returned HTTP {response.status}; no bypass attempted."
+            )
+        elif state != "ok":
+            last_blocked_state = state
+            last_blocked_message = block_message(state)
+            if state == "login_required" and auth_active:
+                last_blocked_message = authenticated_session_required_message()
+
+        candidates: list[FacebookPostCandidate] = []
+        if state == "ok":
+            candidates = extract_candidates_with_adaptive_scroll(
+                page,
+                account,
+                limit,
+                scroll_rounds,
+            )
+            page_text = normalize_text(page.locator("body").inner_text(timeout=5000))
+            state = detect_facebook_block_state(
+                page_text,
+                page.url,
+                has_post_evidence=bool(candidates),
+            )
+            if state != "ok":
+                logger.info(
