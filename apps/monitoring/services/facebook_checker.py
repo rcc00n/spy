@@ -982,3 +982,39 @@ def _extract_public_facebook_posts_from_context(
     best_diagnostics = None
     best_candidates: list[FacebookPostCandidate] = []
     last_blocked_state = ""
+    last_blocked_message = ""
+    routes = facebook_route_urls(account.account_url)
+    for attempt_index, route_url in enumerate(routes, start=1):
+        logger.info(
+            "Facebook route attempt account_id=%s attempt=%s/%s url=%s",
+            account.pk,
+            attempt_index,
+            len(routes),
+            route_url,
+        )
+        response = page.goto(
+            route_url,
+            wait_until="domcontentloaded",
+            timeout=settings.PLAYWRIGHT_TIMEOUT_MS,
+        )
+        page.wait_for_selector("body", timeout=settings.PLAYWRIGHT_TIMEOUT_MS)
+        page.wait_for_timeout(random.randint(1200, 2800))
+        page_text = normalize_text(page.locator("body").inner_text(timeout=5000))
+        initial_article_count, _initial_link_count, initial_post_count = post_link_count(page)
+        state = detect_facebook_block_state(
+            page_text,
+            page.url,
+            has_post_evidence=initial_article_count > 0 and initial_post_count > 0,
+        )
+        logger.info(
+            "Facebook block state account_id=%s attempt=%s state=%s final_url=%s",
+            account.pk,
+            attempt_index,
+            state,
+            page.url,
+        )
+
+        if response and response.status >= 400:
+            state = "private_or_unavailable"
+            last_blocked_state = state
+            last_blocked_message = (
