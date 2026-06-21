@@ -958,3 +958,27 @@ def _extract_public_facebook_posts_with_retry(
             auth_active=auth_active,
             run=run,
         )
+    except FacebookBlocked as exc:
+        if exc.state == "login_required" and auth_active:
+            raise FacebookBlocked(
+                "login_required",
+                authenticated_session_required_message(),
+            ) from exc
+        raise
+    finally:
+        context.close()
+
+
+def _extract_public_facebook_posts_from_context(
+    context,
+    account: MonitoredAccount,
+    limit: int,
+    scroll_rounds: int,
+    *,
+    auth_active: bool,
+    run=None,
+) -> list[FacebookPostCandidate]:
+    page = context.new_page()
+    best_diagnostics = None
+    best_candidates: list[FacebookPostCandidate] = []
+    last_blocked_state = ""
