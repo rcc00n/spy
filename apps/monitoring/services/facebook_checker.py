@@ -934,3 +934,27 @@ def extract_public_facebook_posts(
 
 def _extract_public_facebook_posts_with_retry(
     browser,
+    account: MonitoredAccount,
+    limit: int,
+    scroll_rounds: int,
+    *,
+    auth_active: bool,
+    run=None,
+) -> list[FacebookPostCandidate]:
+    try:
+        context = new_facebook_context(
+            browser,
+            auth_enabled=auth_active,
+        )
+    except FacebookAuthError as exc:
+        raise FacebookBlocked("login_required", str(exc)) from exc
+
+    try:
+        return _extract_public_facebook_posts_from_context(
+            context,
+            account,
+            limit,
+            scroll_rounds,
+            auth_active=auth_active,
+            run=run,
+        )
