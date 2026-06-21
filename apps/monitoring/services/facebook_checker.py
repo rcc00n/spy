@@ -1042,3 +1042,27 @@ def _extract_public_facebook_posts_from_context(
             )
             if state != "ok":
                 logger.info(
+                    "Facebook block state after scroll account_id=%s attempt=%s state=%s",
+                    account.pk,
+                    attempt_index,
+                    state,
+                )
+                last_blocked_state = state
+                last_blocked_message = (
+                    authenticated_session_required_message()
+                    if state == "login_required" and auth_active
+                    else block_message(state)
+                )
+
+        diagnostics = collect_page_diagnostics(
+            page,
+            route_url=route_url,
+            response=response,
+            state=state,
+            visible_text=page_text,
+            run=run,
+            attempt_index=attempt_index,
+        )
+        if diagnostics_score(diagnostics) >= diagnostics_score(best_diagnostics):
+            best_diagnostics = diagnostics
+            update_check_run_diagnostics(run, best_diagnostics)
