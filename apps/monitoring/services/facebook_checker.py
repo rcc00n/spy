@@ -1090,3 +1090,14 @@ def _extract_public_facebook_posts_from_context(
                 return candidates[:limit]
 
     update_check_run_diagnostics(run, best_diagnostics)
+    if best_candidates:
+        return best_candidates[:limit]
+    if last_blocked_state:
+        raise FacebookBlocked(last_blocked_state, last_blocked_message)
+    logger.info(
+        "Facebook candidates account_id=%s candidate_count=0 processed_limit=%s routes=%s",
+        account.pk,
+        limit,
+        len(routes),
+    )
+    return []
