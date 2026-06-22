@@ -1066,3 +1066,27 @@ def _extract_public_facebook_posts_from_context(
         if diagnostics_score(diagnostics) >= diagnostics_score(best_diagnostics):
             best_diagnostics = diagnostics
             update_check_run_diagnostics(run, best_diagnostics)
+
+        if state != "ok":
+            continue
+
+        if not candidates:
+            html = page.content()
+            candidates = real_post_candidates(
+                extract_candidates_from_html(html, account, limit)
+            )
+        logger.info(
+            "Facebook candidates account_id=%s attempt=%s candidate_count=%s processed_limit=%s",
+            account.pk,
+            attempt_index,
+            len(candidates),
+            limit,
+        )
+        if candidates:
+            update_check_run_diagnostics(run, diagnostics)
+            if len(candidates) > len(best_candidates):
+                best_candidates = candidates[:limit]
+            if len(candidates) >= limit:
+                return candidates[:limit]
+
+    update_check_run_diagnostics(run, best_diagnostics)
