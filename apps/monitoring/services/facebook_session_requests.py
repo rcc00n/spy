@@ -130,3 +130,26 @@ def mark_session_request_error(
     send_session_result_alert(request)
 
 
+def send_session_request_alert(request: FacebookSessionRefreshRequest) -> None:
+    lines = [
+        f"Request: #{request.pk}",
+        f"Token hint: ...{request.token_hint}",
+        f"Expires: {request.expires_at:%Y-%m-%d %H:%M:%S %Z}",
+    ]
+    if request.operator_url:
+        lines.append(f"Operator URL: {request.operator_url}")
+    else:
+        lines.append("Operator URL is not configured. Set FACEBOOK_SESSION_MANAGER_URL.")
+    send_system_alert("Facebook session refresh requested", lines)
+
+
+def send_session_result_alert(request: FacebookSessionRefreshRequest) -> None:
+    lines = [
+        f"Request: #{request.pk}",
+        f"Status: {request.status}",
+    ]
+    if request.created_session:
+        lines.append(f"Session: {request.session_path}")
+    if request.error_message:
+        lines.append(f"Error: {request.error_message[:600]}")
+    send_system_alert("Facebook session refresh finished", lines)
