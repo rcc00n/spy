@@ -106,3 +106,27 @@ def mark_session_request_success(request: FacebookSessionRefreshRequest) -> None
     request.session_path = str(storage_state_path())
     request.created_session = storage_state_path().exists()
     request.save(
+        update_fields=[
+            "status",
+            "finished_at",
+            "error_message",
+            "session_path",
+            "created_session",
+            "updated_at",
+        ]
+    )
+    send_session_result_alert(request)
+
+
+def mark_session_request_error(
+    request: FacebookSessionRefreshRequest,
+    error_message: str,
+) -> None:
+    now = timezone.now()
+    request.status = FacebookSessionRefreshRequest.Status.ERROR
+    request.finished_at = now
+    request.error_message = (error_message or "")[:4000]
+    request.save(update_fields=["status", "finished_at", "error_message", "updated_at"])
+    send_session_result_alert(request)
+
+
