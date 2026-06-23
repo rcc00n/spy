@@ -70,3 +70,39 @@ def expire_stale_session_requests() -> int:
         expired += 1
     return expired
 
+
+def next_pending_session_request() -> FacebookSessionRefreshRequest | None:
+    expire_stale_session_requests()
+    return (
+        FacebookSessionRefreshRequest.objects.filter(
+            status=FacebookSessionRefreshRequest.Status.PENDING,
+            expires_at__gt=timezone.now(),
+        )
+        .order_by("requested_at")
+        .first()
+    )
+
+
+def mark_session_request_running(request: FacebookSessionRefreshRequest) -> None:
+    request.status = FacebookSessionRefreshRequest.Status.RUNNING
+    request.started_at = timezone.now()
+    request.error_message = ""
+    request.save(update_fields=["status", "started_at", "error_message", "updated_at"])
+    send_system_alert(
+        "Facebook session refresh started",
+        [
+            f"Request: #{request.pk}",
+            f"Expires: {request.expires_at:%Y-%m-%d %H:%M:%S %Z}",
+            "Open the session-manager browser and complete Facebook login manually.",
+        ],
+    )
+
+
+def mark_session_request_success(request: FacebookSessionRefreshRequest) -> None:
+    now = timezone.now()
+    request.status = FacebookSessionRefreshRequest.Status.SUCCESS
+    request.finished_at = now
+    request.error_message = ""
+    request.session_path = str(storage_state_path())
+    request.created_session = storage_state_path().exists()
+    request.save(
