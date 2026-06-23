@@ -46,3 +46,27 @@ def verify_request_token(
     raw_token: str,
 ) -> bool:
     return bool(raw_token) and secrets.compare_digest(
+        request.token_hash,
+        token_hash(raw_token),
+    )
+
+
+def expire_stale_session_requests() -> int:
+    now = timezone.now()
+    stale = FacebookSessionRefreshRequest.objects.filter(
+        status__in=[
+            FacebookSessionRefreshRequest.Status.PENDING,
+            FacebookSessionRefreshRequest.Status.RUNNING,
+        ],
+        expires_at__lte=now,
+    )
+    expired = 0
+    for request in stale:
+        request.status = FacebookSessionRefreshRequest.Status.EXPIRED
+        request.finished_at = now
+        request.error_message = "The operator did not complete Facebook login before the request expired."
+        request.save(update_fields=["status", "finished_at", "error_message", "updated_at"])
+        send_session_result_alert(request)
+        expired += 1
+    return expired
+
