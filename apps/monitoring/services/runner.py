@@ -82,3 +82,20 @@ def format_check_summary(summary: dict) -> str:
         f"errors={summary['errors']} "
         f"auth_required={summary.get('auth_required', 0)}"
     )
+
+
+def send_check_summary_alert(summary: dict) -> None:
+    lines = [
+        format_check_summary(summary),
+    ]
+    for run in summary["runs"]:
+        account = run.monitored_account
+        line = (
+            f"{account.get_platform_display()} {account.account_name}: "
+            f"{run.status} posts={run.posts_found} new={run.new_posts_found} "
+            f"matches={run.matches_found}"
+        )
+        if run.error_message:
+            line = f"{line} error={run.error_message[:300]}"
+        lines.append(line)
+    send_system_alert("Monitoring check finished", lines)
