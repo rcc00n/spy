@@ -58,3 +58,27 @@ def run_account_checks(
         if run.status == CheckRun.Status.AUTH_REQUIRED:
             summary["auth_required"] += 1
         summary["runs"].append(run)
+
+    logger.info(
+        "Check summary accounts=%s posts=%s new=%s matches=%s errors=%s auth_required=%s",
+        summary["accounts_checked"],
+        summary["posts_found"],
+        summary["new_posts_found"],
+        summary["matches_found"],
+        summary["errors"],
+        summary["auth_required"],
+    )
+    if send_telegram and summary["accounts_checked"]:
+        send_check_summary_alert(summary)
+    return summary
+
+
+def format_check_summary(summary: dict) -> str:
+    return (
+        f"accounts={summary['accounts_checked']} "
+        f"posts={summary['posts_found']} "
+        f"new_posts={summary['new_posts_found']} "
+        f"matches={summary['matches_found']} "
+        f"errors={summary['errors']} "
+        f"auth_required={summary.get('auth_required', 0)}"
+    )
