@@ -34,3 +34,27 @@ def run_telegram_coroutine(coro) -> int:
 
 
 def active_chat_ids() -> list[int]:
+    return list(TelegramChat.objects.filter(is_active=True).values_list("chat_id", flat=True))
+
+
+def send_telegram_message_to_chats(
+    text: str,
+    chat_ids: list[int],
+    *,
+    disable_web_page_preview: bool = True,
+) -> int:
+    token = settings.TELEGRAM_BOT_TOKEN
+    if not token:
+        logger.info("TELEGRAM_BOT_TOKEN is not configured; skipping Telegram message.")
+        return 0
+
+    if not chat_ids:
+        logger.info("No active Telegram chats are registered; skipping Telegram message.")
+        return 0
+
+    try:
+        from telegram import Bot
+    except ImportError:
+        logger.exception("python-telegram-bot is not installed; skipping Telegram message.")
+        return 0
+
