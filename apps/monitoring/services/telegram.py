@@ -58,3 +58,27 @@ def send_telegram_message_to_chats(
         logger.exception("python-telegram-bot is not installed; skipping Telegram message.")
         return 0
 
+    async def send_all() -> int:
+        bot = Bot(token=token)
+        sent = 0
+        for chat_id in chat_ids:
+            try:
+                await bot.send_message(
+                    chat_id=chat_id,
+                    text=text,
+                    disable_web_page_preview=disable_web_page_preview,
+                )
+                sent += 1
+            except Exception:
+                logger.exception("Failed sending Telegram message to chat %s", chat_id)
+        return sent
+
+    return run_telegram_coroutine(send_all())
+
+
+def send_telegram_message(text: str, *, disable_web_page_preview: bool = True) -> int:
+    return send_telegram_message_to_chats(
+        text,
+        active_chat_ids(),
+        disable_web_page_preview=disable_web_page_preview,
+    )
