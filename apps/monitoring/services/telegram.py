@@ -142,3 +142,5 @@ def send_match_alert(match) -> int:
     )
     if sent_count:
         match.telegram_sent = True
+        match.save(update_fields=["telegram_sent"])
+    return sent_count
