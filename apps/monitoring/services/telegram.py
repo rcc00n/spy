@@ -118,3 +118,27 @@ def format_match_alert(match) -> str:
     preview = match.matched_text_preview[:500]
     return render_telegram_template(
         "match_alert",
+        context={
+            "platform": account.get_platform_display(),
+            "account_name": account.account_name,
+            "keyword": match.keyword.phrase,
+            "post_url": post.post_url or account.account_url,
+            "preview": preview,
+        },
+        default=(
+            "Platform: {platform}\n"
+            "Account: {account_name}\n"
+            "Keyword: {keyword}\n"
+            "Post: {post_url}\n"
+            "Preview: {preview}"
+        ),
+    )
+
+
+def send_match_alert(match) -> int:
+    sent_count = send_telegram_message(
+        format_match_alert(match),
+        disable_web_page_preview=False,
+    )
+    if sent_count:
+        match.telegram_sent = True
