@@ -82,3 +82,39 @@ def send_telegram_message(text: str, *, disable_web_page_preview: bool = True) -
         active_chat_ids(),
         disable_web_page_preview=disable_web_page_preview,
     )
+
+
+def send_system_alert(title: str, lines: list[str] | None = None) -> int:
+    text = render_telegram_template(
+        "system_alert",
+        context={
+            "title": title,
+            "lines": "\n".join(lines or []),
+        },
+        default="Spy Monitor: {title}\n{lines}",
+    )
+    return send_telegram_message(text)
+
+
+def send_system_alert_to_chats(
+    title: str,
+    lines: list[str] | None,
+    chat_ids: list[int],
+) -> int:
+    text = render_telegram_template(
+        "system_alert",
+        context={
+            "title": title,
+            "lines": "\n".join(lines or []),
+        },
+        default="Spy Monitor: {title}\n{lines}",
+    )
+    return send_telegram_message_to_chats(text, chat_ids)
+
+
+def format_match_alert(match) -> str:
+    post = match.post
+    account = post.monitored_account
+    preview = match.matched_text_preview[:500]
+    return render_telegram_template(
+        "match_alert",
