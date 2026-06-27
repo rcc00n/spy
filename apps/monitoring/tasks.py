@@ -70,3 +70,18 @@ def run_manual_check_job(self, job_id: int) -> str:
         if summary["errors"] or summary.get("auth_required", 0)
         else ManualCheckJob.Status.SUCCESS
     )
+    job.finished_at = timezone.now()
+    job.save(
+        update_fields=[
+            "accounts_checked",
+            "posts_found",
+            "new_posts_found",
+            "matches_found",
+            "errors",
+            "auth_required",
+            "summary",
+            "status",
+            "finished_at",
+        ]
+    )
+    return job.summary
