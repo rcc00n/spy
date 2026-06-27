@@ -22,3 +22,10 @@ def build_match_preview(text: str, phrase: str, radius: int = 120) -> str:
 
 def keyword_matches(text: str, keywords) -> list[tuple[object, str]]:
     normalized = normalize_text(text)
+    lowered = normalized.lower()
+    matches = []
+    for keyword in keywords:
+        phrase = normalize_text(keyword.phrase)
+        if phrase and phrase.lower() in lowered:
+            matches.append((keyword, build_match_preview(normalized, phrase)))
+    return matches
