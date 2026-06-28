@@ -70,3 +70,27 @@ class FacebookCheckerTests(TestCase):
             detect_facebook_block_state(
                 "Enter your authentication code",
                 "https://www.facebook.com/two_step_verification/authentication/",
+            ),
+            "captcha_or_checkpoint",
+        )
+        self.assertEqual(
+            detect_facebook_block_state("Этот контент сейчас недоступен"),
+            "private_or_unavailable",
+        )
+        self.assertEqual(
+            detect_facebook_block_state(
+                "Gurtej Singh 14 ноябрь 2025 г. Albertans are ready for change. "
+                "Этот контент сейчас недоступен",
+                has_post_evidence=True,
+            ),
+            "ok",
+        )
+        self.assertEqual(
+            detect_facebook_block_state(
+                "Naheed закрыл(-а) профиль Только друзья этого человека видят, "
+                "чем он делится в своем профиле."
+            ),
+            "private_or_unavailable",
+        )
+
+    def test_reel_navigation_url_is_not_a_post_url(self):
