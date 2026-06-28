@@ -46,3 +46,27 @@ class FacebookCheckerTests(TestCase):
             platform=MonitoredAccount.Platform.FACEBOOK,
             account_url="https://www.facebook.com/SamplePage",
             account_name="Sample Page",
+            max_posts_per_check=5,
+            scroll_rounds=1,
+        )
+
+    def fixture(self, name):
+        return (FIXTURES / name).read_text()
+
+    def test_blocked_state_detection(self):
+        self.assertEqual(
+            detect_facebook_block_state(self.fixture("facebook_login_wall_sample.html")),
+            "login_required",
+        )
+        self.assertEqual(
+            detect_facebook_block_state(self.fixture("facebook_unavailable_sample.html")),
+            "private_or_unavailable",
+        )
+        self.assertEqual(
+            detect_facebook_block_state(self.fixture("facebook_public_page_sample.html")),
+            "ok",
+        )
+        self.assertEqual(
+            detect_facebook_block_state(
+                "Enter your authentication code",
+                "https://www.facebook.com/two_step_verification/authentication/",
