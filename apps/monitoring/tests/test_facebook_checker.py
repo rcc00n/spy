@@ -94,3 +94,27 @@ class FacebookCheckerTests(TestCase):
         )
 
     def test_reel_navigation_url_is_not_a_post_url(self):
+        self.assertFalse(is_post_url("https://www.facebook.com/reel/?s=tab"))
+        self.assertFalse(is_post_url("https://www.facebook.com/reel"))
+        self.assertTrue(is_post_url("https://www.facebook.com/reel/230031623078487"))
+
+    def test_unavailable_only_candidate_text_detection(self):
+        self.assertTrue(
+            is_unavailable_only_candidate_text(
+                "Gurtej Singh Brar обновил(-а) свой статус. 23 апрель · "
+                "Этот контент сейчас недоступен Возможно, владелец удалил "
+                "контент или ограничил доступ к нему. Напишите комментарий…",
+                account_name="Gurtej Singh",
+            )
+        )
+        self.assertFalse(
+            is_unavailable_only_candidate_text(
+                "Gurtej Singh Brar 14 ноябрь 2025 г. · Albertans are ready "
+                "for change. Этот контент сейчас недоступен Возможно, "
+                "владелец удалил контент или ограничил доступ к нему.",
+                account_name="Gurtej Singh",
+            )
+        )
+
+    def test_low_information_candidate_text_detection(self):
+        self.assertTrue(
