@@ -154,3 +154,27 @@ class FacebookCheckerTests(TestCase):
         self.assertTrue(all("profile.php/posts" not in route for route in routes))
         self.assertTrue(all("id=61590506608414" in route for route in routes))
 
+    def test_external_post_id_stability(self):
+        first = external_post_id_for(
+            self.account,
+            post_url="https://facebook.com/SamplePage/posts/111?fbclid=abc",
+            text="ignored text",
+        )
+        second = external_post_id_for(
+            self.account,
+            post_url="https://www.facebook.com/SamplePage/posts/111",
+            text="different ignored text",
+        )
+        self.assertEqual(first, second)
+
+    def test_slug_account_allows_permalink_profile_id_post(self):
+        self.assertTrue(
+            facebook_post_url_matches_account(
+                "https://www.facebook.com/SamplePage",
+                "https://www.facebook.com/permalink.php?id=333&story_fbid=222",
+            )
+        )
+        self.assertFalse(
+            facebook_post_url_matches_account(
+                "https://www.facebook.com/SamplePage",
+                "https://www.facebook.com/OtherPage/posts/222",
