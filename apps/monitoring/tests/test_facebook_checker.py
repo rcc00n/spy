@@ -118,3 +118,39 @@ class FacebookCheckerTests(TestCase):
 
     def test_low_information_candidate_text_detection(self):
         self.assertTrue(
+            is_low_information_candidate_text(
+                "24 июнь 2025 г.",
+                account_name="Gurtej Singh",
+            )
+        )
+        self.assertFalse(
+            is_low_information_candidate_text(
+                "The campaign may be over, but the work starts now.",
+                account_name="Gurtej Singh",
+            )
+        )
+
+    def test_post_url_normalization(self):
+        normalized = normalize_facebook_url(
+            "https://facebook.com/permalink.php?ref=feed&story_fbid=222&id=333&fbclid=abc"
+        )
+        self.assertEqual(
+            normalized,
+            "https://www.facebook.com/permalink.php?id=333&story_fbid=222",
+        )
+
+    def test_profile_php_routes_keep_profile_id(self):
+        routes = facebook_route_urls("https://www.facebook.com/profile.php?id=61590506608414")
+
+        self.assertIn(
+            "https://www.facebook.com/profile.php?id=61590506608414",
+            routes,
+        )
+        self.assertIn(
+            "https://www.facebook.com/profile.php?id=61590506608414&sk=posts",
+            routes,
+        )
+        self.assertNotIn("https://www.facebook.com/profile.php/posts", routes)
+        self.assertTrue(all("profile.php/posts" not in route for route in routes))
+        self.assertTrue(all("id=61590506608414" in route for route in routes))
+
