@@ -178,3 +178,27 @@ class FacebookCheckerTests(TestCase):
             facebook_post_url_matches_account(
                 "https://www.facebook.com/SamplePage",
                 "https://www.facebook.com/OtherPage/posts/222",
+            )
+        )
+
+    def test_parser_returns_multiple_post_candidates(self):
+        candidates = extract_candidates_from_html(
+            self.fixture("facebook_public_page_sample.html"),
+            self.account,
+            limit=5,
+        )
+        self.assertEqual(len(candidates), 2)
+        self.assertIn("city council budget", candidates[0].text)
+        self.assertIn("story_fbid=222", candidates[1].post_url)
+
+    def test_keyword_matching_on_extracted_candidates(self):
+        Keyword.objects.create(phrase="budget")
+        Keyword.objects.create(phrase="transit")
+        candidates = extract_candidates_from_html(
+            self.fixture("facebook_public_page_sample.html"),
+            self.account,
+            limit=5,
+        )
+        posts_found, new_posts, matches, alert_ids = store_post_candidates(
+            self.account,
+            candidates,
