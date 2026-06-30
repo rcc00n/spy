@@ -202,3 +202,39 @@ class FacebookCheckerTests(TestCase):
         posts_found, new_posts, matches, alert_ids = store_post_candidates(
             self.account,
             candidates,
+        )
+        self.assertEqual(posts_found, 2)
+        self.assertEqual(new_posts, 2)
+        self.assertEqual(matches, 2)
+        self.assertEqual(len(alert_ids), 2)
+
+    def test_duplicate_candidate_does_not_create_duplicate_post(self):
+        candidate = FacebookPostCandidate(
+            external_post_id="facebook-url:test-id",
+            post_url="https://www.facebook.com/SamplePage/posts/111",
+            text="Public budget keyword post",
+            published_at=None,
+            raw_snapshot="raw",
+            source_type="post_container",
+        )
+        store_post_candidates(self.account, [candidate, candidate])
+        store_post_candidates(self.account, [candidate])
+        self.assertEqual(Post.objects.count(), 1)
+
+    def test_login_wall_candidate_is_not_stored_as_post(self):
+        candidate = FacebookPostCandidate(
+            external_post_id="facebook-text:login-wall",
+            post_url="https://www.facebook.com/login/?next=https%3A%2F%2Fexample.com",
+            text=self.fixture("facebook_login_wall_sample.html"),
+            published_at=None,
+            raw_snapshot="raw",
+            source_type="fallback_snapshot",
+        )
+
+        posts_found, new_posts, matches, alert_ids = store_post_candidates(
+            self.account,
+            [candidate],
+        )
+
+        self.assertEqual(posts_found, 0)
+        self.assertEqual(new_posts, 0)
