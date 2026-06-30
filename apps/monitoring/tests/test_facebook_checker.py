@@ -238,3 +238,27 @@ class FacebookCheckerTests(TestCase):
 
         self.assertEqual(posts_found, 0)
         self.assertEqual(new_posts, 0)
+        self.assertEqual(matches, 0)
+        self.assertEqual(alert_ids, [])
+        self.assertEqual(Post.objects.count(), 0)
+
+    def test_facebook_candidate_without_post_url_is_not_stored_as_post(self):
+        candidate = FacebookPostCandidate(
+            external_post_id="facebook-text:no-post-url",
+            post_url="https://www.facebook.com/SamplePage",
+            text="A long page snapshot that is not tied to a real Facebook post URL.",
+            published_at=None,
+            raw_snapshot="raw",
+            source_type="fallback_snapshot",
+        )
+
+        run = CheckRun.objects.create(monitored_account=self.account)
+        posts_found, new_posts, matches, alert_ids = store_post_candidates(
+            self.account,
+            [candidate],
+            run=run,
+        )
+
+        self.assertEqual(posts_found, 0)
+        self.assertEqual(new_posts, 0)
+        self.assertEqual(matches, 0)
