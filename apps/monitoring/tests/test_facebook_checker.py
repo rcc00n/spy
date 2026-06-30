@@ -262,3 +262,27 @@ class FacebookCheckerTests(TestCase):
         self.assertEqual(posts_found, 0)
         self.assertEqual(new_posts, 0)
         self.assertEqual(matches, 0)
+        self.assertEqual(alert_ids, [])
+        self.assertEqual(Post.objects.count(), 0)
+        observed = run.observed_posts.get()
+        self.assertEqual(observed.status, "skipped")
+        self.assertEqual(observed.skip_reason, "missing_post_url")
+
+    def test_facebook_unavailable_only_candidate_is_not_stored_as_post(self):
+        candidate = FacebookPostCandidate(
+            external_post_id="facebook-url:unavailable-only",
+            post_url="https://www.facebook.com/SamplePage/posts/222",
+            text=(
+                "Sample Page обновил(-а) свой статус. 23 апрель · "
+                "Этот контент сейчас недоступен Возможно, владелец удалил "
+                "контент или ограничил доступ к нему. Напишите комментарий…"
+            ),
+            published_at=None,
+            raw_snapshot="raw",
+            source_type="post_container",
+        )
+
+        run = CheckRun.objects.create(monitored_account=self.account)
+        posts_found, new_posts, matches, alert_ids = store_post_candidates(
+            self.account,
+            [candidate],
