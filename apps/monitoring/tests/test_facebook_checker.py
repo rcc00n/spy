@@ -286,3 +286,27 @@ class FacebookCheckerTests(TestCase):
         posts_found, new_posts, matches, alert_ids = store_post_candidates(
             self.account,
             [candidate],
+            run=run,
+        )
+
+        self.assertEqual(posts_found, 0)
+        self.assertEqual(new_posts, 0)
+        self.assertEqual(matches, 0)
+        self.assertEqual(alert_ids, [])
+        self.assertEqual(Post.objects.count(), 0)
+        observed = run.observed_posts.get()
+        self.assertEqual(observed.status, "skipped")
+        self.assertEqual(observed.skip_reason, "unavailable_only")
+
+    def test_facebook_low_information_candidate_is_not_stored_as_post(self):
+        candidate = FacebookPostCandidate(
+            external_post_id="facebook-url:low-information",
+            post_url="https://www.facebook.com/SamplePage/posts/333",
+            text="24 июнь 2025 г.",
+            published_at=None,
+            raw_snapshot="raw",
+            source_type="permalink_link",
+        )
+
+        run = CheckRun.objects.create(monitored_account=self.account)
+        posts_found, new_posts, matches, alert_ids = store_post_candidates(
