@@ -394,3 +394,39 @@ class FacebookCheckerTests(TestCase):
 
     @override_settings(
         FACEBOOK_AUTH_ENABLED=True,
+        FACEBOOK_AUTH_STORAGE_STATE_PATH="/tmp/spy-missing-facebook-state.json",
+    )
+    def test_facebook_context_auth_requires_storage_state_file(self):
+        with self.assertRaises(FacebookAuthError):
+            facebook_context_kwargs()
+
+    @override_settings(FACEBOOK_AUTH_ENABLED=True)
+    def test_facebook_context_auth_uses_storage_state_file(self):
+        with NamedTemporaryFile() as state_file:
+            with override_settings(FACEBOOK_AUTH_STORAGE_STATE_PATH=state_file.name):
+                kwargs = facebook_context_kwargs()
+
+        self.assertEqual(kwargs["storage_state"], state_file.name)
+
+    def test_platform_credential_encrypts_password(self):
+        credential = PlatformCredential(
+            platform=PlatformCredential.Platform.FACEBOOK,
+            username="operator@example.com",
+            is_active=True,
+        )
+        credential.set_password("secret-password")
+        credential.save()
+
+        self.assertNotIn("secret-password", credential.encrypted_password)
+        self.assertEqual(credential.get_password(), "secret-password")
+
+    def test_platform_credential_form_preserves_password_when_blank(self):
+        credential = PlatformCredential(
+            platform=PlatformCredential.Platform.FACEBOOK,
+            username="operator@example.com",
+            is_active=True,
+        )
+        credential.set_password("secret-password")
+        credential.save()
+
+        form = PlatformCredentialForm(
