@@ -310,3 +310,39 @@ class FacebookCheckerTests(TestCase):
 
         run = CheckRun.objects.create(monitored_account=self.account)
         posts_found, new_posts, matches, alert_ids = store_post_candidates(
+            self.account,
+            [candidate],
+            run=run,
+        )
+
+        self.assertEqual(posts_found, 0)
+        self.assertEqual(new_posts, 0)
+        self.assertEqual(matches, 0)
+        self.assertEqual(alert_ids, [])
+        self.assertEqual(Post.objects.count(), 0)
+        observed = run.observed_posts.get()
+        self.assertEqual(observed.status, "skipped")
+        self.assertEqual(observed.skip_reason, "low_information_text")
+
+    def test_login_required_check_gets_auth_required_status(self):
+        with patch(
+            "apps.monitoring.services.checker.fetch_account_candidates",
+            side_effect=FacebookBlocked("login_required", "Refresh Facebook session."),
+        ):
+            run = run_account_check(self.account, send_telegram=False)
+
+        self.account.refresh_from_db()
+        self.assertEqual(run.status, CheckRun.Status.AUTH_REQUIRED)
+        self.assertEqual(self.account.last_status, CheckRun.Status.AUTH_REQUIRED)
+
+    def test_duplicate_keyword_match_does_not_resend_alert(self):
+        Keyword.objects.create(phrase="budget")
+        candidate = FacebookPostCandidate(
+            external_post_id="facebook-url:test-alert-id",
+            post_url="https://www.facebook.com/SamplePage/posts/999",
+            text="Public budget keyword post",
+            published_at=None,
+            raw_snapshot="raw",
+            source_type="post_container",
+        )
+
