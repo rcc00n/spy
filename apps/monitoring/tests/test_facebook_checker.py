@@ -346,3 +346,27 @@ class FacebookCheckerTests(TestCase):
             source_type="post_container",
         )
 
+        with patch(
+            "apps.monitoring.services.checker.fetch_account_candidates",
+            return_value=[candidate],
+        ), patch("apps.monitoring.services.checker.send_match_alert") as send_alert:
+            run_account_check(self.account)
+            run_account_check(self.account)
+
+        self.assertEqual(Post.objects.count(), 1)
+        self.assertEqual(PostKeywordMatch.objects.count(), 1)
+        self.assertEqual(send_alert.call_count, 1)
+
+    @override_settings(
+        FACEBOOK_AUTH_ENABLED=False,
+        FACEBOOK_LOGIN_EMAIL="",
+        FACEBOOK_LOGIN_PASSWORD="",
+    )
+    def test_facebook_context_without_auth_has_no_storage_state(self):
+        with TemporaryDirectory() as tempdir:
+            with override_settings(
+                FACEBOOK_AUTH_STORAGE_STATE_PATH=f"{tempdir}/missing-state.json"
+            ):
+                kwargs = facebook_context_kwargs()
+
+        self.assertNotIn("storage_state", kwargs)
