@@ -370,3 +370,27 @@ class FacebookCheckerTests(TestCase):
                 kwargs = facebook_context_kwargs()
 
         self.assertNotIn("storage_state", kwargs)
+        self.assertIn("user_agent", kwargs)
+
+    @override_settings(
+        FACEBOOK_AUTH_ENABLED=False,
+        FACEBOOK_LOGIN_EMAIL="",
+        FACEBOOK_LOGIN_PASSWORD="",
+    )
+    def test_admin_credential_enables_facebook_auth(self):
+        credential = PlatformCredential(
+            platform=PlatformCredential.Platform.FACEBOOK,
+            username="operator@example.com",
+            is_active=True,
+        )
+        credential.set_password("secret-password")
+        credential.save()
+
+        with TemporaryDirectory() as tempdir:
+            with override_settings(
+                FACEBOOK_AUTH_STORAGE_STATE_PATH=f"{tempdir}/missing-state.json"
+            ):
+                self.assertTrue(facebook_auth_enabled())
+
+    @override_settings(
+        FACEBOOK_AUTH_ENABLED=True,
