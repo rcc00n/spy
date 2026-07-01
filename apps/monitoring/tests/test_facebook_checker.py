@@ -430,3 +430,27 @@ class FacebookCheckerTests(TestCase):
         credential.save()
 
         form = PlatformCredentialForm(
+            data={
+                "platform": PlatformCredential.Platform.FACEBOOK,
+                "username": "new-operator@example.com",
+                "password": "",
+                "is_active": "on",
+            },
+            instance=credential,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        updated = form.save()
+        self.assertEqual(updated.username, "new-operator@example.com")
+        self.assertEqual(updated.get_password(), "secret-password")
+
+    @override_settings(FACEBOOK_LOGIN_EMAIL="", FACEBOOK_LOGIN_PASSWORD="")
+    def test_facebook_credentials_fall_back_to_admin_credential(self):
+        credential = PlatformCredential(
+            platform=PlatformCredential.Platform.FACEBOOK,
+            username="operator@example.com",
+            is_active=True,
+        )
+        credential.set_password("secret-password")
+        credential.save()
+
