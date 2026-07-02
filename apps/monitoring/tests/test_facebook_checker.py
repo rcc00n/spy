@@ -454,3 +454,23 @@ class FacebookCheckerTests(TestCase):
         credential.set_password("secret-password")
         credential.save()
 
+        username, password, stored_credential = get_facebook_login_credentials()
+
+        self.assertEqual(username, "operator@example.com")
+        self.assertEqual(password, "secret-password")
+        self.assertEqual(stored_credential.pk, credential.pk)
+
+    def test_telegram_template_renders_placeholders(self):
+        TelegramMessageTemplate.objects.create(
+            key="test_template",
+            name="Test template",
+            body="Account {account_name}: {status}. Unknown {missing}",
+        )
+
+        rendered = render_telegram_template(
+            "test_template",
+            context={"account_name": "Sample Page", "status": "active"},
+            default="fallback",
+        )
+
+        self.assertEqual(rendered, "Account Sample Page: active. Unknown {missing}")
