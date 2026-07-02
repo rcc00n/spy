@@ -58,3 +58,21 @@ class SessionStateTests(SimpleTestCase):
                 self.assertEqual(list(Path(root).iterdir()), [target])
 
     @override_settings(FACEBOOK_SESSION_MANAGER_URL='https://example.com/facebook-session/vnc.html?path=facebook-session/')
+    def test_operator_url_preserves_proxy_path_and_autoconnects(self):
+        from urllib.parse import parse_qs, urlsplit
+        query = parse_qs(urlsplit(build_operator_url(SimpleNamespace(pk=8), 'test-token')).query)
+        self.assertEqual(query['path'], ['facebook-session/'])
+        self.assertEqual(query['autoconnect'], ['true'])
+        self.assertEqual(query['request'], ['8'])
+
+
+class SessionAccessTests(TestCase):
+    def test_remote_browser_requires_staff_login(self):
+        url = '/settings/facebook-login/session-access/'
+        self.assertEqual(self.client.get(url, secure=True).status_code, 401)
+        user = get_user_model().objects.create_user('operator')
+        self.client.force_login(user)
+        self.assertEqual(self.client.get(url, secure=True).status_code, 403)
+        user.is_staff = True
+        user.save()
+        self.assertEqual(self.client.get(url, secure=True).status_code, 204)
