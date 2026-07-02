@@ -22,3 +22,39 @@ class SessionDatabaseTests(TransactionTestCase):
         async def run():
             Command()._validate_monitored_accounts(Mock(), SimpleNamespace(pk=1), [])
             self.assertEqual(render_telegram_template('system_alert', context={'title': 'login'}), 'Custom login')
+
+        asyncio.run(run())
+
+
+class SessionStateTests(SimpleTestCase):
+    def page(self, text, url='https://www.facebook.com/me', cookies=True):
+        page = Mock(url=url)
+        page.locator.return_value.inner_text.return_value = text
+        page.context.cookies.return_value = ([{'name': 'c_user', 'value': 'test'}, {'name': 'xs', 'value': 'test'}] if cookies else [])
+        return page
+
+    def test_requires_facebook_content_and_authentication_cookies(self):
+        self.assertEqual(facebook_session_state(self.page('')), 'unknown')
+        self.assertEqual(facebook_session_state(self.page('Some public content', cookies=False)), 'unknown')
+        self.assertEqual(facebook_session_state(self.page('Content', url='https://example.com')), 'unknown')
+        self.assertEqual(facebook_session_state(self.page('News feed')), 'authenticated')
+        self.assertEqual(facebook_session_state(self.page('Enter your authentication code')), 'checkpoint')
+        self.assertEqual(facebook_session_state(self.page('Log in to Facebook')), 'login_required')
+
+    def test_atomic_save_preserves_previous_session_on_failure(self):
+        with TemporaryDirectory() as root:
+            target = Path(root) / 'state.json'
+            target.write_text('{"old":true}')
+            with override_settings(FACEBOOK_AUTH_STORAGE_STATE_PATH=target):
+                context = Mock()
+                context.storage_state.side_effect = RuntimeError('interrupted')
+                with self.assertRaises(RuntimeError):
+                    save_facebook_storage_state(context)
+                self.assertEqual(json.loads(target.read_text()), {'old': True})
+                context.storage_state.side_effect = lambda path: Path(path).write_text('{"new":true}')
+                save_facebook_storage_state(context)
+                self.assertEqual(json.loads(target.read_text()), {'new': True})
+                self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+                self.assertEqual(list(Path(root).iterdir()), [target])
+
+    @override_settings(FACEBOOK_SESSION_MANAGER_URL='https://example.com/facebook-session/vnc.html?path=facebook-session/')
