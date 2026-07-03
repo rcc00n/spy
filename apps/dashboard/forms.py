@@ -34,3 +34,27 @@ class MonitoredAccountForm(forms.ModelForm):
             "is_active": forms.CheckboxInput(attrs={"class": "form-checkbox"}),
         }
 
+    def clean_account_url(self):
+        value = self.cleaned_data["account_url"].strip()
+        platform = self.cleaned_data.get("platform")
+        host = urlparse(value).netloc.lower().removeprefix("www.")
+
+        if platform == MonitoredAccount.Platform.FACEBOOK and not (
+            host == "facebook.com" or host.endswith(".facebook.com")
+        ):
+            raise forms.ValidationError("Facebook accounts must use a facebook.com URL.")
+        if platform == MonitoredAccount.Platform.INSTAGRAM and not (
+            host == "instagram.com" or host.endswith(".instagram.com")
+        ):
+            raise forms.ValidationError(
+                "Instagram accounts must use an instagram.com URL."
+            )
+        return value
+
+
+class KeywordForm(forms.ModelForm):
+    class Meta:
+        model = Keyword
+        fields = ["phrase", "is_active"]
+        widgets = {
+            "phrase": forms.TextInput(attrs={"class": "form-control"}),
