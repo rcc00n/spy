@@ -82,3 +82,4 @@ class ManualCheckForm(forms.Form):
                 "placeholder": "Default",
             }
         ),
+    )
