@@ -58,3 +58,27 @@ class KeywordForm(forms.ModelForm):
         fields = ["phrase", "is_active"]
         widgets = {
             "phrase": forms.TextInput(attrs={"class": "form-control"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-checkbox"}),
+        }
+
+    def clean_phrase(self):
+        phrase = " ".join(self.cleaned_data["phrase"].split())
+        if not phrase:
+            raise forms.ValidationError("Enter a keyword phrase.")
+        return phrase
+
+
+class ManualCheckForm(forms.Form):
+    limit = forms.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=20,
+        label="Limit to last N posts",
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control form-control-small",
+                "min": "1",
+                "max": "20",
+                "placeholder": "Default",
+            }
+        ),
