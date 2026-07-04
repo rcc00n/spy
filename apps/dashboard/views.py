@@ -82,3 +82,27 @@ def index(request):
             "keyword",
             "post__monitored_account",
         ).order_by("-created_at")[:10],
+        "recent_runs": CheckRun.objects.select_related("monitored_account").order_by(
+            "-started_at"
+        )[:10],
+        "recent_manual_jobs": ManualCheckJob.objects.select_related(
+            "account",
+            "requested_by",
+        ).order_by("-requested_at")[:10],
+        "error_runs": CheckRun.objects.filter(status=CheckRun.Status.ERROR).count(),
+        "accounts_status": MonitoredAccount.objects.annotate(
+            match_count=Count("posts__keyword_matches")
+        ).order_by("platform", "account_name"),
+        "manual_check_form": ManualCheckForm(),
+    }
+    context.update(facebook_credential_status())
+    return render(request, "dashboard/index.html", context)
+
+
+@login_required
+def run_check_now(request):
+    if request.method != "POST":
+        return redirect("dashboard:index")
+
+    form = ManualCheckForm(request.POST)
+    if not form.is_valid():
