@@ -46,3 +46,39 @@ def staff_required(view_func):
 
 
 def facebook_session_access(request):
+    """Authorize the operator's noVNC HTTP and WebSocket routes."""
+    if not request.user.is_authenticated:
+        return HttpResponse(status=401)
+    return HttpResponse(status=204 if request.user.is_staff else 403)
+
+
+def facebook_credential_status():
+    credential = PlatformCredential.objects.filter(
+        platform=PlatformCredential.Platform.FACEBOOK,
+        is_active=True,
+    ).first()
+    return {
+        "facebook_auth_enabled": facebook_auth_enabled(),
+        "facebook_auth_setting_enabled": settings.FACEBOOK_AUTH_ENABLED,
+        "facebook_credential": credential,
+        "facebook_session_exists": storage_state_path().exists(),
+        "facebook_storage_state_path": storage_state_path(),
+        "facebook_session_manager_url": settings.FACEBOOK_SESSION_MANAGER_URL,
+        "recent_session_requests": FacebookSessionRefreshRequest.objects.order_by(
+            "-requested_at"
+        )[:10],
+    }
+
+
+@login_required
+def index(request):
+    if request.user.is_staff and request.GET.get("legacy") != "1":
+        return redirect("research:facebook_monitor")
+    context = {
+        "active_accounts": MonitoredAccount.objects.filter(is_active=True).count(),
+        "active_keywords": Keyword.objects.filter(is_active=True).count(),
+        "total_matches": PostKeywordMatch.objects.count(),
+        "recent_matches": PostKeywordMatch.objects.select_related(
+            "keyword",
+            "post__monitored_account",
+        ).order_by("-created_at")[:10],
