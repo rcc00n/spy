@@ -130,3 +130,27 @@ def run_check_now(request):
             "Refresh the dashboard to see status."
         ),
     )
+    return redirect(request.POST.get("next") or "dashboard:index")
+
+
+@login_required
+def accounts(request):
+    queryset = MonitoredAccount.objects.order_by("platform", "account_name")
+    return render(
+        request,
+        "dashboard/accounts.html",
+        {"page_obj": paginate(request, queryset), "manual_check_form": ManualCheckForm()},
+    )
+
+
+@login_required
+def account_create(request):
+    if request.method == "POST":
+        form = MonitoredAccountForm(request.POST)
+        if form.is_valid():
+            account = form.save()
+            messages.success(request, f"Added monitored account {account.account_name}.")
+            return redirect("dashboard:accounts")
+    else:
+        form = MonitoredAccountForm(initial={"is_active": True})
+
