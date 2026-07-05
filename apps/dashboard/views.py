@@ -154,3 +154,39 @@ def account_create(request):
     else:
         form = MonitoredAccountForm(initial={"is_active": True})
 
+    return render(
+        request,
+        "dashboard/account_form.html",
+        {"form": form, "title": "Add monitored account", "submit_label": "Add account"},
+    )
+
+
+@login_required
+def account_edit(request, pk):
+    account = get_object_or_404(MonitoredAccount, pk=pk)
+    if request.method == "POST":
+        form = MonitoredAccountForm(request.POST, instance=account)
+        if form.is_valid():
+            account = form.save()
+            messages.success(request, f"Updated monitored account {account.account_name}.")
+            return redirect("dashboard:accounts")
+    else:
+        form = MonitoredAccountForm(instance=account)
+
+    return render(
+        request,
+        "dashboard/account_form.html",
+        {"form": form, "title": "Edit monitored account", "submit_label": "Save changes"},
+    )
+
+
+@login_required
+def account_deactivate(request, pk):
+    account = get_object_or_404(MonitoredAccount, pk=pk)
+    if request.method == "POST":
+        account.is_active = False
+        account.save(update_fields=["is_active", "updated_at"])
+        messages.success(request, f"Deactivated monitored account {account.account_name}.")
+        return redirect("dashboard:accounts")
+
+    return render(
