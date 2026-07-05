@@ -106,3 +106,27 @@ def run_check_now(request):
 
     form = ManualCheckForm(request.POST)
     if not form.is_valid():
+        messages.error(request, "Manual check limit must be between 1 and 20.")
+        return redirect(request.POST.get("next") or "dashboard:index")
+
+    account_id = request.POST.get("account_id") or None
+    accounts = accounts_for_check(force=True, account_id=account_id)
+    if not accounts:
+        messages.info(request, "No active monitored accounts found for manual check.")
+        return redirect(request.POST.get("next") or "dashboard:index")
+
+    job = ManualCheckJob.objects.create(
+        requested_by=request.user,
+        account=accounts[0] if account_id else None,
+        post_limit=form.cleaned_data.get("limit"),
+    )
+    async_result = run_manual_check_job.delay(job.pk)
+    job.task_id = async_result.id or ""
+    job.save(update_fields=["task_id"])
+    messages.success(
+        request,
+        (
+            f"Manual check queued as job #{job.pk} for {len(accounts)} account(s). "
+            "Refresh the dashboard to see status."
+        ),
+    )
