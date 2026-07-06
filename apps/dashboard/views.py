@@ -214,3 +214,27 @@ def keywords(request):
 def keyword_create(request):
     if request.method == "POST":
         form = KeywordForm(request.POST)
+        if form.is_valid():
+            keyword = form.save()
+            messages.success(request, f"Added keyword {keyword.phrase}.")
+            return redirect("dashboard:keywords")
+    else:
+        form = KeywordForm(initial={"is_active": True})
+
+    return render(
+        request,
+        "dashboard/keyword_form.html",
+        {"form": form, "title": "Add keyword", "submit_label": "Add keyword"},
+    )
+
+
+@login_required
+def keyword_edit(request, pk):
+    keyword = get_object_or_404(Keyword, pk=pk)
+    if request.method == "POST":
+        form = KeywordForm(request.POST, instance=keyword)
+        if form.is_valid():
+            keyword = form.save()
+            messages.success(request, f"Updated keyword {keyword.phrase}.")
+            return redirect("dashboard:keywords")
+    else:
