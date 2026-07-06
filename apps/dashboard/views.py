@@ -298,3 +298,27 @@ def check_run_detail(request, pk):
     run = get_object_or_404(
         CheckRun.objects.select_related("monitored_account"),
         pk=pk,
+    )
+    observed_posts = CheckRunPost.objects.select_related("post").filter(check_run=run)
+    return render(
+        request,
+        "dashboard/check_run_detail.html",
+        {
+            "run": run,
+            "observed_posts": observed_posts,
+        },
+    )
+
+
+@login_required
+@staff_required
+def facebook_login_settings(request):
+    credential = PlatformCredential.objects.filter(
+        platform=PlatformCredential.Platform.FACEBOOK,
+    ).first()
+
+    if request.method == "POST":
+        form = PlatformCredentialForm(request.POST, instance=credential)
+        if form.is_valid():
+            credential = form.save()
+            try:
