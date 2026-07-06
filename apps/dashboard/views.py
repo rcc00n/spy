@@ -274,3 +274,27 @@ def matches(request):
         "post",
         "post__monitored_account",
     ).order_by("-created_at")
+    return render(
+        request,
+        "dashboard/matches.html",
+        {"page_obj": paginate(request, queryset)},
+    )
+
+
+@login_required
+def check_runs(request):
+    queryset = CheckRun.objects.select_related("monitored_account").order_by(
+        "-started_at"
+    ).annotate(observed_count=Count("observed_posts"))
+    return render(
+        request,
+        "dashboard/check_runs.html",
+        {"page_obj": paginate(request, queryset)},
+    )
+
+
+@login_required
+def check_run_detail(request, pk):
+    run = get_object_or_404(
+        CheckRun.objects.select_related("monitored_account"),
+        pk=pk,
