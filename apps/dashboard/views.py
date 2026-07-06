@@ -322,3 +322,27 @@ def facebook_login_settings(request):
         if form.is_valid():
             credential = form.save()
             try:
+                storage_state_path().unlink(missing_ok=True)
+            except OSError as exc:
+                messages.warning(
+                    request,
+                    f"Saved credentials, but could not clear the old session: {exc}",
+                )
+            else:
+                credential.last_session_refreshed_at = None
+                credential.last_error = ""
+                credential.save(
+                    update_fields=[
+                        "last_session_refreshed_at",
+                        "last_error",
+                        "updated_at",
+                    ]
+                )
+            send_system_alert(
+                "Facebook credentials saved",
+                [
+                    f"User: {request.user.get_username()}",
+                    "The saved browser session was cleared; create a session refresh request next.",
+                ],
+            )
+            messages.success(
