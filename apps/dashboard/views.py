@@ -190,3 +190,27 @@ def account_deactivate(request, pk):
         return redirect("dashboard:accounts")
 
     return render(
+        request,
+        "dashboard/confirm_deactivate.html",
+        {
+            "title": "Deactivate monitored account",
+            "object_label": account.account_name,
+            "cancel_url": "dashboard:accounts",
+        },
+    )
+
+
+@login_required
+def keywords(request):
+    queryset = Keyword.objects.order_by("phrase")
+    return render(
+        request,
+        "dashboard/keywords.html",
+        {"page_obj": paginate(request, queryset)},
+    )
+
+
+@login_required
+def keyword_create(request):
+    if request.method == "POST":
+        form = KeywordForm(request.POST)
