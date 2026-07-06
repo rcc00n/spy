@@ -238,3 +238,39 @@ def keyword_edit(request, pk):
             messages.success(request, f"Updated keyword {keyword.phrase}.")
             return redirect("dashboard:keywords")
     else:
+        form = KeywordForm(instance=keyword)
+
+    return render(
+        request,
+        "dashboard/keyword_form.html",
+        {"form": form, "title": "Edit keyword", "submit_label": "Save changes"},
+    )
+
+
+@login_required
+def keyword_deactivate(request, pk):
+    keyword = get_object_or_404(Keyword, pk=pk)
+    if request.method == "POST":
+        keyword.is_active = False
+        keyword.save(update_fields=["is_active"])
+        messages.success(request, f"Deactivated keyword {keyword.phrase}.")
+        return redirect("dashboard:keywords")
+
+    return render(
+        request,
+        "dashboard/confirm_deactivate.html",
+        {
+            "title": "Deactivate keyword",
+            "object_label": keyword.phrase,
+            "cancel_url": "dashboard:keywords",
+        },
+    )
+
+
+@login_required
+def matches(request):
+    queryset = PostKeywordMatch.objects.select_related(
+        "keyword",
+        "post",
+        "post__monitored_account",
+    ).order_by("-created_at")
