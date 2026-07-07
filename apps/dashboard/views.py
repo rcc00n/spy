@@ -346,3 +346,39 @@ def facebook_login_settings(request):
                 ],
             )
             messages.success(
+                request,
+                (
+                    f"Saved Facebook login credentials for {credential.username}. "
+                    "Create a session refresh request so an operator can complete login."
+                ),
+            )
+            return redirect("dashboard:facebook_login")
+    else:
+        form = PlatformCredentialForm(
+            instance=credential,
+            initial={
+                "platform": PlatformCredential.Platform.FACEBOOK,
+                "is_active": True,
+            },
+        )
+
+    context = {
+        "form": form,
+        "credential": credential,
+    }
+    context.update(facebook_credential_status())
+    return render(request, "dashboard/facebook_login.html", context)
+
+
+@login_required
+@staff_required
+def facebook_session_request_create(request):
+    if request.method != "POST":
+        return redirect("dashboard:facebook_login")
+
+    session_request, _raw_token = create_facebook_session_request(user=request.user)
+    messages.success(
+        request,
+        (
+            f"Created Facebook session request #{session_request.pk}. "
+            "The request was sent to Telegram."
