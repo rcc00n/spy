@@ -58,3 +58,27 @@ class ResearchEventAdmin(admin.ModelAdmin):
 class ResearchSourceAdmin(admin.ModelAdmin):
     list_display = ["job", "source_type", "title", "url", "created_at"]
     list_filter = ["source_type", "created_at"]
+    search_fields = ["title", "url", "excerpt", "job__title", "job__query"]
+
+
+
+from apps.research.models import FacebookPost, FacebookComment, FacebookCommentRevision, FacebookThreadWork
+
+
+class EvidenceAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class CommentRevisionInline(admin.TabularInline):
+    model = FacebookCommentRevision
+    extra = 0
+    readonly_fields = ['text', 'has_media', 'observed_at']
+    can_delete = False
+
