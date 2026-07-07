@@ -382,3 +382,6 @@ def facebook_session_request_create(request):
         (
             f"Created Facebook session request #{session_request.pk}. "
             "The request was sent to Telegram."
+        ),
+    )
+    return redirect("dashboard:facebook_login")
