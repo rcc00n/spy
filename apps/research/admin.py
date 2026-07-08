@@ -82,3 +82,27 @@ class CommentRevisionInline(admin.TabularInline):
     readonly_fields = ['text', 'has_media', 'observed_at']
     can_delete = False
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(FacebookPost)
+class FacebookPostAdmin(EvidenceAdmin):
+    list_display = ['id', 'url', 'public_verified', 'mentions_pcl', 'last_seen_at']
+    search_fields = ['url', 'text']
+    list_filter = ['public_verified', 'mentions_pcl']
+
+
+@admin.register(FacebookComment)
+class FacebookCommentAdmin(EvidenceAdmin):
+    list_display = ['facebook_id', 'post', 'mentions_pcl', 'first_seen_at', 'last_seen_at']
+    search_fields = ['facebook_id', 'text', 'post__url']
+    list_filter = ['mentions_pcl']
+    list_select_related = ['post']
+    inlines = [CommentRevisionInline]
+
+
+@admin.register(FacebookThreadWork)
+class FacebookThreadWorkAdmin(EvidenceAdmin):
+    list_display = ['id', 'job', 'post', 'status', 'attempts', 'coverage', 'updated_at']
+    list_filter = ['status', 'coverage']
