@@ -106,3 +106,5 @@ class FacebookCommentAdmin(EvidenceAdmin):
 class FacebookThreadWorkAdmin(EvidenceAdmin):
     list_display = ['id', 'job', 'post', 'status', 'attempts', 'coverage', 'updated_at']
     list_filter = ['status', 'coverage']
+    list_select_related = ['job', 'post']
+    exclude = ['comments']
