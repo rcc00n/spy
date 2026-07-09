@@ -58,3 +58,27 @@ def complete_if_idle(job):
     search_errors = sum(q.get('status') == 'error' for q in job.plan.get('queries', [])) + job.facebook_discoveries.filter(status__in=['failed', 'blocked']).count()
     message = f'Collection pass ended with {gaps} discussion gaps and {search_errors} search errors. Saved evidence retained; continue collection to retry.' if gaps or search_errors else ''
     job.mark_finished('failed' if gaps or search_errors else 'completed', message)
+    ResearchEvent.objects.create(job=job, level='warning' if message else 'info',
+        message=message or 'Collection pass ended. No further visible comments observed is not a completeness claim.')
+
+
+def scan_step(job):
+    import_legacy_job(job)
+    if job.plan.get('discovery_version'):
+        from apps.research.services.facebook_discovery import run_next_discovery
+        if run_next_discovery(job):
+            update_report(job)
+            complete_if_idle(job)
+            return
+    queries = list(dict.fromkeys(line.strip() for line in job.query.splitlines() if line.strip()))[:12]
+    index = len(queries) if job.plan.get('discovery_version') else job.plan.get('discovery_index', 0)
+    depth = {'quick': (5, 2, 0), 'standard': (10, 4, 40), 'deep': (20, 7, 100)}.get(job.depth, (10, 4, 40))
+    work = None
+    if index >= len(queries):
+        # An old RUNNING row means a previous task was interrupted; the Redis
+        # lease guarantees no other collector is still reading it.
+        work = job.facebook_threads.select_related('post').filter(status__in=['queued', 'running'], next_attempt_at__lte=timezone.now()).order_by('attempts', 'pk').first()
+        if work is None:
+            complete_if_idle(job)
+            return
+        work.status = 'running'
