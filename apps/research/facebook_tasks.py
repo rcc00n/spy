@@ -142,3 +142,27 @@ def scan_step(job):
                 elif job.monitor_lane == 'refresh':
                     limit = 40
                 seconds = 45 if job.monitor_lane == 'refresh' else min(150, 45 * work.attempts)
+                try:
+                    source = collect_thread(page, work.post.url, limit, time.monotonic() + 180,
+                        checkpoint=lambda snapshot: call_sync_db(lambda: persist_snapshot(work.pk, snapshot)),
+                        seconds=seconds, expansion_limit=25 if job.monitor_lane == 'refresh' else min(150, 25 * work.attempts),
+                        prefer_newest=job.monitor_lane == 'refresh')
+                    call_sync_db(lambda: persist_snapshot(work.pk, source))
+                    call_sync_db(lambda: finish_attempt(work, source))
+                except FacebookAccessStopped as exc:
+                    call_sync_db(lambda: finish_attempt(work, error=str(exc), blocked=True))
+                    raise
+                except Exception as exc:
+                    call_sync_db(lambda: finish_attempt(work, error=str(exc)))
+        finally:
+            browser.close()
+    update_report(job)
+    if job.plan.get('discovery_version') or job.plan.get('discovery_index', 0) >= len(queries):
+        complete_if_idle(job)
+
+
+@shared_task(bind=True, time_limit=270, soft_time_limit=240, acks_late=True, reject_on_worker_lost=True)
+def run_facebook_scan(self, job_id):
+    lock = Redis.from_url(settings.REDIS_URL).lock('spy:facebook-browser-scan', timeout=300)
+    if not lock.acquire(blocking=False):
+        return 'busy'  # Beat will find the durable pending work again.
