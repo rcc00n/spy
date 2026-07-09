@@ -82,3 +82,39 @@ def scan_step(job):
             complete_if_idle(job)
             return
         work.status = 'running'
+        work.attempts += 1
+        work.cycle_attempts += 1
+        work.error = ''
+        work.checkpoint = {**work.checkpoint, 'comments_before_attempt': work.comments.count()}
+        work.save()
+        if work.cycle_attempts > 3:
+            finish_attempt(work, error='Previous worker interrupted repeatedly; continue manually to retry.')
+            update_report(job)
+            complete_if_idle(job)
+            return
+
+    # One search or one discussion per browser lifetime. A task never depends
+    # on an in-memory cursor surviving a worker restart.
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            context = browser.new_context(**facebook_context_kwargs(auth_enabled=True))
+            page = context.new_page()
+            page.set_default_timeout(10000)
+            if work is None:
+                query = queries[index]
+                entry = {'query': query, 'status': 'ok', 'discovered': 0}
+                found = set()
+
+                def save_urls(urls):
+                    found.update(urls)
+                    def save():
+                        for url in urls:
+                            enqueue_url(job, url, [query])
+                    call_sync_db(save)
+
+                try:
+                    direct = canonical_post_url(query)
+                    if direct:
+                        save_urls([direct])
+                    else:
