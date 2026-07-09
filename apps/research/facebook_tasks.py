@@ -118,3 +118,27 @@ def scan_step(job):
                     if direct:
                         save_urls([direct])
                     else:
+                        discover(page, query, depth[0], depth[1], time.monotonic() + 90, on_urls=save_urls)
+                except FacebookAccessStopped:
+                    raise
+                except Exception as exc:
+                    entry.update(status='error', error=str(exc)[:500])
+                entry['discovered'] = len(found)
+                def finish_search():
+                    entries = list(job.plan.get('queries', []))
+                    # Preserve other searches when resuming a failed query.
+                    if index < len(entries):
+                        entries[index] = entry
+                    else:
+                        entries.append(entry)
+                    job.plan = {**job.plan, 'queries': entries, 'discovery_index': index + 1}
+                    job.save(update_fields=['plan', 'updated_at'])
+                    ResearchEvent.objects.create(job=job, message=f"Search: {query} — {len(found)} links; {entry['status']}")
+                call_sync_db(finish_search)
+            else:
+                limit = 0 if depth[2] == 0 else work.checkpoint['comments_before_attempt'] + depth[2]
+                if job.monitor_lane == 'discovery':
+                    limit = 0
+                elif job.monitor_lane == 'refresh':
+                    limit = 40
+                seconds = 45 if job.monitor_lane == 'refresh' else min(150, 45 * work.attempts)
