@@ -166,3 +166,27 @@ def run_facebook_scan(self, job_id):
     lock = Redis.from_url(settings.REDIS_URL).lock('spy:facebook-browser-scan', timeout=300)
     if not lock.acquire(blocking=False):
         return 'busy'  # Beat will find the durable pending work again.
+    job = None
+    try:
+        from apps.research.services.facebook_monitor import runnable_jobs
+        job = runnable_jobs().filter(pk=job_id).first()
+        if job is None:
+            return 'inactive'
+        job.mark_started(ResearchJob.Status.SOCIAL_COLLECTING)
+        job.task_id = self.request.id or job.task_id
+        job.save(update_fields=['task_id'])
+        scan_step(job)
+        return job.status
+    except FacebookAccessStopped as exc:
+        from apps.research.services.facebook_monitor import pause_monitors
+        pause_monitors(str(exc))
+        # Pause all browser jobs until an operator checks access; no automatic
+        # login/checkpoint/rate-limit retries against Facebook.
+        for active in ResearchJob.objects.filter(status__in=ACTIVE, plan__engine='facebook_browser'):
+            active.mark_finished('failed', str(exc)[:2000])
+            ResearchEvent.objects.create(job=active, level='error', message=str(exc)[:2000])
+        if job:
+            update_report(job)
+        return 'access_stopped'
+    except Exception as exc:
+        # Unexpected process/setup failures pause visibly. Already committed
