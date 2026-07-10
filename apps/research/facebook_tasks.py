@@ -190,3 +190,38 @@ def run_facebook_scan(self, job_id):
         return 'access_stopped'
     except Exception as exc:
         # Unexpected process/setup failures pause visibly. Already committed
+        # rows survive, and Continue collection resets attempts for another cycle.
+        if job:
+            if job.monitor_id:
+                from apps.research.services.facebook_monitor import pause_monitors
+                pause_monitors('Collector error: ' + str(exc))
+            update_report(job)
+            job.mark_finished('failed', str(exc)[:2000])
+            ResearchEvent.objects.create(job=job, level='error', message=str(exc)[:2000])
+        raise
+    finally:
+        if lock.owned():
+            lock.release()
+        if job:
+            try:
+                # Preserve round-robin fairness when several scans share one browser.
+                from apps.research.services.facebook_monitor import runnable_jobs
+                candidates = runnable_jobs().order_by('updated_at').values_list('pk', flat=True)[:20]
+                for candidate_id in candidates:
+                    if ready_for_next_step(candidate_id):
+                        self.apply_async(args=[candidate_id], countdown=5)
+                        break
+            except Exception:
+                # The periodic dispatcher is the fallback; evidence is already durable.
+                logger.exception('Could not publish the next Facebook collection step')
+
+
+def ready_for_next_step(job_id):
+    from apps.research.services.facebook_monitor import runnable_jobs
+    job = runnable_jobs().filter(pk=job_id).first()
+    if job is None:
+        return False
+    due = {'status__in': ['queued', 'running'], 'next_attempt_at__lte': timezone.now()}
+    if job.facebook_discoveries.filter(**due).exists() or job.facebook_threads.filter(**due).exists():
+        return True
+    return not job.plan.get('discovery_version') and job.plan.get('discovery_index', 0) < len([line for line in job.query.splitlines() if line.strip()])
