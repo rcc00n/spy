@@ -46,3 +46,39 @@ def monitor_context():
 @operator_view
 def workspace(request):
     # Preserve previously bookmarked POST controls without showing settings in the inbox.
+    if request.method == 'POST':
+        return settings(request)
+    posts = evidence_posts(request.user)
+    scope = request.GET.get('scope', 'pcl')
+    if scope not in ('pcl', 'all', 'saved'):
+        scope = 'pcl'
+    query = request.GET.get('q', '').strip()[:200]
+    period = request.GET.get('period', 'all')
+    if period not in ('all', '1', '7', '30'):
+        period = 'all'
+    unread = request.GET.get('unread') == '1'
+    totals = {'pcl': posts.filter(pcl_filter()).count(), 'all': posts.count(), 'saved': posts.filter(is_saved=True).count()}
+    if scope == 'pcl':
+        posts = posts.filter(pcl_filter())
+    elif scope == 'saved':
+        posts = posts.filter(is_saved=True)
+    if query:
+        matching_comments = FacebookComment.objects.filter(post_id=OuterRef('pk'), text__icontains=query)
+        posts = posts.annotate(matches_comment=Exists(matching_comments)).filter(Q(text__icontains=query) | Q(matches_comment=True))
+    if period != 'all':
+        posts = posts.filter(first_seen_at__gte=timezone.now()-timedelta(days=int(period)))
+    if unread:
+        posts = posts.filter(is_reviewed=False)
+    ordering = ('-pcl_in_comments', '-first_seen_at', '-pk') if scope == 'pcl' else ('-first_seen_at', '-pk')
+    page = Paginator(posts.order_by(*ordering), 20).get_page(request.GET.get('page'))
+    decorate_posts(page.object_list)
+    params = request.GET.copy(); params.pop('page', None)
+    tabs = []
+    for value, label in [('pcl', 'PCL mentions'), ('all', 'All posts'), ('saved', 'Saved')]:
+        tab_params = params.copy(); tab_params['scope'] = value
+        tabs.append({'value': value, 'label': label, 'count': totals[value], 'url': '?' + tab_params.urlencode()})
+    return render(request, 'research/facebook_workspace.html', {
+        **monitor_context(), 'fb_nav': 'findings', 'page_obj': page,
+        'scope': scope, 'query': query, 'period': period, 'unread': unread, 'tabs': tabs,
+        'pagination_query': params.urlencode(),
+    })
