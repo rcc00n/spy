@@ -106,3 +106,27 @@ def discussion(request, pk):
 
 
 @operator_view
+@require_POST
+def review(request, pk):
+    post = get_object_or_404(FacebookPost, pk=pk, public_verified=True)
+    action = request.POST.get('action')
+    if action not in ('save', 'unsave', 'read', 'unread'):
+        return HttpResponseBadRequest('Unknown action')
+    with transaction.atomic():
+        state, _ = FacebookReview.objects.get_or_create(user=request.user, post=post)
+        state = FacebookReview.objects.select_for_update().get(pk=state.pk)
+        if action in ('save', 'unsave'):
+            state.saved = action == 'save'
+        else:
+            state.reviewed_at = timezone.now() if action == 'read' else None
+        state.save()
+    if request.headers.get('Accept') == 'application/json':
+        return JsonResponse({'post_id': post.pk, 'saved': state.saved, 'reviewed': bool(state.reviewed_at)})
+    next_url = request.POST.get('next', '')
+    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        next_url = reverse('research:facebook_discussion', args=[post.pk])
+    return redirect(next_url or reverse('research:facebook_discussion', args=[post.pk]))
+
+
+@operator_view
+def settings(request):
