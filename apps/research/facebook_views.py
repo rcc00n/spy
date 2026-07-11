@@ -130,3 +130,27 @@ def review(request, pk):
 
 @operator_view
 def settings(request):
+    monitor, _ = FacebookMonitor.objects.get_or_create(pk=1)
+    form = FacebookMonitorForm(instance=monitor)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'save':
+            form = FacebookMonitorForm(request.POST, instance=monitor)
+            if form.is_valid():
+                configure_monitor('save', form.cleaned_data)
+                messages.success(request, 'Settings saved. The current cycle will finish with its existing configuration.')
+                return redirect('research:facebook_settings')
+        elif action in ('pause', 'resume'):
+            configure_monitor(action)
+            messages.success(request, 'Collection paused. The current post may finish saving.' if action == 'pause' else 'Collection enabled.')
+            return redirect('research:facebook_settings')
+        else:
+            return HttpResponseBadRequest('Unknown action')
+    return render(request, 'research/facebook_settings.html', {
+        **monitor_context(), 'monitor': monitor, 'fb_nav': 'settings', 'form': form,
+        'source_count': FacebookDiscoverySource.objects.filter(enabled=True).count(),
+        'recent_cycles': monitor.jobs.order_by('-pk')[:10],
+    })
+
+
+@operator_view
