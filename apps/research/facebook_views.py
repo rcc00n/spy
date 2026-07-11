@@ -82,3 +82,27 @@ def workspace(request):
         'scope': scope, 'query': query, 'period': period, 'unread': unread, 'tabs': tabs,
         'pagination_query': params.urlencode(),
     })
+
+
+@operator_view
+def discussion(request, pk):
+    post = get_object_or_404(evidence_posts(request.user), pk=pk)
+    decorate_posts([post])
+    comments = post.comments.order_by('-first_seen_at', '-pk')
+    pcl_count = comments.filter(mentions_pcl=True).count()
+    comment_scope = request.GET.get('comments', 'pcl' if pcl_count else 'all')
+    if comment_scope not in ('pcl', 'all'):
+        comment_scope = 'all'
+    if comment_scope == 'pcl':
+        comments = comments.filter(mentions_pcl=True)
+    page = Paginator(comments, 30).get_page(request.GET.get('page'))
+    fragment = request.GET.get('panel') == '1'
+    response = render(request, 'research/facebook_discussion_content.html' if fragment else 'research/facebook_discussion.html', {
+        'fb_nav': 'findings', 'post': post, 'comments_page': page,
+        'pcl_count': pcl_count, 'comment_scope': comment_scope, 'fragment': fragment,
+    })
+    response['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@operator_view
