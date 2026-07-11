@@ -154,3 +154,11 @@ def settings(request):
 
 
 @operator_view
+@require_POST
+def toggle_source(request, pk):
+    source = get_object_or_404(FacebookDiscoverySource, pk=pk)
+    if request.POST.get('action') not in ('enable', 'disable'):
+        return HttpResponseBadRequest('Unknown action')
+    source.enabled = request.POST['action'] == 'enable'
+    source.save(update_fields=['enabled', 'updated_at'])
+    return redirect('research:facebook_sources')
