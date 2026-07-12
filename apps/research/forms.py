@@ -70,3 +70,39 @@ class FacebookScanForm(ResearchJobForm):
             raise forms.ValidationError('Use up to 12 lines, each at most 500 characters.')
         for line in lines:
             if '://' in line and not (canonical_post_url(line) or canonical_source_url(line)):
+                raise forms.ValidationError('Use HTTPS Facebook page, group, post or Reel links.')
+        self.manual_lines = lines
+        return '\n'.join(lines) or 'Watchlist scan'
+
+    def clean(self):
+        data = super().clean()
+        sources = data.get('sources')
+        if sources is not None and len(sources)>30:
+            raise forms.ValidationError('Select at most 30 sources per scan.')
+        if not getattr(self, 'manual_lines', []) and not sources:
+            raise forms.ValidationError('Enter a query or select at least one source.')
+        return data
+
+
+class FacebookDiscoverySourceForm(forms.ModelForm):
+    class Meta:
+        model = FacebookDiscoverySource
+        fields = ['name', 'kind', 'target', 'enabled', 'notes']
+        widgets = {'notes': forms.Textarea(attrs={'rows':3})}
+        help_texts = {'target':'HTTPS Facebook page/group URL or a search phrase. Group visibility is checked before discovery.',
+                      'enabled':'Included in future monitor discovery cycles and available for manual scans. Existing scans keep their saved configuration.'}
+
+    def clean(self):
+        from apps.research.services.facebook_targets import canonical_source_url
+        data=super().clean()
+        target=data.get('target','').strip();kind=data.get('kind')
+        if kind in ('page','group'):
+            normalized=canonical_source_url(target,kind)
+            if not normalized:self.add_error('target','Enter a valid HTTPS Facebook URL for the selected source type.')
+            else:data['target']=normalized
+        elif kind=='search':
+            if '://' in target:self.add_error('target','Use a phrase for a search source, not a URL.')
+            data['target']=' '.join(target.split())
+        return data
+
+
