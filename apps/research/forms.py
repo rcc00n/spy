@@ -106,3 +106,13 @@ class FacebookDiscoverySourceForm(forms.ModelForm):
         return data
 
 
+class FacebookMonitorForm(forms.ModelForm):
+    class Meta:
+        from apps.research.models import FacebookMonitor
+        model = FacebookMonitor
+        fields = ['discovery_hours', 'refresh_hours', 'backfill_hours', 'refresh_batch', 'backfill_batch']
+        labels = {'discovery_hours': 'Find new posts every (hours)',
+                  'refresh_hours': 'Check fresh comments every (hours)',
+                  'backfill_hours': 'Continue unfinished threads every (hours)',
+                  'refresh_batch': 'Discussions per fresh-comment cycle',
+                  'backfill_batch': 'Discussions per continuation cycle'}
