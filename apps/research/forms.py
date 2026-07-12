@@ -46,3 +46,27 @@ class FacebookScanForm(ResearchJobForm):
     sources = forms.ModelMultipleChoiceField(
         queryset=FacebookDiscoverySource.objects.filter(enabled=True), required=False,
         widget=forms.CheckboxSelectMultiple,
+        help_text="Selected pages/groups are read directly; selected search phrases run independently. Configuration is saved with this scan.",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['query'].required = False
+        if not self.is_bound:
+            self.fields['sources'].initial = list(FacebookDiscoverySource.objects.filter(enabled=True).values_list('pk', flat=True))
+
+    class Meta(ResearchJobForm.Meta):
+        fields = ["title", "query", "sources", "depth"]
+        help_texts = {
+            "query": "Optional extra phrases, Facebook page/group URLs or post/Reel URLs, one per line; up to 12. Select watchlist sources below. Results may be old or unrelated.",
+            "depth": "Quick: up to 5 links per query, posts only. Standard: 10 links per query, batches of 40 comments. Deep: 20 links per query, batches of 100. All discovered links are queued. Up to 3 attempts per discussion per cycle; Continue collection preserves saved evidence.",
+        }
+
+    def clean_query(self):
+        from apps.research.services.facebook_browser import canonical_post_url
+        from apps.research.services.facebook_targets import canonical_source_url
+        lines = list(dict.fromkeys(line.strip() for line in self.cleaned_data.get('query', '').splitlines() if line.strip()))
+        if len(lines)>12 or any(len(line)>500 for line in lines):
+            raise forms.ValidationError('Use up to 12 lines, each at most 500 characters.')
+        for line in lines:
+            if '://' in line and not (canonical_post_url(line) or canonical_source_url(line)):
