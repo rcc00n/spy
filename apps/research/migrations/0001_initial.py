@@ -34,3 +34,27 @@ class Migration(migrations.Migration):
                         choices=[
                             ("quick", "Quick"),
                             ("standard", "Standard"),
+                            ("deep", "Deep"),
+                        ],
+                        default="standard",
+                        max_length=20,
+                    ),
+                ),
+                ("include_social", models.BooleanField(default=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("queued", "Queued"),
+                            ("planning", "Planning"),
+                            ("collecting", "Collecting"),
+                            ("social_collecting", "Social collecting"),
+                            ("critiquing", "Critiquing"),
+                            ("completed", "Completed"),
+                            ("failed", "Failed"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        default="queued",
+                        max_length=30,
+                    ),
+                ),
