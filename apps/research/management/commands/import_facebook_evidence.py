@@ -10,3 +10,4 @@ class Command(BaseCommand):
         for job in ResearchJob.objects.filter(plan__engine='facebook_browser'):
             import_legacy_job(job)
             update_report(job)
+        self.stdout.write(f'Corpus: {FacebookPost.objects.count()} posts; {FacebookComment.objects.count()} comments. No jobs started.')
