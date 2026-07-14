@@ -142,3 +142,27 @@ class Migration(migrations.Migration):
                             ("social", "Social"),
                             ("document", "Document"),
                             ("other", "Other"),
+                        ],
+                        default="other",
+                        max_length=30,
+                    ),
+                ),
+                ("title", models.CharField(blank=True, max_length=500)),
+                ("url", models.URLField(blank=True, max_length=2000)),
+                ("excerpt", models.TextField(blank=True)),
+                ("payload", models.JSONField(blank=True, default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "job",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="sources",
+                        to="research.researchjob",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ["source_type", "title", "id"],
+            },
+        ),
+        migrations.AddIndex(
