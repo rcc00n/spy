@@ -118,3 +118,27 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "ordering": ["created_at", "id"],
+            },
+        ),
+        migrations.CreateModel(
+            name="ResearchSource",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "source_type",
+                    models.CharField(
+                        choices=[
+                            ("web", "Web"),
+                            ("social", "Social"),
+                            ("document", "Document"),
+                            ("other", "Other"),
