@@ -10,3 +10,27 @@ class Migration(migrations.Migration):
     dependencies = [
         ("research", "0001_initial"),
     ]
+
+    operations = [
+        migrations.CreateModel(
+            name="FacebookComment",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("facebook_id", models.CharField(max_length=255)),
+                ("parent_id", models.CharField(blank=True, max_length=255)),
+                ("url", models.URLField(max_length=2500)),
+                ("text", models.TextField(blank=True)),
+                ("has_media", models.BooleanField(default=False)),
+                ("mentions_pcl", models.BooleanField(default=False)),
+                (
+                    "first_seen_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
