@@ -202,3 +202,10 @@ class Migration(migrations.Migration):
                 fields=["job", "source_type"], name="research_re_job_id_6c63b1_idx"
             ),
         ),
+        migrations.AddIndex(
+            model_name="researchsource",
+            index=models.Index(
+                fields=["created_at"], name="research_re_created_545994_idx"
+            ),
+        ),
+    ]
