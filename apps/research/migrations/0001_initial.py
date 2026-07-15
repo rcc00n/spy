@@ -166,3 +166,39 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddIndex(
+            model_name="researchjob",
+            index=models.Index(
+                fields=["status", "created_at"], name="research_re_status_4adb58_idx"
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="researchjob",
+            index=models.Index(
+                fields=["requested_by", "created_at"],
+                name="research_re_request_2d8dbc_idx",
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="researchjob",
+            index=models.Index(
+                fields=["external_job_id"], name="research_re_externa_ef9da5_idx"
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="researchevent",
+            index=models.Index(
+                fields=["job", "created_at"], name="research_re_job_id_67f9ef_idx"
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="researchevent",
+            index=models.Index(
+                fields=["level", "created_at"], name="research_re_level_0a3c9d_idx"
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="researchsource",
+            index=models.Index(
+                fields=["job", "source_type"], name="research_re_job_id_6c63b1_idx"
+            ),
+        ),
