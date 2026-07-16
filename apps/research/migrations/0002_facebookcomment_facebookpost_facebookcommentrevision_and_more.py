@@ -34,3 +34,39 @@ class Migration(migrations.Migration):
                     "first_seen_at",
                     models.DateTimeField(default=django.utils.timezone.now),
                 ),
+                (
+                    "last_seen_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="FacebookPost",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("url", models.URLField(max_length=2000)),
+                ("url_hash", models.CharField(max_length=64, unique=True)),
+                ("text", models.TextField(blank=True)),
+                ("public_verified", models.BooleanField(default=False)),
+                ("mentions_pcl", models.BooleanField(default=False)),
+                (
+                    "first_seen_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                (
+                    "last_seen_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="FacebookCommentRevision",
+            fields=[
