@@ -142,3 +142,39 @@ class Migration(migrations.Migration):
                 ("coverage", models.CharField(blank=True, max_length=80)),
                 ("error", models.TextField(blank=True)),
                 (
+                    "next_attempt_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "comments",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="work_items",
+                        to="research.facebookcomment",
+                    ),
+                ),
+                (
+                    "job",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="facebook_threads",
+                        to="research.researchjob",
+                    ),
+                ),
+                (
+                    "post",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="work_items",
+                        to="research.facebookpost",
+                    ),
+                ),
+            ],
+        ),
+        migrations.AddConstraint(
+            model_name="facebookcomment",
+            constraint=models.UniqueConstraint(
+                fields=("post", "facebook_id"), name="fb_comment_post_id_unique"
+            ),
+        ),
