@@ -94,3 +94,27 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "ordering": ["observed_at", "id"],
+            },
+        ),
+        migrations.AddField(
+            model_name="facebookcomment",
+            name="post",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="comments",
+                to="research.facebookpost",
+            ),
+        ),
+        migrations.CreateModel(
+            name="FacebookThreadWork",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
