@@ -118,3 +118,27 @@ class Migration(migrations.Migration):
                         serialize=False,
                         verbose_name="ID",
                     ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("queued", "Queued"),
+                            ("running", "Reading"),
+                            ("sampled", "No further comments observed"),
+                            ("post_only", "Post only"),
+                            ("partial", "Partial — continue available"),
+                            ("failed", "Extraction failed"),
+                            ("blocked", "Access stopped"),
+                        ],
+                        default="queued",
+                        max_length=20,
+                    ),
+                ),
+                ("queries", models.JSONField(blank=True, default=list)),
+                ("attempts", models.PositiveIntegerField(default=0)),
+                ("cycle_attempts", models.PositiveIntegerField(default=0)),
+                ("checkpoint", models.JSONField(blank=True, default=dict)),
+                ("coverage", models.CharField(blank=True, max_length=80)),
+                ("error", models.TextField(blank=True)),
+                (
