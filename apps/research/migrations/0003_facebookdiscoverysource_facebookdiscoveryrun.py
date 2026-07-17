@@ -58,3 +58,27 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=160)),
+                ("kind", models.CharField(max_length=12)),
+                ("target", models.CharField(max_length=500)),
+                ("status", models.CharField(default="queued", max_length=16)),
+                ("coverage", models.CharField(blank=True, max_length=80)),
+                ("error", models.TextField(blank=True)),
+                ("attempts", models.PositiveIntegerField(default=0)),
+                ("cycle_attempts", models.PositiveIntegerField(default=0)),
+                (
+                    "next_attempt_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "job",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
