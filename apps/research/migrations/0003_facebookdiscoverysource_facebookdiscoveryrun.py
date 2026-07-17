@@ -22,3 +22,39 @@ class Migration(migrations.Migration):
                     "id",
                     models.BigAutoField(
                         auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=160)),
+                (
+                    "kind",
+                    models.CharField(
+                        choices=[
+                            ("page", "Page"),
+                            ("group", "Public group"),
+                            ("search", "Search phrase"),
+                        ],
+                        max_length=12,
+                    ),
+                ),
+                ("target", models.CharField(max_length=500)),
+                ("enabled", models.BooleanField(default=True)),
+                ("notes", models.TextField(blank=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+            ],
+            options={
+                "ordering": ["kind", "name"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("kind", "target"), name="fb_discovery_source_unique"
+                    )
+                ],
+            },
+        ),
+        migrations.CreateModel(
+            name="FacebookDiscoveryRun",
+            fields=[
+                (
+                    "id",
