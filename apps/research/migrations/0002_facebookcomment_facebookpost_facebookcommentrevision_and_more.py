@@ -178,3 +178,17 @@ class Migration(migrations.Migration):
                 fields=("post", "facebook_id"), name="fb_comment_post_id_unique"
             ),
         ),
+        migrations.AddIndex(
+            model_name="facebookthreadwork",
+            index=models.Index(
+                fields=["status", "next_attempt_at"],
+                name="research_fa_status_2b3197_idx",
+            ),
+        ),
+        migrations.AddConstraint(
+            model_name="facebookthreadwork",
+            constraint=models.UniqueConstraint(
+                fields=("job", "post"), name="fb_work_job_post_unique"
+            ),
+        ),
+    ]
