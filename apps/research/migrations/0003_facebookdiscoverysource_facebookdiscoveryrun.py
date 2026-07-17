@@ -82,3 +82,27 @@ class Migration(migrations.Migration):
                     "job",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
+                        related_name="facebook_discoveries",
+                        to="research.researchjob",
+                    ),
+                ),
+                (
+                    "posts",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="discoveries",
+                        to="research.facebookpost",
+                    ),
+                ),
+                (
+                    "source",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="runs",
+                        to="research.facebookdiscoverysource",
+                    ),
+                ),
+            ],
+            options={
