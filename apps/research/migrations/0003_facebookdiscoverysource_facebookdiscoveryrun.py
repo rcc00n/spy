@@ -106,3 +106,18 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
+                "ordering": ["pk"],
+                "indexes": [
+                    models.Index(
+                        fields=["status", "next_attempt_at"],
+                        name="research_fa_status_b107a6_idx",
+                    )
+                ],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("job", "kind", "target"), name="fb_discovery_run_unique"
+                    )
+                ],
+            },
+        ),
+    ]
