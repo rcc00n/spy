@@ -58,3 +58,27 @@ class Migration(migrations.Migration):
                         default=2,
                         validators=[
                             django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(168),
+                        ],
+                    ),
+                ),
+                (
+                    "backfill_hours",
+                    models.PositiveIntegerField(
+                        default=12,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(168),
+                        ],
+                    ),
+                ),
+                (
+                    "refresh_batch",
+                    models.PositiveIntegerField(
+                        default=12,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(50),
+                        ],
+                    ),
+                ),
