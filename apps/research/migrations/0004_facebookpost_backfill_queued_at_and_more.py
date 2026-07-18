@@ -34,3 +34,27 @@ class Migration(migrations.Migration):
                 (
                     "id",
                     models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("enabled", models.BooleanField(default=False)),
+                ("pause_reason", models.TextField(blank=True)),
+                (
+                    "discovery_hours",
+                    models.PositiveIntegerField(
+                        default=6,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(168),
+                        ],
+                    ),
+                ),
+                (
+                    "refresh_hours",
+                    models.PositiveIntegerField(
+                        default=2,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
