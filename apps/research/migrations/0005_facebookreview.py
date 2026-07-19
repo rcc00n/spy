@@ -34,3 +34,21 @@ class Migration(migrations.Migration):
                         related_name="reviews",
                         to="research.facebookpost",
                     ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("user", "post"), name="fb_review_user_post_unique"
+                    )
+                ],
+            },
+        ),
+    ]
