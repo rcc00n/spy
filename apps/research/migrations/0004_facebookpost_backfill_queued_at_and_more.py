@@ -118,3 +118,11 @@ class Migration(migrations.Migration):
             model_name="researchjob",
             name="monitor",
             field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="jobs",
+                to="research.facebookmonitor",
+            ),
+        ),
+    ]
