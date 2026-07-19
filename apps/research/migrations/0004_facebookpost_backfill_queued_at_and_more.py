@@ -82,3 +82,39 @@ class Migration(migrations.Migration):
                         ],
                     ),
                 ),
+                (
+                    "backfill_batch",
+                    models.PositiveIntegerField(
+                        default=4,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(20),
+                        ],
+                    ),
+                ),
+                (
+                    "discovery_due_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                (
+                    "refresh_due_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                (
+                    "backfill_due_at",
+                    models.DateTimeField(default=django.utils.timezone.now),
+                ),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+            ],
+            options={
+                "constraints": [
+                    models.CheckConstraint(
+                        condition=models.Q(("pk", 1)), name="fb_monitor_singleton"
+                    )
+                ],
+            },
+        ),
+        migrations.AddField(
+            model_name="researchjob",
+            name="monitor",
+            field=models.ForeignKey(
