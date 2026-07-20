@@ -22,3 +22,27 @@ class ResearchJob(models.Model):
 
     TERMINAL_STATUSES = {
         Status.COMPLETED,
+        Status.FAILED,
+        Status.CANCELLED,
+    }
+
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="research_jobs",
+    )
+    title = models.CharField(max_length=255, blank=True)
+    query = models.TextField()
+    depth = models.CharField(
+        max_length=20,
+        choices=Depth.choices,
+        default=Depth.STANDARD,
+    )
+    include_social = models.BooleanField(default=True)
+    status = models.CharField(
+        max_length=30,
+        choices=Status.choices,
+        default=Status.QUEUED,
+    )
