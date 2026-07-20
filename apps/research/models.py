@@ -154,3 +154,27 @@ class ResearchSource(models.Model):
 
 class FacebookPost(models.Model):
     """Public evidence shared across scans; timestamps are observation times."""
+    url = models.URLField(max_length=2000)
+    url_hash = models.CharField(max_length=64, unique=True)
+    refresh_queued_at = models.DateTimeField(null=True, blank=True)
+    backfill_queued_at = models.DateTimeField(null=True, blank=True)
+    text = models.TextField(blank=True)
+    public_verified = models.BooleanField(default=False)
+    mentions_pcl = models.BooleanField(default=False)
+    first_seen_at = models.DateTimeField(default=timezone.now)
+    last_seen_at = models.DateTimeField(default=timezone.now)
+
+
+class FacebookComment(models.Model):
+    post = models.ForeignKey(FacebookPost, on_delete=models.CASCADE, related_name="comments")
+    facebook_id = models.CharField(max_length=255)
+    parent_id = models.CharField(max_length=255, blank=True)
+    url = models.URLField(max_length=2500)
+    text = models.TextField(blank=True)
+    has_media = models.BooleanField(default=False)
+    mentions_pcl = models.BooleanField(default=False)
+    first_seen_at = models.DateTimeField(default=timezone.now)
+    last_seen_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["post", "facebook_id"], name="fb_comment_post_id_unique")]
