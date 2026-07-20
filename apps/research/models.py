@@ -70,3 +70,39 @@ class ResearchJob(models.Model):
         return f"Research #{self.pk}: {self.display_title}"
 
     @property
+    def display_title(self) -> str:
+        return self.title or self.query[:80]
+
+    @property
+    def is_terminal(self) -> bool:
+        return self.status in self.TERMINAL_STATUSES
+
+    def mark_started(self, status: str = Status.PLANNING) -> None:
+        self.status = status
+        self.started_at = self.started_at or timezone.now()
+        self.error_message = ""
+        self.save(update_fields=["status", "started_at", "error_message", "updated_at"])
+
+    def mark_finished(self, status: str, error_message: str = "") -> None:
+        self.status = status
+        self.completed_at = timezone.now()
+        self.error_message = error_message
+        self.save(update_fields=["status", "completed_at", "error_message", "updated_at"])
+
+
+class ResearchEvent(models.Model):
+    class Level(models.TextChoices):
+        INFO = "info", "Info"
+        WARNING = "warning", "Warning"
+        ERROR = "error", "Error"
+
+    job = models.ForeignKey(
+        ResearchJob,
+        on_delete=models.CASCADE,
+        related_name="events",
+    )
+    level = models.CharField(max_length=20, choices=Level.choices, default=Level.INFO)
+    message = models.TextField()
+    payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
