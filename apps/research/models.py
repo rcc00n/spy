@@ -106,3 +106,27 @@ class ResearchEvent(models.Model):
     payload = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["created_at", "id"]
+        indexes = [
+            models.Index(fields=["job", "created_at"]),
+            models.Index(fields=["level", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_level_display()} for research #{self.job_id}"
+
+
+class ResearchSource(models.Model):
+    class SourceType(models.TextChoices):
+        WEB = "web", "Web"
+        SOCIAL = "social", "Social"
+        DOCUMENT = "document", "Document"
+        OTHER = "other", "Other"
+
+    job = models.ForeignKey(
+        ResearchJob,
+        on_delete=models.CASCADE,
+        related_name="sources",
+    )
+    source_type = models.CharField(
