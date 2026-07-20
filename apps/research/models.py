@@ -130,3 +130,27 @@ class ResearchSource(models.Model):
         related_name="sources",
     )
     source_type = models.CharField(
+        max_length=30,
+        choices=SourceType.choices,
+        default=SourceType.OTHER,
+    )
+    title = models.CharField(max_length=500, blank=True)
+    url = models.URLField(max_length=2000, blank=True)
+    excerpt = models.TextField(blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["source_type", "title", "id"]
+        indexes = [
+            models.Index(fields=["job", "source_type"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return self.title or self.url or f"{self.source_type} source"
+
+
+
+class FacebookPost(models.Model):
+    """Public evidence shared across scans; timestamps are observation times."""
