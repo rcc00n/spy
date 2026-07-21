@@ -262,3 +262,29 @@ class FacebookDiscoveryRun(models.Model):
 
 
 class FacebookMonitor(models.Model):
+    """Single operator-controlled schedule sharing the site's browser session."""
+    enabled = models.BooleanField(default=False)
+    pause_reason = models.TextField(blank=True)
+    discovery_hours = models.PositiveIntegerField(default=6, validators=[MinValueValidator(1), MaxValueValidator(168)])
+    refresh_hours = models.PositiveIntegerField(default=2, validators=[MinValueValidator(1), MaxValueValidator(168)])
+    backfill_hours = models.PositiveIntegerField(default=12, validators=[MinValueValidator(1), MaxValueValidator(168)])
+    refresh_batch = models.PositiveIntegerField(default=12, validators=[MinValueValidator(1), MaxValueValidator(50)])
+    backfill_batch = models.PositiveIntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(20)])
+    discovery_due_at = models.DateTimeField(default=timezone.now)
+    refresh_due_at = models.DateTimeField(default=timezone.now)
+    backfill_due_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.CheckConstraint(condition=models.Q(pk=1), name='fb_monitor_singleton')]
+
+
+class FacebookReview(models.Model):
+    """Personal reading state; independent of collection and shared evidence."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(FacebookPost, on_delete=models.CASCADE, related_name='reviews')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    saved = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'post'], name='fb_review_user_post_unique')]
