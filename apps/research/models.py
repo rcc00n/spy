@@ -178,3 +178,39 @@ class FacebookComment(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["post", "facebook_id"], name="fb_comment_post_id_unique")]
+
+
+class FacebookCommentRevision(models.Model):
+    comment = models.ForeignKey(FacebookComment, on_delete=models.CASCADE, related_name="revisions")
+    text = models.TextField(blank=True)
+    has_media = models.BooleanField(default=False)
+    observed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["observed_at", "id"]
+
+
+class FacebookThreadWork(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        RUNNING = "running", "Reading"
+        SAMPLED = "sampled", "No further comments observed"
+        POST_ONLY = "post_only", "Post only"
+        PARTIAL = "partial", "Partial — continue available"
+        FAILED = "failed", "Extraction failed"
+        BLOCKED = "blocked", "Access stopped"
+
+    job = models.ForeignKey(ResearchJob, on_delete=models.CASCADE, related_name="facebook_threads")
+    post = models.ForeignKey(FacebookPost, on_delete=models.CASCADE, related_name="work_items")
+    comments = models.ManyToManyField(FacebookComment, blank=True, related_name="work_items")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.QUEUED)
+    queries = models.JSONField(default=list, blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    cycle_attempts = models.PositiveIntegerField(default=0)
+    checkpoint = models.JSONField(default=dict, blank=True)
+    coverage = models.CharField(max_length=80, blank=True)
+    error = models.TextField(blank=True)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
