@@ -214,3 +214,27 @@ class FacebookThreadWork(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        constraints = [models.UniqueConstraint(fields=["job", "post"], name="fb_work_job_post_unique")]
+        indexes = [models.Index(fields=["status", "next_attempt_at"])]
+
+
+class FacebookDiscoverySource(models.Model):
+    class Kind(models.TextChoices):
+        PAGE = 'page', 'Page'
+        GROUP = 'group', 'Public group'
+        SEARCH = 'search', 'Search phrase'
+
+    name = models.CharField(max_length=160)
+    kind = models.CharField(max_length=12, choices=Kind.choices)
+    target = models.CharField(max_length=500)
+    enabled = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['kind', 'name']
+        constraints = [models.UniqueConstraint(fields=['kind', 'target'], name='fb_discovery_source_unique')]
+
+    def __str__(self):
+        return f'{self.get_kind_display()}: {self.name}'
+
