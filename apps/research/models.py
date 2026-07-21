@@ -238,3 +238,27 @@ class FacebookDiscoverySource(models.Model):
     def __str__(self):
         return f'{self.get_kind_display()}: {self.name}'
 
+
+class FacebookDiscoveryRun(models.Model):
+    job = models.ForeignKey(ResearchJob, on_delete=models.CASCADE, related_name='facebook_discoveries')
+    source = models.ForeignKey(FacebookDiscoverySource, null=True, blank=True, on_delete=models.SET_NULL, related_name='runs')
+    # Snapshot configuration: editing/disabling a watchlist source affects future scans.
+    name = models.CharField(max_length=160)
+    kind = models.CharField(max_length=12)
+    target = models.CharField(max_length=500)
+    status = models.CharField(max_length=16, default='queued')
+    coverage = models.CharField(max_length=80, blank=True)
+    error = models.TextField(blank=True)
+    attempts = models.PositiveIntegerField(default=0)
+    cycle_attempts = models.PositiveIntegerField(default=0)
+    posts = models.ManyToManyField(FacebookPost, blank=True, related_name='discoveries')
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['pk']
+        constraints = [models.UniqueConstraint(fields=['job', 'kind', 'target'], name='fb_discovery_run_unique')]
+        indexes = [models.Index(fields=['status', 'next_attempt_at'])]
+
+
+class FacebookMonitor(models.Model):
