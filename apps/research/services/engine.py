@@ -34,3 +34,27 @@ REMOTE_STATUS_MAP = {
     "searching": "collecting",
     "collecting": "collecting",
     "web": "collecting",
+    "social": "social_collecting",
+    "social_collecting": "social_collecting",
+    "critique": "critiquing",
+    "critiquing": "critiquing",
+    "critic": "critiquing",
+    "analysis": "critiquing",
+    "completed": "completed",
+    "complete": "completed",
+    "succeeded": "completed",
+    "success": "completed",
+    "done": "completed",
+    "failed": "failed",
+    "error": "failed",
+    "cancelled": "cancelled",
+    "canceled": "cancelled",
+}
+
+
+def normalize_remote_status(value: Any) -> str | None:
+    if not value:
+        return None
+    return REMOTE_STATUS_MAP.get(str(value).strip().lower())
+
+
