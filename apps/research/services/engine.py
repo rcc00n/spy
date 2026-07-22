@@ -58,3 +58,39 @@ def normalize_remote_status(value: Any) -> str | None:
     return REMOTE_STATUS_MAP.get(str(value).strip().lower())
 
 
+def normalize_update(payload: dict[str, Any]) -> RemoteJobUpdate:
+    external_job_id = (
+        payload.get("external_job_id")
+        or payload.get("job_id")
+        or payload.get("id")
+        or ""
+    )
+    status = normalize_remote_status(payload.get("status") or payload.get("phase"))
+    report = payload.get("report_markdown") or payload.get("report") or ""
+    error = payload.get("error_message") or payload.get("error") or ""
+    plan = payload.get("plan") if isinstance(payload.get("plan"), dict) else {}
+    sources = payload.get("sources") if isinstance(payload.get("sources"), list) else []
+    message = payload.get("message") or payload.get("detail") or ""
+    return RemoteJobUpdate(
+        status=status,
+        external_job_id=str(external_job_id),
+        plan=plan,
+        report_markdown=str(report),
+        error_message=str(error),
+        sources=sources,
+        message=str(message),
+    )
+
+
+class ResearchEngineClient:
+    def __init__(
+        self,
+        base_url: str | None = None,
+        token: str | None = None,
+        timeout_seconds: float | None = None,
+    ):
+        configured_url = base_url if base_url is not None else research_engine_base_url()
+        self.base_url = configured_url.rstrip("/")
+        self.token = token if token is not None else settings.RESEARCH_ENGINE_TOKEN
+        self.timeout_seconds = (
+            timeout_seconds
