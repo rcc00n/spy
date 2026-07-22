@@ -10,3 +10,27 @@ from django.conf import settings
 from apps.research.services.runpod import research_engine_base_url
 
 
+class ResearchEngineError(Exception):
+    pass
+
+
+@dataclass(frozen=True)
+class RemoteJobUpdate:
+    status: str | None
+    external_job_id: str
+    plan: dict[str, Any]
+    report_markdown: str
+    error_message: str
+    sources: list[dict[str, Any]]
+    message: str
+
+
+REMOTE_STATUS_MAP = {
+    "queued": "queued",
+    "pending": "queued",
+    "planning": "planning",
+    "plan": "planning",
+    "running": "collecting",
+    "searching": "collecting",
+    "collecting": "collecting",
+    "web": "collecting",
