@@ -118,3 +118,27 @@ class ResearchEngineClient:
                 else "",
                 "portal_task_id": job.task_id,
             },
+        }
+        return normalize_update(
+            self._request_json("POST", "/v1/research/jobs", payload)
+        )
+
+    def get_job_status(self, external_job_id: str) -> RemoteJobUpdate:
+        self.ensure_configured()
+        quoted_id = quote(str(external_job_id), safe="")
+        return normalize_update(
+            self._request_json("GET", f"/v1/research/jobs/{quoted_id}")
+        )
+
+    def _request_json(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        url = f"{self.base_url}{path}"
+        body = None
+        headers = {"Accept": "application/json"}
+        if payload is not None:
+            body = json.dumps(payload).encode("utf-8")
+            headers["Content-Type"] = "application/json"
