@@ -142,3 +142,31 @@ class ResearchEngineClient:
         if payload is not None:
             body = json.dumps(payload).encode("utf-8")
             headers["Content-Type"] = "application/json"
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
+
+        request = Request(url, data=body, headers=headers, method=method)
+        try:
+            with urlopen(request, timeout=self.timeout_seconds) as response:
+                raw_body = response.read().decode("utf-8")
+        except HTTPError as exc:
+            error_body = exc.read().decode("utf-8", errors="replace")
+            raise ResearchEngineError(
+                f"Research engine returned HTTP {exc.code}: {error_body[:1000]}"
+            ) from exc
+        except URLError as exc:
+            raise ResearchEngineError(f"Research engine request failed: {exc}") from exc
+        except TimeoutError as exc:
+            raise ResearchEngineError("Research engine request timed out.") from exc
+
+        if not raw_body:
+            return {}
+        try:
+            parsed = json.loads(raw_body)
+        except json.JSONDecodeError as exc:
+            raise ResearchEngineError(
+                f"Research engine returned invalid JSON: {raw_body[:1000]}"
+            ) from exc
+        if not isinstance(parsed, dict):
+            raise ResearchEngineError("Research engine response must be a JSON object.")
+        return parsed
