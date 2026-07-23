@@ -46,3 +46,27 @@ def comment_record(row, source_url):
             continue
         query = parse_qs(urlsplit(link).query)
         parent_id = (query.get('comment_id') or [''])[0]
+        reply_id = (query.get('reply_comment_id') or [''])[0]
+        key = reply_id or parent_id
+        if not key:
+            continue
+        text = '\n'.join(dict.fromkeys(x.strip() for x in row.get('texts', []) if x.strip()))[:12000]
+        params = {'comment_id': parent_id}
+        if reply_id:
+            params['reply_comment_id'] = reply_id
+        separator = '&' if '?' in source_url else '?'
+        return {'id': key, 'parent_id': parent_id if reply_id else '', 'url': source_url + separator + urlencode(params),
+                'text': text, 'has_media': bool(row.get('has_media')), 'mentions_pcl': bool(TARGET.search(text))}
+    return None
+
+
+def check_page(page):
+    text = page.locator('body').inner_text(timeout=5000)
+    state = detect_facebook_block_state(text, page.url, has_post_evidence=page.locator('[role=article]').count() > 0)
+    if state in {'login_required', 'captcha_or_checkpoint', 'rate_limited_or_blocked'}:
+        raise FacebookAccessStopped('Facebook access state: ' + state)
+    if state != 'ok':
+        raise RuntimeError('Facebook access state: ' + state)
+    return text
+
+
