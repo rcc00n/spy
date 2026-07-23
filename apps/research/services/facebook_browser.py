@@ -22,3 +22,27 @@ TARGET = re.compile(r'\bPCL\b|PCL\s*(?:Construction|Constructors|Industrial|Ener
 class FacebookAccessStopped(RuntimeError):
     pass
 
+
+PUBLIC = re.compile(r'(?:Shared with\s*Public|Поделился.*Доступно всем|^Public$|^Доступно всем$)', re.I)
+
+
+def canonical_post_url(value):
+    parsed = urlsplit(value)
+    if parsed.scheme != 'https' or parsed.hostname not in {'facebook.com', 'www.facebook.com', 'm.facebook.com'}:
+        return ''
+    path = parsed.path.rstrip('/')
+    query = parse_qs(parsed.query)
+    if re.search(r'/(?:posts|reel|videos|permalink)/[^/]+', path):
+        return urlunsplit(('https', 'www.facebook.com', path + '/', '', ''))
+    if path in {'/story.php', '/permalink.php'} and query.get('story_fbid') and query.get('id'):
+        return 'https://www.facebook.com' + path + '?' + urlencode({'story_fbid': query['story_fbid'][0], 'id': query['id'][0]})
+    return ''
+
+
+def comment_record(row, source_url):
+    """Reject comment links from recommendations/other posts or profile links."""
+    for link in row.get('links', []):
+        if canonical_post_url(link) != source_url:
+            continue
+        query = parse_qs(urlsplit(link).query)
+        parent_id = (query.get('comment_id') or [''])[0]
