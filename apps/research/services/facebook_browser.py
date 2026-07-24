@@ -154,3 +154,39 @@ def collect_thread(page, url, limit, deadline, checkpoint=None, seconds=60, expa
                 scope = article
                 break
     if scope is None:
+        result['coverage'] = 'discussion_container_not_found'
+        return result
+    labels = scope.locator('[aria-label], [title], svg title').evaluate_all('(ns) => ns.flatMap(n => [n.getAttribute("aria-label"), n.getAttribute("title"), n.tagName.toLowerCase() === "title" ? n.textContent : ""])')
+    group_public = group_public and group_from_post(page.url) == group
+    if not any(PUBLIC.search(x or '') for x in labels) and not group_public:
+        result['coverage'] = 'public_visibility_not_verified'
+        return result
+    result['public_verified'] = True
+    # Expand only known read-only controls; never click Reply, Like or Publish.
+    # An icon labelled 'Ещё' can open an unrelated 'About this content' dialog.
+    # Only expand controls with actual visible caption text, never icon menus.
+    more_text = re.compile(r'^(See more|Ещё|Еще)$', re.I)
+    more = scope.get_by_role('button', name=more_text).filter(has_text=more_text)
+    if more.count() and more.first.is_visible():
+        more.first.click(timeout=3000)
+    # Keep a bounded context snapshot without comment bodies or account chrome.
+    result['text'] = scope.evaluate(r'''(root) => {
+        const message = root.querySelector('[data-ad-preview="message"], [data-ad-comet-preview="message"]');
+        if (message) return message.innerText || '';
+        const articles = Array.from(root.querySelectorAll('[role="article"]'));
+        const post = articles.find(n => !/^(Comment by|Reply by|Комментарий|Ответ)/i.test(n.getAttribute('aria-label') || ''));
+        if (post) {
+            const copy = post.cloneNode(true);
+            copy.querySelectorAll('[role="article"], [role="button"], button, input, textarea, [contenteditable]').forEach(n => n.remove());
+            const value = copy.innerText || copy.textContent || '';
+            if (value.trim()) return value;
+        }
+        if (root.getAttribute('role') === 'dialog') {
+            let text = root.innerText || '';
+            articles.forEach(n => { text = text.replace(n.innerText || '', ''); });
+            return text;
+        }
+        const badge = Array.from(root.querySelectorAll('[aria-label], [title]')).find(n => /Shared with Public|Поделился.*Доступно всем/.test(n.getAttribute('aria-label') || n.getAttribute('title') || ''));
+        let node = badge;
+        for (let i=0; node && i<18; i++, node=node.parentElement) {
+            if (node.querySelector('[role=article]')) break;
