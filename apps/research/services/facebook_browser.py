@@ -130,3 +130,27 @@ def collect_thread(page, url, limit, deadline, checkpoint=None, seconds=60, expa
         result['coverage'] = f'http_{response.status}'
         return result
     page.wait_for_timeout(2000)
+    check_page(page)
+    # Reels initially hide their public badge, caption and comments together.
+    if '/reel/' in url and not page.locator('[role=article]').count():
+        opener = page.get_by_role('button', name=OPEN_COMMENTS)
+        if opener.count():
+            opener.first.click(timeout=5000)
+            page.wait_for_timeout(1500)
+    # A post can open in a dialog over the user's unrelated home feed.
+    # Never collect that background feed or use its visibility badge.
+    # Resolve the last *currently visible* dialog on each operation. Absolute nth
+    # indices become invalid when Facebook removes a loading/hidden dialog.
+    dialogs = page.locator('[role="dialog"]:visible')
+    scope = dialogs.last if dialogs.count() else None
+    if scope is None and '/reel/' in url:
+        scope = page.locator('body')
+    if scope is None:
+        articles = page.locator('[role=article]')
+        for i in range(min(articles.count(), 50)):
+            article = articles.nth(i)
+            links = article.locator('a[href]').evaluate_all('(ns) => ns.map(n => n.href)')
+            if any(canonical_post_url(link) == url for link in links):
+                scope = article
+                break
+    if scope is None:
