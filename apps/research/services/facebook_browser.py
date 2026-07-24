@@ -106,3 +106,27 @@ COMMENT_ROWS = r'''(root) => Array.from(root.querySelectorAll('[role="article"]'
     );
     return {
         texts: textNodes.map(x => x.innerText || '').filter(Boolean),
+        links: Array.from(n.querySelectorAll('a[href]')).filter(own).map(a => a.href),
+        has_media: Array.from(n.querySelectorAll('img,video')).filter(own).some(x => (x.alt || '').length > 0)
+    };
+})'''
+
+
+def collect_thread(page, url, limit, deadline, checkpoint=None, seconds=60, expansion_limit=25, prefer_newest=False):
+    result = {'url': url, 'text': '', 'comments': [], 'public_verified': False,
+              'coverage': 'not_read', 'sort': 'unknown', 'mentions_pcl': False}
+    group = group_from_post(url)
+    group_public = False
+    if group:
+        page.goto(group, wait_until='domcontentloaded', timeout=30000)
+        page.wait_for_timeout(2500)
+        check_page(page)
+        group_public = canonical_source_url(page.url, 'group') == group and public_group_header(page)
+        if not group_public:
+            result['coverage'] = 'public_group_not_verified'
+            return result
+    response = page.goto(url, wait_until='domcontentloaded', timeout=30000)
+    if response and response.status >= 400:
+        result['coverage'] = f'http_{response.status}'
+        return result
+    page.wait_for_timeout(2000)
