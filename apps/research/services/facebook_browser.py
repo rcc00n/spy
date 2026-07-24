@@ -190,3 +190,27 @@ def collect_thread(page, url, limit, deadline, checkpoint=None, seconds=60, expa
         let node = badge;
         for (let i=0; node && i<18; i++, node=node.parentElement) {
             if (node.querySelector('[role=article]')) break;
+            const text = node.innerText || '';
+            if (text.length > 50) return text;
+        }
+        return '';
+    }''')[:14000]
+    result['mentions_pcl'] = bool(TARGET.search(result['text']))
+    result['coverage'] = 'collecting'
+    if checkpoint:
+        checkpoint(dict(result))
+    if limit == 0:
+        result['coverage'] = 'post_only_comments_not_requested'
+        return result
+    sort = scope.get_by_role('button', name=SORT)
+    if sort.count():
+        sort.first.click(timeout=3000)
+        items = page.get_by_role('menuitem')
+        chosen = False
+        choices = [(r'^(All comments|Все комментарии)', 'all'), (r'^(Newest|Most recent|Новые|Сначала новые)', 'newest')]
+        for pattern, label in (list(reversed(choices)) if prefer_newest else choices):
+            option = items.filter(has_text=re.compile(pattern, re.I))
+            if option.count():
+                option.first.click(timeout=3000)
+                result['sort'] = label
+                chosen = True
