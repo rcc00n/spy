@@ -70,3 +70,39 @@ def check_page(page):
     return text
 
 
+def discover(page, query, limit, rounds, deadline, on_urls=None):
+    url = 'https://www.facebook.com/search/posts/?' + urlencode({'q': query})
+    response = page.goto(url, wait_until='domcontentloaded', timeout=30000)
+    if response and response.status >= 400:
+        raise RuntimeError(f'Facebook search HTTP {response.status}')
+    page.wait_for_timeout(2500)
+    seen = {}
+    stagnant = 0
+    for _ in range(rounds + 1):
+        check_page(page)
+        before = len(seen)
+        links = page.locator('[role=article] a[href]').evaluate_all('(nodes) => nodes.map(n => n.href)')
+        for link in links:
+            post = canonical_post_url(link)
+            if post:
+                seen[post] = None
+        if on_urls and len(seen) != before:
+            on_urls(list(seen)[:limit])
+        stagnant = stagnant + 1 if len(seen) == before else 0
+        if len(seen) >= limit or stagnant >= 2 or time.monotonic() >= deadline:
+            break
+        page.mouse.wheel(0, 1800)
+        page.wait_for_timeout(1500)
+    return list(seen)[:limit]
+
+
+COMMENT_ROWS = r'''(root) => Array.from(root.querySelectorAll('[role="article"]')).filter(n =>
+    /^(Comment by|Reply by|Комментарий|Ответ)/i.test(n.getAttribute('aria-label') || '')
+).map(n => {
+    const own = x => x.closest('[role="article"]') === n;
+    const textNodes = Array.from(n.querySelectorAll('[dir="auto"]')).filter(x =>
+        own(x) && !x.closest('a, [role="button"], button') &&
+        !Array.from(x.querySelectorAll('[dir="auto"]')).some(y => own(y))
+    );
+    return {
+        texts: textNodes.map(x => x.innerText || '').filter(Boolean),
