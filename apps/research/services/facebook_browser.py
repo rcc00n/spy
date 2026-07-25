@@ -238,3 +238,27 @@ def collect_thread(page, url, limit, deadline, checkpoint=None, seconds=60, expa
                     batch.append(record)
                 comments[record['id']] = record
         if checkpoint and batch:
+            checkpoint({**result, 'comments': batch, 'coverage': 'collecting'})
+        stagnant = stagnant + 1 if len(comments) == previous_count else 0
+        if len(comments) >= limit:
+            result['coverage'] = 'comment_limit_reached'
+            break
+        expander = scope.get_by_role('button', name=EXPAND)
+        visible = next((expander.nth(i) for i in range(min(expander.count(), 20)) if expander.nth(i).is_visible()), None)
+        if visible is None:
+            if stagnant >= 3:
+                result['coverage'] = 'no_new_comments_after_scroll'
+                break
+            # Newest comments often load by scrolling, without a More button.
+            scope.evaluate(r'''root => {
+                const nodes = [root, ...root.querySelectorAll('*')].filter(n =>
+                    n.clientHeight > 100 && n.scrollHeight > n.clientHeight + 100 &&
+                    /auto|scroll/.test(getComputedStyle(n).overflowY)
+                );
+                nodes.sort((a,b) => (b.scrollHeight-b.clientHeight)-(a.scrollHeight-a.clientHeight));
+                nodes.slice(0,2).forEach(n => n.scrollBy(0, Math.max(n.clientHeight, 700)));
+            }''')
+            page.wait_for_timeout(1500)
+            continue
+        if clicks >= expansion_limit:
+            result['coverage'] = 'expansion_limit_reached'
