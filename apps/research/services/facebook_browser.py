@@ -214,3 +214,27 @@ def collect_thread(page, url, limit, deadline, checkpoint=None, seconds=60, expa
                 option.first.click(timeout=3000)
                 result['sort'] = label
                 chosen = True
+                page.wait_for_timeout(1200)
+                break
+        if not chosen:
+            page.keyboard.press('Escape')
+            result['sort'] = 'relevance_filtered'
+    comments = {}
+    observed_rows = 0
+    clicks = 0
+    stagnant = 0
+    end = min(deadline, time.monotonic() + seconds)
+    result['coverage'] = 'visible_comments_only'
+    while time.monotonic() < end:
+        check_page(page)
+        previous_count = len(comments)
+        batch = []
+        rows = scope.evaluate(COMMENT_ROWS)
+        observed_rows += len(rows)
+        for row in rows:
+            record = comment_record(row, url)
+            if record:
+                if comments.get(record['id']) != record:
+                    batch.append(record)
+                comments[record['id']] = record
+        if checkpoint and batch:
