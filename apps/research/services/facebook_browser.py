@@ -262,3 +262,39 @@ def collect_thread(page, url, limit, deadline, checkpoint=None, seconds=60, expa
             continue
         if clicks >= expansion_limit:
             result['coverage'] = 'expansion_limit_reached'
+            break
+        visible.click(timeout=3000)
+        clicks += 1
+        page.wait_for_timeout(900)
+    else:
+        result['coverage'] = 'time_budget_reached'
+    if not comments and result['coverage'] == 'no_new_comments_after_scroll':
+        result['coverage'] = 'comment_links_not_matched' if observed_rows else 'comments_not_observed'
+    result['comments'] = list(comments.values())
+    result['video_analysis'] = 'not_performed'
+    return result
+
+
+def browser_scan(queries, depth='standard', progress=None):
+    post_limit, rounds, visit_limit, comment_limit = {
+        'quick': (5, 2, 6, 0), 'standard': (10, 4, 12, 40), 'deep': (20, 7, 24, 100)
+    }.get(depth, (10, 4, 12, 40))
+    kwargs = facebook_context_kwargs(auth_enabled=True)
+    result = {'queries': [], 'sources': [], 'discovered_urls': [], 'observed_at': datetime.now(timezone.utc).isoformat(),
+              'limitations': 'Bounded personalized Facebook search, not exhaustive. Only confirmed public content is stored. Dates, video/audio and images are not analyzed. Captured text may be automatically translated by Facebook. No sentiment or factual truth is inferred from keyword matches.'}
+    deadline = time.monotonic() + 600
+    found = {}
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(**kwargs)
+        page = context.new_page()
+        try:
+            for query in queries:
+                if time.monotonic() >= deadline:
+                    break
+                entry = {'query': query, 'status': 'ok', 'discovered': 0}
+                try:
+                    direct = canonical_post_url(query)
+                    urls = [direct] if direct else discover(page, query, post_limit, rounds, deadline)
+                    entry['discovered'] = len(urls)
+                    for url in urls:
