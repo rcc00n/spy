@@ -70,3 +70,27 @@ def discover_feed(page, target, kind, limit, rounds, deadline, on_urls):
             if any(canonical_source_url(link)==landed for link in card['links']):
                 for link in card['links']:
                     post=canonical_post_url(link)
+                    if post and '/reel/' in post:found[post]=None
+        if len(found)!=before:on_urls(list(found)[:limit])
+        stagnant=stagnant+1 if len(found)==before else 0
+        if len(found)>=limit:
+            coverage='link_limit_reached';break
+        if time.monotonic()>=deadline:
+            coverage='time_budget_reached';break
+        if stagnant>=3:
+            coverage='no_new_links_observed' if found else 'no_links_observed';break
+        page.mouse.wheel(0,1700);page.wait_for_timeout(1500)
+    return {'coverage':coverage,'error':'' if found else 'No source-owned post links were exposed.'}
+
+
+def run_next_discovery(job):
+    run=job.facebook_discoveries.filter(status__in=['queued','running'],next_attempt_at__lte=timezone.now()).first()
+    if run is None:return False
+    run.status='running';run.attempts+=1;run.cycle_attempts+=1;run.error='';run.save()
+    if run.cycle_attempts>3:
+        run.status='failed';run.coverage='worker_interrupted';run.error='Discovery interrupted repeatedly; continue to retry.';run.save();return True
+    limit,rounds={'quick':(5,2),'standard':(10,4),'deep':(20,7)}.get(job.depth,(10,4))
+    found=set();result={}
+    def save_urls(urls):
+        found.update(urls)
+        def save():
