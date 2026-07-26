@@ -46,3 +46,27 @@ def discover_feed(page, target, kind, limit, rounds, deadline, on_urls):
     response=page.goto(target,wait_until='domcontentloaded',timeout=30000)
     if response and response.status >= 400:
         return {'coverage':f'http_{response.status}','error':f'HTTP {response.status}'}
+    page.wait_for_timeout(3000)
+    check_page(page)
+    landed=canonical_source_url(page.url,kind)
+    if not landed:
+        return {'coverage':'source_redirect_not_verified','error':'Source redirected outside a page/group feed.'}
+    if kind == 'group' and not public_group_header(page):
+        return {'coverage':'public_group_not_verified','error':'Public group header not verified; no group links collected.'}
+    main=page.locator('[role="main"]').last
+    if not main.count():
+        return {'coverage':'feed_not_found','error':'Facebook feed container not found.'}
+    found={}; stagnant=0; coverage='scroll_budget_reached'
+    for _ in range(rounds+1):
+        check_page(page)
+        before=len(found)
+        # Owner-scoped URLs avoid importing posts from unrelated recommendations.
+        links=main.locator('a[href]').evaluate_all('(ns)=>ns.map(n=>n.href)')
+        for link in links:
+            post=canonical_post_url(link)
+            if post and belongs_to_source(post,landed):found[post]=None
+        # Generic /reel/<id> links need an owner link in the same post card.
+        for card in main.evaluate(FEED_CARDS):
+            if any(canonical_source_url(link)==landed for link in card['links']):
+                for link in card['links']:
+                    post=canonical_post_url(link)
