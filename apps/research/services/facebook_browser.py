@@ -298,3 +298,27 @@ def browser_scan(queries, depth='standard', progress=None):
                     urls = [direct] if direct else discover(page, query, post_limit, rounds, deadline)
                     entry['discovered'] = len(urls)
                     for url in urls:
+                        found.setdefault(url, []).append(query)
+                except FacebookAccessStopped as exc:
+                    entry.update(status='error', error=str(exc)[:500])
+                    result['queries'].append(entry)
+                    raise
+                except Exception as exc:
+                    entry.update(status='error', error=str(exc)[:500])
+                result['queries'].append(entry)
+                if progress:
+                    progress(f"Search: {query} — {entry['discovered']} links; {entry['status']}")
+            # Share the visit budget across queries, so one broad query cannot
+            # consume all visits before a narrow reputational query is checked.
+            by_query = [[url for url, terms in found.items() if query in terms] for query in queries]
+            ordered = list(dict.fromkeys(url for index in range(post_limit) for urls in by_query for url in urls[index:index + 1]))
+            result['discovered_urls'] = ordered
+            for url in ordered[:visit_limit]:
+                if time.monotonic() >= deadline:
+                    break
+                try:
+                    source = collect_thread(page, url, comment_limit, deadline)
+                except FacebookAccessStopped:
+                    raise
+                except Exception as exc:
+                    source = {'url': url, 'text': '', 'comments': [], 'public_verified': False, 'coverage': 'error', 'error': str(exc)[:500]}
