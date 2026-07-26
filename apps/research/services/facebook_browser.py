@@ -322,3 +322,11 @@ def browser_scan(queries, depth='standard', progress=None):
                     raise
                 except Exception as exc:
                     source = {'url': url, 'text': '', 'comments': [], 'public_verified': False, 'coverage': 'error', 'error': str(exc)[:500]}
+                source['queries'] = found[url]
+                result['sources'].append(source)
+                if progress:
+                    progress(f"Discussion: {url} — {len(source['comments'])} comments; {source['coverage']}")
+        finally:
+            browser.close()
+    result['unvisited_count'] = len(found) - len(result['sources'])
+    return result
