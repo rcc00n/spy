@@ -70,3 +70,33 @@ def schedule_cycle(now=None):
         else:
             # Caption-only and refresh passes do not overwrite the last deep-read outcome.
             latest_read = FacebookThreadWork.objects.filter(post_id=OuterRef('pk')).exclude(
+                job__depth='quick').exclude(job__monitor_lane__in=['discovery', 'refresh']).order_by('-pk')
+            posts = list(FacebookPost.objects.exclude(work_items__job__status__in=ACTIVE).annotate(last_read_status=Subquery(latest_read.values('status')[:1])).filter(
+                Q(last_read_status__isnull=True) | Q(last_read_status__in=['post_only', 'partial', 'failed', 'blocked', 'queued', 'running'])
+            ).order_by(F('backfill_queued_at').asc(nulls_first=True), 'pk')[:monitor.backfill_batch])
+        setattr(monitor, lane + '_due_at', now + timedelta(hours=getattr(monitor, lane + '_hours')))
+        monitor.save()
+        if not sources and not posts:
+            continue
+        job = ResearchJob.objects.create(
+            monitor=monitor, monitor_lane=lane, title=f'Facebook monitor: {lane}',
+            query=f'Scheduled {lane} cycle', depth='deep' if lane == 'backfill' else 'standard',
+            plan={'engine': 'facebook_browser', 'collector_version': 2, 'discovery_version': 1})
+        if lane == 'discovery':
+            initialize_discovery(job, sources, [])
+        else:
+            for post in posts:
+                work = enqueue_url(job, post.url, [f'monitor: {lane}'])
+                if lane == 'backfill':
+                    # Reopening must replay already seen comments before progressing.
+                    work.comments.set(post.comments.all())
+                    work.attempts = post.work_items.aggregate(value=Max('attempts'))['value'] or 0
+                    work.checkpoint = {'seeded_comments': work.comments.count()}
+                    work.save()
+                setattr(post, lane + '_queued_at', now)
+                post.save(update_fields=[lane + '_queued_at'])
+        ResearchEvent.objects.create(job=job, message=(
+            f'Scheduled {lane}: {len(sources)} sources, {len(posts)} discussions. '
+            'One bounded pass; intervals are queue targets, not coverage guarantees.'))
+        return job
+    return None
