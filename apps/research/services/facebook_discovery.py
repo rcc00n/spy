@@ -118,3 +118,9 @@ def run_next_discovery(job):
         result={'coverage':'error','error':str(exc)[:1000]}
     run.coverage=result['coverage'];run.error=result.get('error','')
     run.status=('queued' if run.cycle_attempts<3 else 'failed') if run.error else 'done'
+    run.next_attempt_at=timezone.now()+timedelta(seconds=60*run.cycle_attempts)
+    run.save()
+    ResearchEvent.objects.create(job=job,level='warning' if run.error else 'info',
+        message=f'Discovery {run.name}: {run.coverage}; {run.posts.count()} distinct links.',
+        payload={'discovery_id':run.pk,'kind':run.kind,'target':run.target,'error':run.error})
+    return True
