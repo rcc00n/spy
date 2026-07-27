@@ -94,3 +94,27 @@ def run_next_discovery(job):
     def save_urls(urls):
         found.update(urls)
         def save():
+            for url in urls:
+                work=enqueue_url(job,url,[f'{run.kind}: {run.name}'])
+                if work:run.posts.add(work.post_id)
+        call_sync_db(save)
+    try:
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            try:
+                page=browser.new_page(**facebook_context_kwargs(auth_enabled=True))
+                page.set_default_timeout(10000)
+                if run.kind=='post':
+                    save_urls([run.target]);result={'coverage':'direct_link','error':''}
+                elif run.kind=='search':
+                    discover(page,run.target,limit,rounds,time.monotonic()+90,on_urls=save_urls)
+                    result={'coverage':'bounded_search' if found else 'no_links_observed','error':'' if found else 'Search exposed no post links.'}
+                else:
+                    result=discover_feed(page,run.target,run.kind,limit,rounds,time.monotonic()+90,save_urls)
+            finally:browser.close()
+    except FacebookAccessStopped as exc:
+        run.status='blocked';run.error=str(exc)[:1000];run.coverage='access_stopped';run.save();raise
+    except Exception as exc:
+        result={'coverage':'error','error':str(exc)[:1000]}
+    run.coverage=result['coverage'];run.error=result.get('error','')
+    run.status=('queued' if run.cycle_attempts<3 else 'failed') if run.error else 'done'
