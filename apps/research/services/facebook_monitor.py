@@ -46,3 +46,27 @@ def configure_monitor(action, values=None):
         raise ValueError('Unknown monitor action')
     monitor.full_clean()
     monitor.save()
+    return monitor
+
+
+@transaction.atomic
+def schedule_cycle(now=None):
+    """DB lock serializes beat/admin calls; only one unfinished cycle per monitor."""
+    now = now or timezone.now()
+    monitor = FacebookMonitor.objects.select_for_update().filter(pk=1, enabled=True).first()
+    if monitor is None or monitor.jobs.filter(status__in=ACTIVE).exists():
+        return None
+    lanes = sorted(LANES, key=lambda lane: getattr(monitor, lane + '_due_at'))
+    for lane in lanes:
+        if getattr(monitor, lane + '_due_at') > now:
+            continue
+        sources = []
+        posts = []
+        if lane == 'discovery':
+            sources = list(FacebookDiscoverySource.objects.filter(enabled=True))
+        elif lane == 'refresh':
+            posts = list(FacebookPost.objects.filter(public_verified=True).order_by(
+                F('refresh_queued_at').asc(nulls_first=True), 'pk')[:monitor.refresh_batch])
+        else:
+            # Caption-only and refresh passes do not overwrite the last deep-read outcome.
+            latest_read = FacebookThreadWork.objects.filter(post_id=OuterRef('pk')).exclude(
