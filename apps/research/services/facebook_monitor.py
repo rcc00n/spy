@@ -22,3 +22,27 @@ def runnable_jobs():
 
 
 def pause_monitors(reason):
+    FacebookMonitor.objects.filter(enabled=True).update(
+        enabled=False, pause_reason=reason[:2000], updated_at=timezone.now())
+
+
+@transaction.atomic
+def configure_monitor(action, values=None):
+    monitor, _ = FacebookMonitor.objects.get_or_create(pk=1)
+    monitor = FacebookMonitor.objects.select_for_update().get(pk=monitor.pk)
+    if action == 'save':
+        for field, value in (values or {}).items():
+            setattr(monitor, field, value)
+        # Changes take effect after the current cycle; no accumulated catch-up runs.
+        for lane in LANES:
+            setattr(monitor, lane + '_due_at', timezone.now() + timedelta(hours=getattr(monitor, lane + '_hours')))
+    elif action == 'resume':
+        monitor.enabled = True
+        monitor.pause_reason = ''
+    elif action == 'pause':
+        monitor.enabled = False
+        monitor.pause_reason = 'Paused by operator. The current browser step may finish saving evidence.'
+    else:
+        raise ValueError('Unknown monitor action')
+    monitor.full_clean()
+    monitor.save()
