@@ -70,3 +70,39 @@ def persist_snapshot(work_id, snapshot):
 def finish_attempt(work, snapshot=None, error='', blocked=False):
     work.refresh_from_db()
     coverage = (snapshot or {}).get('coverage', 'error')
+    work.coverage = coverage
+    work.error = error[:2000]
+    new_comments = work.comments.count() - work.checkpoint.get('comments_before_attempt', 0)
+    work.checkpoint = {**work.checkpoint, 'new_comments_last_attempt': new_comments}
+    max_attempts = 1 if work.job.monitor_lane in ('refresh', 'backfill') else 3
+    if blocked:
+        work.status = 'blocked'
+    elif coverage == 'post_only_comments_not_requested':
+        work.status = 'post_only'
+    elif coverage == 'no_new_comments_after_scroll':
+        work.status = 'sampled'
+    elif coverage in LIMITS:
+        work.status = 'queued' if work.cycle_attempts < max_attempts else 'partial'
+    else:
+        # A missing public badge is a gap, never permission to collect private text.
+        work.status = 'queued' if work.cycle_attempts < max_attempts else 'failed'
+    work.next_attempt_at = timezone.now() + timedelta(seconds=30 if not error else 60 * work.cycle_attempts)
+    work.save()
+    sync_source(work)
+    ResearchEvent.objects.create(job=work.job, level='warning' if error or work.status in {'partial', 'failed', 'blocked'} else 'info',
+        message=f'Discussion attempt {work.attempts}: {work.post.url} — {work.coverage}; {work.comments.count()} saved, {new_comments} new.',
+        payload={'work_id': work.pk, 'status': work.status, 'error': work.error})
+
+
+def sync_source(work):
+    """Keep the existing evidence UI compatible; corpus remains the source of truth."""
+    work.post.refresh_from_db()
+    post = work.post
+    comments = [{'id': c.facebook_id, 'parent_id': c.parent_id, 'url': c.url, 'text': c.text,
+                 'has_media': c.has_media, 'mentions_pcl': c.mentions_pcl,
+                 'first_seen_at': c.first_seen_at.isoformat(), 'last_seen_at': c.last_seen_at.isoformat()}
+                for c in work.comments.order_by('pk')]
+    payload = {'url': post.url, 'text': post.text, 'public_verified': post.public_verified,
+               'mentions_pcl': post.mentions_pcl, 'comments': comments, 'coverage': work.coverage,
+               'status': work.status, 'sort': work.checkpoint.get('sort', 'unknown'), 'error': work.error,
+               'attempts': work.attempts, 'queries': work.queries}
