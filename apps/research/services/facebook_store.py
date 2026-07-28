@@ -46,3 +46,27 @@ def persist_snapshot(work_id, snapshot):
         for record in snapshot.get('comments', []):
             if canonical_post_url(record.get('url', '')) != post.url or not record.get('id'):
                 continue
+            defaults = {'url': record['url'], 'parent_id': record.get('parent_id', ''),
+                        'text': record.get('text', ''), 'has_media': record.get('has_media', False),
+                        'mentions_pcl': record.get('mentions_pcl', False), 'last_seen_at': now}
+            comment, created = FacebookComment.objects.get_or_create(
+                post=post, facebook_id=record['id'], defaults=defaults)
+            changed = created or comment.text != defaults['text'] or comment.has_media != defaults['has_media']
+            if not created:
+                for field, value in defaults.items():
+                    setattr(comment, field, value)
+                comment.save()
+            if changed:
+                FacebookCommentRevision.objects.create(comment=comment, text=comment.text, has_media=comment.has_media, observed_at=now)
+            work.comments.add(comment)
+    work.coverage = snapshot.get('coverage', 'collecting')
+    work.checkpoint = {**work.checkpoint, 'sort': snapshot.get('sort', 'unknown'),
+                       'saved_comments': work.comments.count(), 'last_checkpoint_at': now.isoformat(),
+                       'public_verified_this_attempt': bool(snapshot.get('public_verified'))}
+    work.save(update_fields=['coverage', 'checkpoint', 'updated_at'])
+    return work.checkpoint['saved_comments']
+
+
+def finish_attempt(work, snapshot=None, error='', blocked=False):
+    work.refresh_from_db()
+    coverage = (snapshot or {}).get('coverage', 'error')
