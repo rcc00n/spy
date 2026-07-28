@@ -106,3 +106,27 @@ def sync_source(work):
                'mentions_pcl': post.mentions_pcl, 'comments': comments, 'coverage': work.coverage,
                'status': work.status, 'sort': work.checkpoint.get('sort', 'unknown'), 'error': work.error,
                'attempts': work.attempts, 'queries': work.queries}
+    source = ResearchSource.objects.filter(job=work.job, url=post.url).first()
+    if source is None:
+        source = ResearchSource(job=work.job, url=post.url, source_type='social')
+    source.title = (post.text.strip().split('\n')[0][:200] if post.text.strip() else work.coverage)
+    source.excerpt = post.text[:14000]
+    source.payload = payload
+    source.save()
+
+
+def update_report(job):
+    works = list(job.facebook_threads.select_related('post').order_by('pk'))
+    counts = {}
+    for work in works:
+        counts[work.status] = counts.get(work.status, 0) + 1
+    comments = FacebookComment.objects.filter(work_items__job=job).distinct()
+    verified = sum(w.post.public_verified for w in works)
+    hits = comments.filter(mentions_pcl=True)
+    plan = dict(job.plan)
+    plan.update(engine='facebook_browser', collector_version=2, thread_counts=counts,
+                discovered_urls=[w.post.url for w in works], verified_posts=verified,
+                comments_read=comments.count(), pcl_comment_mentions=hits.count(),
+                pcl_post_mentions=sum(w.post.mentions_pcl for w in works),
+                unvisited_count=sum(w.attempts == 0 for w in works))
+    job.plan = plan
