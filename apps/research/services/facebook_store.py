@@ -130,3 +130,27 @@ def update_report(job):
                 pcl_post_mentions=sum(w.post.mentions_pcl for w in works),
                 unvisited_count=sum(w.attempts == 0 for w in works))
     job.plan = plan
+    lines = ['Facebook collection report', f'Updated: {timezone.now().isoformat()}',
+        f'Known discussions: {len(works)}; public posts verified at least once: {verified}; unique saved comments: {comments.count()}.',
+        f'Queue: {counts}. Unvisited: {plan["unvisited_count"]}.', '',
+        'A PCL mention is a review candidate, not a finding of hostility or wrongdoing.',
+        'No further comments observed means the current browser pass stopped making progress, not complete coverage.',
+        'Comments and observed text revisions survive retries. Reopening replays the discussion; Facebook provides no durable browser cursor.',
+        'Observation times are not publication dates. Translations or extraction changes can also produce text revisions.',
+        'Search is bounded and personalized. Private, unavailable, deleted, video/audio/image content is not covered.', '', 'Search coverage:']
+    for query in plan.get('queries', []):
+        lines.append(f'- {query["query"]}: {query["status"]}; {query.get("discovered", 0)} links. {query.get("error", "")}')
+    lines.append('\nSource discovery coverage:')
+    for run in job.facebook_discoveries.all():
+        lines.append(f'- {run.name} ({run.kind}): {run.status}; {run.coverage}; {run.posts.count()} links; {run.attempts} attempts. {run.error}')
+    lines.append('\nDiscussion coverage:')
+    for work in works:
+        lines.append(f'- {work.post.url}: {work.status}; {work.coverage}; {work.comments.count()} saved comments; {work.attempts} attempts. {work.error}')
+    if hits.exists():
+        lines.append('\nComments mentioning PCL (manual review required):')
+        for comment in hits[:100]:
+            lines.extend([comment.url, comment.text[:1500], ''])
+    job.report_markdown = '\n'.join(lines)
+    job.save(update_fields=['plan', 'report_markdown', 'updated_at'])
+
+
