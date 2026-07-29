@@ -34,3 +34,20 @@ def group_from_post(url):
     parts = urlsplit(url).path.strip('/').split('/')
     if len(parts) >= 4 and parts[0] == 'groups' and parts[2] in {'posts','permalink'}:
         return canonical_source_url('https://www.facebook.com/groups/'+parts[1]+'/', 'group')
+    return ''
+
+
+def public_group_header(page):
+    # Exclude posts/feed and recommendations. Only inspect the header around h1.
+    headers = page.locator('[role="main"] h1, [role="main"] [role="heading"][aria-level="1"]')
+    text = headers.evaluate_all('''nodes => nodes.map(h => {
+        let best = h.innerText || '';
+        for(let n=h.parentElement,i=0;n && i<8;n=n.parentElement,i++) {
+            if(n.querySelector('[role="feed"], [role="article"]')) break;
+            const t=n.innerText||'';
+            if(t.length>4000) break;
+            best=t;
+        }
+        return best;
+    }).join('\\n')''')
+    return bool(GROUP_PUBLIC.search(text)) and not GROUP_PRIVATE.search(text)
