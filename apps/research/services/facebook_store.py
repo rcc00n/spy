@@ -154,3 +154,24 @@ def update_report(job):
     job.save(update_fields=['plan', 'report_markdown', 'updated_at'])
 
 
+def import_legacy_job(job):
+    """Idempotent offline import. Never automatically starts historical jobs."""
+    if job.plan.get('collector_version') == 2:
+        return
+    for url in job.plan.get('discovered_urls', []):
+        enqueue_url(job, url)
+    for source in job.sources.all():
+        work = enqueue_url(job, source.url, source.payload.get('queries', []))
+        if work is None or work.attempts:
+            continue
+        snapshot = {**source.payload, 'url': work.post.url}
+        persist_snapshot(work.pk, snapshot)
+        work.refresh_from_db()
+        work.attempts = 1
+        work.status = ('sampled' if work.coverage == 'no_new_comments_after_scroll' else
+                       'post_only' if work.coverage == 'post_only_comments_not_requested' else 'partial')
+        work.save()
+    if job.plan.get('queries'):
+        job.plan['discovery_index'] = len(job.plan['queries'])
+    job.plan['collector_version'] = 2
+    job.save(update_fields=['plan'])
