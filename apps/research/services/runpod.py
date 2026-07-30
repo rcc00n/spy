@@ -82,3 +82,27 @@ class RunPodLifecycleClient:
             time.sleep(settings.RUNPOD_HEALTH_POLL_SECONDS)
 
         raise RunPodLifecycleError(
+            f"RunPod engine did not become healthy at {health_url}: {last_error}"
+        )
+
+    def _post(self, path: str) -> dict:
+        url = f"https://rest.runpod.io/v1{path}"
+        request = Request(
+            url,
+            data=b"",
+            headers={
+                "Accept": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=settings.RUNPOD_API_TIMEOUT_SECONDS) as response:
+                raw_body = response.read().decode("utf-8")
+        except HTTPError as exc:
+            error_body = exc.read().decode("utf-8", errors="replace")
+            raise RunPodLifecycleError(
+                f"RunPod API returned HTTP {exc.code}: {error_body[:1000]}"
+            ) from exc
+        except (TimeoutError, URLError) as exc:
+            raise RunPodLifecycleError(f"RunPod API request failed: {exc}") from exc
