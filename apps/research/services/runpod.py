@@ -46,3 +46,39 @@ class RunPodLifecycleClient:
             raise RunPodLifecycleError("RUNPOD_POD_ID is not configured.")
 
     def start_pod(self) -> None:
+        self.ensure_configured()
+        self._post(f"/pods/{self.pod_id}/start")
+
+    def stop_pod(self) -> None:
+        self.ensure_configured()
+        self._post(f"/pods/{self.pod_id}/stop")
+
+    def wait_for_engine(self) -> None:
+        base_url = research_engine_base_url()
+        if not base_url:
+            raise RunPodLifecycleError(
+                "RESEARCH_ENGINE_URL or RUNPOD_POD_ID/RUNPOD_ENGINE_PORT is required."
+            )
+
+        health_url = f"{base_url}{settings.RUNPOD_ENGINE_HEALTH_PATH}"
+        deadline = time.monotonic() + settings.RUNPOD_START_TIMEOUT_SECONDS
+        last_error = ""
+
+        while time.monotonic() < deadline:
+            try:
+                request = Request(health_url, headers={"Accept": "application/json"})
+                with urlopen(
+                    request,
+                    timeout=settings.RUNPOD_HEALTH_TIMEOUT_SECONDS,
+                ) as response:
+                    if 200 <= response.status < 300:
+                        return
+                    last_error = f"HTTP {response.status}"
+            except HTTPError as exc:
+                last_error = f"HTTP {exc.code}"
+            except (TimeoutError, URLError) as exc:
+                last_error = str(exc)
+
+            time.sleep(settings.RUNPOD_HEALTH_POLL_SECONDS)
+
+        raise RunPodLifecycleError(
