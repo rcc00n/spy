@@ -70,3 +70,27 @@ def apply_remote_update(job: ResearchJob, update) -> ResearchJob:
 
     if update.status and job.status != update.status:
         job.status = update.status
+        update_fields.append("status")
+        record_event(job, f"Status changed to {job.get_status_display()}.")
+
+    if update.plan and job.plan != update.plan:
+        job.plan = update.plan
+        update_fields.append("plan")
+
+    if update.report_markdown and job.report_markdown != update.report_markdown:
+        job.report_markdown = update.report_markdown
+        update_fields.append("report_markdown")
+
+    if update.error_message and job.error_message != update.error_message:
+        job.error_message = update.error_message
+        update_fields.append("error_message")
+
+    if update.message:
+        record_event(job, update.message, dedupe_last=True)
+
+    if update_fields:
+        update_fields.append("updated_at")
+        job.save(update_fields=update_fields)
+
+    sync_sources(job, update.sources)
+    return job
