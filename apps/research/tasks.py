@@ -118,3 +118,39 @@ def maybe_stop_runpod_engine(job: ResearchJob) -> None:
     ).exists()
     if active_jobs_exist:
         record_event(
+            job,
+            "RunPod pod left running because another research job is active.",
+            level=ResearchEvent.Level.WARNING,
+        )
+        return
+
+    try:
+        lifecycle.stop_pod()
+    except Exception as exc:
+        record_event(
+            job,
+            f"Could not stop RunPod pod automatically: {exc}",
+            level=ResearchEvent.Level.WARNING,
+        )
+    else:
+        record_event(job, "RunPod pod stop requested after research job finished.")
+
+
+@shared_task(bind=True)
+def run_research_job(self, job_id: int) -> str:
+    job = ResearchJob.objects.select_related("requested_by").get(pk=job_id)
+    job.task_id = self.request.id or job.task_id
+    job.save(update_fields=["task_id", "updated_at"])
+
+    job.mark_started(ResearchJob.Status.PLANNING)
+    record_event(job, "Research job started by portal worker.")
+
+    try:
+        prepare_runpod_engine(job)
+        client = ResearchEngineClient()
+        update = client.submit_job(job)
+        job = apply_remote_update(job, update)
+        external_job_id = job.external_job_id or update.external_job_id
+
+        if job.status == ResearchJob.Status.COMPLETED:
+            job.mark_finished(ResearchJob.Status.COMPLETED)
