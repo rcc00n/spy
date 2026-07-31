@@ -106,3 +106,13 @@ class RunPodLifecycleClient:
             ) from exc
         except (TimeoutError, URLError) as exc:
             raise RunPodLifecycleError(f"RunPod API request failed: {exc}") from exc
+
+        if not raw_body:
+            return {}
+        try:
+            parsed = json.loads(raw_body)
+        except json.JSONDecodeError as exc:
+            raise RunPodLifecycleError(
+                f"RunPod API returned invalid JSON: {raw_body[:1000]}"
+            ) from exc
+        return parsed if isinstance(parsed, dict) else {}
