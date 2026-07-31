@@ -94,3 +94,27 @@ def apply_remote_update(job: ResearchJob, update) -> ResearchJob:
 
     sync_sources(job, update.sources)
     return job
+
+
+def prepare_runpod_engine(job: ResearchJob) -> None:
+    lifecycle = RunPodLifecycleClient()
+    if not lifecycle.autostart_enabled:
+        return
+
+    record_event(job, "Starting RunPod pod for research engine.")
+    lifecycle.start_pod()
+    record_event(job, "Waiting for RunPod research engine health check.")
+    lifecycle.wait_for_engine()
+    record_event(job, "RunPod research engine is reachable.")
+
+
+def maybe_stop_runpod_engine(job: ResearchJob) -> None:
+    lifecycle = RunPodLifecycleClient()
+    if not lifecycle.autostop_enabled:
+        return
+
+    active_jobs_exist = ResearchJob.objects.exclude(pk=job.pk).exclude(
+        status__in=ResearchJob.TERMINAL_STATUSES
+    ).exists()
+    if active_jobs_exist:
+        record_event(
