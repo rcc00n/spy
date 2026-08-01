@@ -154,3 +154,27 @@ def run_research_job(self, job_id: int) -> str:
 
         if job.status == ResearchJob.Status.COMPLETED:
             job.mark_finished(ResearchJob.Status.COMPLETED)
+            record_event(job, "Research job completed by remote engine.")
+            return "completed"
+
+        if not external_job_id:
+            raise ResearchEngineError(
+                "Research engine did not return external_job_id, job_id, id, "
+                "or a completed report."
+            )
+
+        poll_count = 0
+        while poll_count < settings.RESEARCH_ENGINE_MAX_POLLS:
+            time.sleep(settings.RESEARCH_ENGINE_POLL_SECONDS)
+            poll_count += 1
+            job.refresh_from_db()
+            if job.is_terminal:
+                return job.status
+
+            update = client.get_job_status(external_job_id)
+            job = apply_remote_update(job, update)
+
+            if job.status == ResearchJob.Status.COMPLETED:
+                job.mark_finished(ResearchJob.Status.COMPLETED)
+                record_event(job, "Research job completed by remote engine.")
+                return "completed"
