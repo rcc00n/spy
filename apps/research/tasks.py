@@ -178,3 +178,26 @@ def run_research_job(self, job_id: int) -> str:
                 job.mark_finished(ResearchJob.Status.COMPLETED)
                 record_event(job, "Research job completed by remote engine.")
                 return "completed"
+            if job.status in {ResearchJob.Status.FAILED, ResearchJob.Status.CANCELLED}:
+                job.mark_finished(job.status, job.error_message)
+                record_event(
+                    job,
+                    f"Research job ended with status {job.get_status_display()}.",
+                )
+                return job.status
+
+        raise ResearchEngineError(
+            "Research engine polling limit reached before completion."
+        )
+    except Exception as exc:
+        message = str(exc)[:4000]
+        job.mark_finished(ResearchJob.Status.FAILED, message)
+        record_event(job, message, level=ResearchEvent.Level.ERROR)
+        raise
+    finally:
+        job.refresh_from_db()
+        if job.is_terminal:
+            maybe_stop_runpod_engine(job)
+
+# Register the browser collector with Celery autodiscovery.
+from apps.research.facebook_tasks import run_facebook_scan, dispatch_facebook_scans  # noqa: F401, E402
