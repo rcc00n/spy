@@ -70,3 +70,4 @@ class BrowserPortalTests(TestCase):
         self.assertIn('not a finding of hostility', job.report_markdown)
         self.assertIn('comment_limit_reached',job.report_markdown)
         self.assertEqual(job.sources.count(),1)
+        self.assertEqual(job.plan['pcl_comment_mentions'],1)
