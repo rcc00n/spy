@@ -154,3 +154,27 @@ class DiscoveryCheckpointTests(TransactionTestCase):
         b.refresh_from_db()
         self.assertEqual(b.posts.count(),1, b.error)
         self.assertEqual(job.facebook_threads.count(),1)
+        self.assertEqual(len(job.facebook_threads.get().queries),2)
+
+
+class GroupPostDomTests(SimpleTestCase):
+    def test_group_post_requires_fresh_public_header_before_reading(self):
+        from apps.research.services.facebook_browser import collect_thread
+        post='https://www.facebook.com/groups/123/posts/456/'
+        group='https://www.facebook.com/groups/123/'
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            try:
+                for visibility in ['Public group','Private group']:
+                    page=browser.new_page();visited=[]
+                    def route(r):
+                        visited.append(r.request.url)
+                        if r.request.url==group:
+                            html=f'<main role="main"><header><h1>Group</h1><div>{visibility}</div></header></main>'
+                        else:
+                            html=f'<div role="dialog"><div data-ad-preview="message">Public group discussion</div><article role="article" aria-label="Comment by Person"><div dir="auto">PCL comment</div><a href="{post}?comment_id=7">time</a></article></div>'
+                        r.fulfill(status=200,content_type='text/html',body=html)
+                    page.route('**/*',route)
+                    result=collect_thread(page,post,1,time.monotonic()+20)
+                    if visibility=='Public group':
+                        self.assertEqual(result['comments'][0]['id'],'7')
