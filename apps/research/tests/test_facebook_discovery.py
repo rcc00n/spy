@@ -70,3 +70,27 @@ class DiscoveryPortalTests(TestCase):
     def test_initialize_deduplicates_source_plus_manual_and_empty_form_fails(self):
         job=ResearchJob.objects.create(query='Watchlist scan')
         initialize_discovery(job,[self.source],[self.source.target,'PCL Oilers'])
+        initialize_discovery(job,[self.source],[self.source.target,'PCL Oilers'])
+        self.assertEqual(job.facebook_discoveries.count(),2)
+        self.assertFalse(FacebookScanForm(data={'depth':'quick'}).is_valid())
+
+    def test_pending_or_failed_discovery_cannot_be_reported_as_completed(self):
+        job=ResearchJob.objects.create(query='PCL',status='social_collecting')
+        initialize_discovery(job,[self.source],[])
+        complete_if_idle(job)
+        self.assertFalse(job.is_terminal)
+        job.facebook_discoveries.update(status='failed',error='No feed')
+        complete_if_idle(job)
+        self.assertEqual(job.status,'failed')
+
+
+class FeedDomTests(SimpleTestCase):
+    def test_feed_keeps_owned_posts_and_reels_but_excludes_recommendations(self):
+        html='''<main role="main"><h1>PCL</h1>
+        <article role="article"><a href="https://www.facebook.com/PCLconstruction/">PCL</a><a href="https://www.facebook.com/reel/123/">Reel</a></article>
+        <a href="https://www.facebook.com/PCLconstruction/posts/456/">Post</a>
+        <article role="article"><a href="https://www.facebook.com/other/">Other</a><a href="https://www.facebook.com/reel/999/">Other reel</a></article>
+        <a href="https://www.facebook.com/other/posts/111/">Recommended post</a></main>'''
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            try:
