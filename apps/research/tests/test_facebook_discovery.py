@@ -118,3 +118,39 @@ class FeedDomTests(SimpleTestCase):
     def test_private_group_is_not_discovered_or_joined(self):
         html='<main role="main"><header><h1>Group</h1><div>Private group</div></header><button onclick="window.joined=true">Join</button><article role="article"><a href="https://www.facebook.com/groups/123/posts/456/">Post</a></article></main>'
         with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            try:
+                page=browser.new_page();page.route('**/*',lambda r:r.fulfill(status=200,content_type='text/html',body=html))
+                found=[]
+                result=discover_feed(page,'https://www.facebook.com/groups/123/','group',10,0,time.monotonic()+15,found.append)
+                self.assertFalse(page.evaluate('!!window.joined'))
+            finally:browser.close()
+        self.assertEqual(found,[])
+        self.assertEqual(result['coverage'],'public_group_not_verified')
+
+
+class DiscoveryCheckpointTests(TransactionTestCase):
+    def test_real_browser_checkpoint_deduplicates_posts_and_retains_both_origins(self):
+        job=ResearchJob.objects.create(query='Watchlist scan',depth='quick',plan={'engine':'facebook_browser','collector_version':2,'discovery_version':1})
+        a=FacebookDiscoveryRun.objects.create(job=job,kind='page',name='PCL',target='https://www.facebook.com/PCLconstruction/')
+        b=FacebookDiscoveryRun.objects.create(job=job,kind='search',name='Search PCL',target='PCL Oilers')
+        html='<main role="main"><article role="article"><a href="https://www.facebook.com/PCLconstruction/posts/123/">PCL post</a></article></main>'
+        real=discover_feed
+        def feed(page,*args):
+            page.route('**/*',lambda r:r.fulfill(status=200,content_type='text/html',body=html))
+            # One real browser pass, then an injected failure AFTER commit.
+            result=real(page,args[0],args[1],10,0,time.monotonic()+15,args[-1])
+            raise RuntimeError('Interrupted after finding a link')
+        def search(page,query,limit,rounds,deadline,on_urls):
+            on_urls(['https://www.facebook.com/PCLconstruction/posts/123/'])
+        with patch('apps.research.services.facebook_discovery.facebook_context_kwargs',return_value={}),patch('apps.research.services.facebook_discovery.discover_feed',side_effect=feed):
+            run_next_discovery(job)
+        a.refresh_from_db()
+        self.assertEqual(a.status,'queued')
+        self.assertEqual(a.posts.count(),1)
+        self.assertEqual(job.facebook_threads.count(),1)
+        with patch('apps.research.services.facebook_discovery.facebook_context_kwargs',return_value={}),patch('apps.research.services.facebook_discovery.discover',side_effect=search):
+            run_next_discovery(job)
+        b.refresh_from_db()
+        self.assertEqual(b.posts.count(),1, b.error)
+        self.assertEqual(job.facebook_threads.count(),1)
