@@ -46,3 +46,27 @@ class DiscoveryPortalTests(TestCase):
         self.source.target='https://www.facebook.com/changed/'
         self.source.enabled=False;self.source.save()
         run.refresh_from_db()
+        self.assertEqual(run.target,'https://www.facebook.com/PCLconstruction/')
+        self.assertEqual(job.plan['discovery_version'],1)
+        invalid=FacebookScanForm(data={'sources':[self.source.pk],'depth':'quick'})
+        self.assertFalse(invalid.is_valid())
+        self.assertEqual(self.client.get(reverse('research:facebook_sources'),secure=True).status_code,200)
+        self.assertContains(self.client.get(reverse('research:job_detail',args=[job.pk]),secure=True),'Discovery sources')
+
+    def test_staff_permissions_and_no_get_mutation(self):
+        count=FacebookDiscoverySource.objects.count()
+        self.client.get(reverse('research:facebook_source_create'),secure=True)
+        self.assertEqual(FacebookDiscoverySource.objects.count(),count)
+        self.user.is_staff=False;self.user.save()
+        for name,args in [('facebook_sources',[]),('facebook_source_create',[]),('facebook_source_edit',[self.source.pk])]:
+            self.assertEqual(self.client.get(reverse('research:'+name,args=args),secure=True).status_code,403)
+
+    def test_source_type_validation_and_duplicate_normalization(self):
+        form=FacebookDiscoverySourceForm(data={'name':'Wrong','kind':'group','target':self.source.target,'enabled':True})
+        self.assertFalse(form.is_valid())
+        duplicate=FacebookDiscoverySourceForm(data={'name':'Duplicate','kind':'page','target':self.source.target+'?locale=ru_RU','enabled':True})
+        self.assertFalse(duplicate.is_valid())
+
+    def test_initialize_deduplicates_source_plus_manual_and_empty_form_fails(self):
+        job=ResearchJob.objects.create(query='Watchlist scan')
+        initialize_discovery(job,[self.source],[self.source.target,'PCL Oilers'])
