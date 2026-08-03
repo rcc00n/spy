@@ -94,3 +94,27 @@ class FeedDomTests(SimpleTestCase):
         with sync_playwright() as p:
             browser=p.chromium.launch(headless=True)
             try:
+                page=browser.new_page()
+                page.route('**/*',lambda r:r.fulfill(status=200,content_type='text/html',body=html))
+                batches=[]
+                result=discover_feed(page,'https://www.facebook.com/PCLconstruction/','page',10,0,time.monotonic()+15,batches.append)
+            finally:browser.close()
+        self.assertEqual(set(batches[0]),{'https://www.facebook.com/reel/123/','https://www.facebook.com/PCLconstruction/posts/456/'})
+        self.assertEqual(result['error'],'')
+
+    def test_public_group_header_ignores_post_claims_of_public_visibility(self):
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            try:
+                page=browser.new_page()
+                page.set_content('<main role="main"><header><h1>Group</h1><div>Public group</div></header><div role="feed"><article role="article">Private group</article></div></main>')
+                self.assertTrue(public_group_header(page))
+                page.set_content('<main role="main"><header><h1>Group</h1><div>Private group</div></header><div role="feed"><article role="article">Public group</article></div></main>')
+                self.assertFalse(public_group_header(page))
+                page.set_content('<main role="main"><header><h1>Group</h1></header><div role="feed"><article role="article">Public group</article></div></main>')
+                self.assertFalse(public_group_header(page))
+            finally:browser.close()
+
+    def test_private_group_is_not_discovered_or_joined(self):
+        html='<main role="main"><header><h1>Group</h1><div>Private group</div></header><button onclick="window.joined=true">Join</button><article role="article"><a href="https://www.facebook.com/groups/123/posts/456/">Post</a></article></main>'
+        with sync_playwright() as p:
