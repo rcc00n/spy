@@ -202,3 +202,27 @@ class SeedTests(TestCase):
 
 
 class ContinuationTests(TestCase):
+    @patch('apps.research.facebook_tasks.run_facebook_scan.apply_async')
+    @patch('apps.research.facebook_tasks.scan_step')
+    @patch('apps.research.facebook_tasks.Redis')
+    def test_productive_queue_continues_without_waiting_for_recovery_timer(self,redis,step,enqueue):
+        from apps.research.facebook_tasks import run_facebook_scan
+        redis.from_url.return_value.lock.return_value.acquire.return_value=True
+        job=ResearchJob.objects.create(query='PCL',plan={'engine':'facebook_browser','collector_version':2,'discovery_version':1})
+        FacebookDiscoveryRun.objects.create(job=job,kind='search',name='PCL',target='PCL')
+        run_facebook_scan.run(job.pk)
+        enqueue.assert_called_once_with(args=[job.pk],countdown=5)
+        redis.from_url.return_value.lock.return_value.release.assert_called_once()
+
+    @patch('apps.research.facebook_tasks.run_facebook_scan.apply_async')
+    @patch('apps.research.facebook_tasks.scan_step')
+    @patch('apps.research.facebook_tasks.Redis')
+    def test_next_step_gives_waiting_scan_a_turn(self,redis,step,enqueue):
+        from apps.research.facebook_tasks import run_facebook_scan
+        redis.from_url.return_value.lock.return_value.acquire.return_value=True
+        waiting=ResearchJob.objects.create(query='Waiting',plan={'engine':'facebook_browser','collector_version':2,'discovery_version':1})
+        current=ResearchJob.objects.create(query='Current',plan={'engine':'facebook_browser','collector_version':2,'discovery_version':1})
+        for job in (waiting,current):
+            FacebookDiscoveryRun.objects.create(job=job,kind='search',name='PCL',target='PCL')
+        run_facebook_scan.run(current.pk)
+        enqueue.assert_called_once_with(args=[waiting.pk],countdown=5)
