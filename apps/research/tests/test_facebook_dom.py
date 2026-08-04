@@ -58,3 +58,27 @@ class RealBrowserCheckpointTests(TransactionTestCase):
             page.route('**/*', lambda route: route.fulfill(status=200, content_type='text/html', body=html))
             return collect_thread(page, source_url, 1, deadline, **kwargs)
 
+        with patch('apps.research.facebook_tasks.facebook_context_kwargs', return_value={}), patch('apps.research.facebook_tasks.collect_thread', side_effect=collect_fixture):
+            scan_step(job)
+        work.refresh_from_db()
+        self.assertEqual(work.coverage, 'comment_limit_reached', work.error)
+        self.assertEqual(work.comments.count(), 1)
+        self.assertEqual(FacebookComment.objects.get().text, 'Saved PCL comment')
+        self.assertEqual(job.sources.get().payload['comments'][0]['id'], '42')
+
+
+class EmptyDiscussionDomTests(SimpleTestCase):
+    def test_public_post_without_exposed_comments_is_a_gap(self):
+        url = 'https://www.facebook.com/example/posts/123/'
+        html = '<div role="dialog"><span aria-label="Shared with Public"></span><div data-ad-preview="message">PCL post with collapsed comments</div></div>'
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.route('**/*', lambda route: route.fulfill(status=200, content_type='text/html', body=html))
+                result = collect_thread(page, url, 40, time.monotonic() + 20)
+            finally:
+                browser.close()
+        self.assertTrue(result['public_verified'])
+        self.assertEqual(result['comments'], [])
+        self.assertEqual(result['coverage'], 'comments_not_observed')
