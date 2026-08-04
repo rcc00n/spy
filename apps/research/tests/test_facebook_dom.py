@@ -34,3 +34,27 @@ class DiscussionDomTests(SimpleTestCase):
         self.assertEqual(result['coverage'], 'comment_limit_reached')
         self.assertEqual([c['id'] for c in result['comments']], ['42'])
         self.assertEqual(saved[0]['text'], 'PCL construction post')
+        self.assertEqual(saved[-1]['comments'][0]['text'], 'Good work PCL')
+
+
+from unittest.mock import patch
+from django.test import TransactionTestCase
+from apps.research.models import ResearchJob, FacebookComment
+from apps.research.facebook_tasks import scan_step
+from apps.research.services.facebook_store import enqueue_url
+
+
+class RealBrowserCheckpointTests(TransactionTestCase):
+    def test_real_playwright_event_loop_commits_to_database(self):
+        url = 'https://www.facebook.com/example/posts/123/'
+        job = ResearchJob.objects.create(query=url, plan={'engine': 'facebook_browser', 'collector_version': 2, 'discovery_index': 1})
+        work = enqueue_url(job, url)
+        html = '''<div role="dialog"><span aria-label="Shared with Public"></span>
+        <div data-ad-preview="message">PCL public post</div>
+        <article role="article" aria-label="Comment by Person"><div dir="auto">Saved PCL comment</div>
+        <a href="https://www.facebook.com/example/posts/123/?comment_id=42">time</a></article></div>'''
+
+        def collect_fixture(page, source_url, limit, deadline, **kwargs):
+            page.route('**/*', lambda route: route.fulfill(status=200, content_type='text/html', body=html))
+            return collect_thread(page, source_url, 1, deadline, **kwargs)
+
