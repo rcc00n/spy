@@ -178,3 +178,27 @@ class GroupPostDomTests(SimpleTestCase):
                     result=collect_thread(page,post,1,time.monotonic()+20)
                     if visibility=='Public group':
                         self.assertEqual(result['comments'][0]['id'],'7')
+                        self.assertTrue(result['public_verified'])
+                    else:
+                        self.assertNotIn(post,visited)
+                        self.assertFalse(result['public_verified'])
+                        self.assertEqual(result['coverage'],'public_group_not_verified')
+                    page.close()
+            finally:browser.close()
+
+
+class SeedTests(TestCase):
+    def test_seed_is_idempotent_and_does_not_enable_disabled_sources_or_start_jobs(self):
+        from django.core.management import call_command
+        from io import StringIO
+        call_command('seed_facebook_sources',stdout=StringIO())
+        count=FacebookDiscoverySource.objects.count()
+        source=FacebookDiscoverySource.objects.first();source.enabled=False;source.save()
+        call_command('seed_facebook_sources',stdout=StringIO())
+        source.refresh_from_db()
+        self.assertFalse(source.enabled)
+        self.assertEqual(FacebookDiscoverySource.objects.count(),count)
+        self.assertEqual(ResearchJob.objects.count(),0)
+
+
+class ContinuationTests(TestCase):
