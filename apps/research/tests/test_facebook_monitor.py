@@ -1,0 +1,36 @@
+from datetime import timedelta
+import time
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase, SimpleTestCase, Client
+from django.urls import reverse
+from django.utils import timezone
+from playwright.sync_api import sync_playwright
+
+from apps.research.facebook_tasks import dispatch_facebook_scans, run_facebook_scan, scan_step
+from apps.research.models import FacebookMonitor, FacebookDiscoverySource, ResearchJob
+from apps.research.services.facebook_browser import FacebookAccessStopped, collect_thread
+from apps.research.services.facebook_monitor import configure_monitor, schedule_cycle
+from apps.research.services.facebook_store import enqueue_url, persist_snapshot
+from apps.research.tests.test_facebook_queue import URL, snapshot
+
+
+class ScheduleTests(TestCase):
+    def setUp(self):
+        self.now = timezone.now()
+        self.monitor = FacebookMonitor.objects.create(pk=1, enabled=True)
+        self.source = FacebookDiscoverySource.objects.create(name='PCL', kind='search', target='PCL Oilers')
+
+    def due_only(self, lane):
+        for key in ('discovery', 'refresh', 'backfill'):
+            setattr(self.monitor, key + '_due_at', self.now if key == lane else self.now + timedelta(days=1))
+        self.monitor.save()
+
+    def known_post(self, url=URL, status='partial'):
+        old = ResearchJob.objects.create(query=url, status='failed', depth='standard')
+        work = enqueue_url(old, url)
+        data = snapshot(); data['url'] = url
+        data['comments'][0]['url'] = url + '?comment_id=42'
+        persist_snapshot(work.pk, data)
+        work.refresh_from_db(); work.status = status; work.attempts = 3; work.save()
