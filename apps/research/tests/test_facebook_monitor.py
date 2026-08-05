@@ -82,3 +82,39 @@ class ScheduleTests(TestCase):
         self.assertEqual(job.depth, 'deep')
 
     def test_caption_and_refresh_passes_do_not_reset_deep_completion(self):
+        old = self.known_post(status='sampled')
+        for lane in ('discovery', 'refresh'):
+            job = ResearchJob.objects.create(query=URL, status='failed', monitor=self.monitor, monitor_lane=lane)
+            work = enqueue_url(job, URL); work.status = 'partial'; work.save()
+        self.due_only('backfill')
+        self.assertIsNone(schedule_cycle(self.now))
+        self.assertEqual(old.comments.count(), 1)
+
+    def test_abandoned_thread_can_be_continued_but_active_manual_work_is_not_duplicated(self):
+        old = self.known_post(status='queued')
+        old.job.status = 'social_collecting'; old.job.save()
+        self.due_only('backfill')
+        self.assertIsNone(schedule_cycle(self.now))
+        old.job.mark_finished('failed')
+        self.monitor.refresh_from_db(); self.due_only('backfill')
+        self.assertEqual(schedule_cycle(self.now).facebook_threads.get().post_id, old.post_id)
+
+    @patch('apps.research.facebook_tasks.run_facebook_scan.delay')
+    @patch('apps.research.facebook_tasks.scan_step')
+    @patch('apps.research.facebook_tasks.Redis')
+    def test_pause_blocks_already_published_tasks_and_resume_keeps_same_cycle(self, redis, step, delay):
+        self.due_only('discovery')
+        job = schedule_cycle(self.now)
+        configure_monitor('pause')
+        dispatch_facebook_scans()
+        delay.assert_not_called()
+        self.assertEqual(run_facebook_scan.run(job.pk), 'inactive')
+        step.assert_not_called()
+        configure_monitor('resume')
+        dispatch_facebook_scans()
+        delay.assert_called_once_with(job.pk)
+        self.assertEqual(self.monitor.jobs.count(), 1)
+
+    @patch('apps.research.facebook_tasks.run_facebook_scan.apply_async')
+    @patch('apps.research.facebook_tasks.scan_step', side_effect=FacebookAccessStopped('captcha_or_checkpoint'))
+    @patch('apps.research.facebook_tasks.Redis')
