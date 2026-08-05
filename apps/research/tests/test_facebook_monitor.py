@@ -118,3 +118,27 @@ class ScheduleTests(TestCase):
     @patch('apps.research.facebook_tasks.run_facebook_scan.apply_async')
     @patch('apps.research.facebook_tasks.scan_step', side_effect=FacebookAccessStopped('captcha_or_checkpoint'))
     @patch('apps.research.facebook_tasks.Redis')
+    def test_access_stop_pauses_scheduler_and_never_autoretries(self, redis, step, enqueue):
+        self.due_only('discovery')
+        job = schedule_cycle(self.now)
+        self.assertEqual(run_facebook_scan.run(job.pk), 'access_stopped')
+        self.monitor.refresh_from_db()
+        self.assertFalse(self.monitor.enabled)
+        self.assertIn('captcha', self.monitor.pause_reason)
+        self.assertIsNone(schedule_cycle(self.now + timedelta(days=3)))
+        enqueue.assert_not_called()
+
+    @patch('apps.research.facebook_tasks.scan_step', side_effect=RuntimeError('Browser setup failed'))
+    @patch('apps.research.facebook_tasks.Redis')
+    def test_unexpected_collector_error_pauses_monitor(self, redis, step):
+        self.due_only('discovery'); job = schedule_cycle(self.now)
+        with self.assertRaises(RuntimeError):
+            run_facebook_scan.run(job.pk)
+        self.monitor.refresh_from_db()
+        self.assertFalse(self.monitor.enabled)
+        self.assertIn('Browser setup failed', self.monitor.pause_reason)
+
+    @patch('apps.research.facebook_tasks.collect_thread', return_value=snapshot(coverage='comment_limit_reached'))
+    @patch('apps.research.facebook_tasks.facebook_context_kwargs', return_value={})
+    @patch('apps.research.facebook_tasks.sync_playwright')
+    def test_refresh_prefers_newest_and_finishes_one_bounded_pass_with_explicit_gap(self, browser, auth, collect):
