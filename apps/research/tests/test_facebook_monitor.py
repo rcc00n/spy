@@ -58,3 +58,27 @@ class ScheduleTests(TestCase):
         self.monitor.refresh_from_db()
         self.assertEqual(self.monitor.discovery_due_at, later + timedelta(hours=6))
 
+    def test_rotation_checks_unvisited_threads_before_rechecking_previous_batch(self):
+        first = self.known_post(); second = self.known_post('https://www.facebook.com/reel/456/')
+        self.monitor.refresh_batch = 1; self.due_only('refresh')
+        job = schedule_cycle(self.now)
+        self.assertEqual(job.facebook_threads.get().post_id, first.post_id)
+        job.mark_finished('completed')
+        self.monitor.refresh_from_db(); self.due_only('refresh')
+        next_job = schedule_cycle(self.now)
+        self.assertEqual(next_job.facebook_threads.get().post_id, second.post_id)
+        self.assertEqual(first.comments.count(), 1)
+
+    def test_backfill_retains_known_comments_and_depth_but_skips_sampled_threads(self):
+        old = self.known_post(); self.known_post('https://www.facebook.com/reel/456/', status='sampled')
+        self.due_only('backfill')
+        job = schedule_cycle(self.now)
+        work = job.facebook_threads.get()
+        self.assertEqual(work.post_id, old.post_id)
+        self.assertEqual(work.comments.get().pk, old.comments.get().pk)
+        self.assertEqual(work.attempts, 3)
+        self.assertEqual(work.cycle_attempts, 0)
+        self.assertEqual(work.checkpoint['seeded_comments'], 1)
+        self.assertEqual(job.depth, 'deep')
+
+    def test_caption_and_refresh_passes_do_not_reset_deep_completion(self):
