@@ -34,3 +34,27 @@ class ScheduleTests(TestCase):
         data['comments'][0]['url'] = url + '?comment_id=42'
         persist_snapshot(work.pk, data)
         work.refresh_from_db(); work.status = status; work.attempts = 3; work.save()
+        return work
+
+    def test_repeated_ticks_create_one_cycle_and_source_settings_are_snapshotted(self):
+        self.due_only('discovery')
+        FacebookDiscoverySource.objects.create(name='Disabled', kind='search', target='Disabled', enabled=False)
+        job = schedule_cycle(self.now)
+        self.assertIsNone(schedule_cycle(self.now))
+        self.assertIsNone(schedule_cycle(self.now + timedelta(days=3)))
+        self.source.target = 'Changed'; self.source.save()
+        self.assertEqual(job.facebook_discoveries.get().target, 'PCL Oilers')
+        self.assertEqual(job.monitor_lane, 'discovery')
+        self.monitor.refresh_from_db()
+        self.assertEqual(self.monitor.discovery_due_at, self.now + timedelta(hours=6))
+
+    def test_completed_cycles_do_not_catch_up_every_missed_interval(self):
+        self.due_only('discovery')
+        job = schedule_cycle(self.now); job.mark_finished('completed')
+        later = self.now + timedelta(days=30)
+        next_job = schedule_cycle(later)
+        next_job.mark_finished('completed')
+        self.assertIsNone(schedule_cycle(later))
+        self.monitor.refresh_from_db()
+        self.assertEqual(self.monitor.discovery_due_at, later + timedelta(hours=6))
+
