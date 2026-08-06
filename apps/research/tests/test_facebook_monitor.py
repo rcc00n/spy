@@ -142,3 +142,27 @@ class ScheduleTests(TestCase):
     @patch('apps.research.facebook_tasks.facebook_context_kwargs', return_value={})
     @patch('apps.research.facebook_tasks.sync_playwright')
     def test_refresh_prefers_newest_and_finishes_one_bounded_pass_with_explicit_gap(self, browser, auth, collect):
+        self.known_post(); self.due_only('refresh')
+        job = schedule_cycle(self.now)
+        scan_step(job)
+        work = job.facebook_threads.get()
+        self.assertEqual(collect.call_args.args[2], 40)
+        self.assertTrue(collect.call_args.kwargs['prefer_newest'])
+        self.assertEqual(work.status, 'partial')
+        self.assertEqual(work.comments.count(), 1)
+        self.assertTrue(job.is_terminal)
+
+
+class MonitorPortalTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user('operator', is_staff=True)
+        self.client.force_login(self.user)
+        self.url = reverse('research:facebook_settings')
+
+    def test_settings_validate_bounds_and_save_never_enables_monitor(self):
+        response = self.client.get(self.url, secure=True)
+        self.assertContains(response, 'Collection')
+        settings = dict(discovery_hours=6, refresh_hours=2, backfill_hours=12, refresh_batch=12, backfill_batch=4, action='save')
+        response = self.client.post(self.url, {**settings, 'refresh_hours': 0}, secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'greater than or equal to 1')
