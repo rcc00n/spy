@@ -166,3 +166,27 @@ class MonitorPortalTests(TestCase):
         response = self.client.post(self.url, {**settings, 'refresh_hours': 0}, secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'greater than or equal to 1')
+        self.assertEqual(self.client.post(self.url, settings, secure=True).status_code, 302)
+        self.assertFalse(FacebookMonitor.objects.get().enabled)
+        self.client.post(self.url, {'action': 'resume'}, secure=True)
+        self.assertTrue(FacebookMonitor.objects.get().enabled)
+        self.client.post(self.url, {'action': 'pause'}, secure=True)
+        self.assertFalse(FacebookMonitor.objects.get().enabled)
+
+    def test_controls_require_staff_post_and_csrf(self):
+        self.client.get(self.url, secure=True)
+        self.assertFalse(FacebookMonitor.objects.get().enabled)
+        csrf_client = Client(enforce_csrf_checks=True); csrf_client.force_login(self.user)
+        self.assertEqual(csrf_client.post(self.url, {'action': 'resume'}, secure=True).status_code, 403)
+        self.user.is_staff = False; self.user.save()
+        self.assertEqual(self.client.get(self.url, secure=True).status_code, 403)
+        self.assertEqual(self.client.post(self.url, {'action': 'resume'}, secure=True).status_code, 403)
+
+    def test_scheduled_job_cannot_be_restarted_outside_monitor(self):
+        monitor = FacebookMonitor.objects.create(pk=1)
+        job = ResearchJob.objects.create(query='Scheduled', monitor=monitor, status='failed')
+        response = self.client.post(reverse('research:job_retry', args=[job.pk]), secure=True)
+        self.assertRedirects(response, reverse('research:facebook_monitor'), fetch_redirect_response=False)
+        job.refresh_from_db(); self.assertEqual(job.status, 'failed')
+
+
