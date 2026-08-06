@@ -190,3 +190,23 @@ class MonitorPortalTests(TestCase):
         job.refresh_from_db(); self.assertEqual(job.status, 'failed')
 
 
+class FreshSortDomTests(SimpleTestCase):
+    def test_newest_preferred_when_available_and_all_fallback_is_recorded(self):
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                for newest in (True, False):
+                    page = browser.new_page()
+                    menu = '<button role="menuitem" onclick="window.chosen=\'all\'">All comments</button>'
+                    if newest:
+                        menu += '<button role="menuitem" onclick="window.chosen=\'newest\'">Newest</button>'
+                    html = f'''<div role="dialog"><span aria-label="Public">Public</span>
+                    <div data-ad-preview="message">PCL discussion</div><button>Most relevant</button>{menu}
+                    <article role="article" aria-label="Comment by Person"><div dir="auto">A comment</div><a href="{URL}?comment_id=42">time</a></article></div>'''
+                    page.route('**/*', lambda r: r.fulfill(status=200, content_type='text/html', body=html))
+                    result = collect_thread(page, URL, 1, time.monotonic()+20, prefer_newest=True)
+                    self.assertEqual(result['sort'], 'newest' if newest else 'all')
+                    self.assertEqual(page.evaluate('window.chosen'), result['sort'])
+                    page.close()
+            finally:
+                browser.close()
