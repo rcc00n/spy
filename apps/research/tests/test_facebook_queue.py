@@ -166,3 +166,39 @@ class DurableTaskTests(TestCase):
         self.assertEqual(self.work.status, 'sampled')
 
     @patch('apps.research.facebook_tasks.discover')
+    def test_discovered_urls_survive_search_error(self, discover):
+        self.job.query = 'PCL Oilers'
+        self.job.plan['discovery_index'] = 0
+        self.job.save()
+        def crash(page, query, limit, rounds, deadline, on_urls):
+            on_urls(['https://www.facebook.com/reel/456/'])
+            raise RuntimeError('Search interrupted')
+        discover.side_effect = crash
+        scan_step(self.job)
+        self.assertEqual(self.job.facebook_threads.count(), 2)
+        self.assertEqual(self.job.plan['queries'][0]['status'], 'error')
+
+    @patch('apps.research.facebook_tasks.Redis')
+    @patch('apps.research.facebook_tasks.collect_thread', side_effect=FacebookAccessStopped('captcha_or_checkpoint'))
+    def test_access_challenge_pauses_queue_without_erasing_evidence(self, collect, redis):
+        redis.from_url.return_value.lock.return_value.acquire.return_value = True
+        persist_snapshot(self.work.pk, snapshot())
+        another = ResearchJob.objects.create(query=URL, plan={'engine': 'facebook_browser'})
+        self.assertEqual(run_facebook_scan.run(self.job.pk), 'access_stopped')
+        self.work.refresh_from_db()
+        another.refresh_from_db()
+        self.assertEqual(self.work.status, 'blocked')
+        self.assertEqual(self.work.comments.count(), 1)
+        self.assertEqual(another.status, 'failed')
+
+    @patch('apps.research.facebook_tasks.Redis')
+    def test_busy_lock_keeps_job_pending(self, redis):
+        redis.from_url.return_value.lock.return_value.acquire.return_value = False
+        self.assertEqual(run_facebook_scan.run(self.job.pk), 'busy')
+        self.work.refresh_from_db()
+        self.assertEqual(self.work.attempts, 0)
+
+    @patch('apps.research.facebook_tasks.run_facebook_scan.delay')
+    def test_dispatcher_recovers_active_jobs_but_never_restarts_finished_jobs(self, delay):
+        ResearchJob.objects.create(query=URL, status='completed', plan={'engine': 'facebook_browser'})
+        ResearchJob.objects.create(query='Remote research')
