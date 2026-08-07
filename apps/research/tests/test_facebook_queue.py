@@ -142,3 +142,27 @@ class DurableTaskTests(TestCase):
         self.assertEqual(self.work.comments.count(), 1)
         self.assertEqual(self.job.sources.count(), 1)
         self.work.next_attempt_at = timezone.now() - timedelta(seconds=1)
+        self.work.save()
+        collect.side_effect = None
+        collect.return_value = snapshot(coverage='no_new_comments_after_scroll')
+        scan_step(self.job)
+        self.work.refresh_from_db()
+        self.assertEqual(self.work.attempts, 2)
+        self.assertEqual(self.work.status, 'sampled')
+        self.assertEqual(FacebookComment.objects.count(), 1)
+        self.assertEqual(FacebookCommentRevision.objects.count(), 1)
+        self.assertEqual(collect.call_args.args[2], 41)  # Existing evidence + new batch.
+        self.assertEqual(self.job.status, 'completed')
+
+    @patch('apps.research.facebook_tasks.collect_thread', return_value=snapshot(coverage='no_new_comments_after_scroll'))
+    def test_interrupted_running_row_is_reclaimed(self, collect):
+        self.work.status = 'running'
+        self.work.attempts = 1
+        self.work.cycle_attempts = 1
+        self.work.save()
+        scan_step(self.job)
+        self.work.refresh_from_db()
+        self.assertEqual(self.work.attempts, 2)
+        self.assertEqual(self.work.status, 'sampled')
+
+    @patch('apps.research.facebook_tasks.discover')
