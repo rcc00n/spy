@@ -82,3 +82,39 @@ class CorpusTests(TestCase):
 
     def test_limit_retries_then_remains_explicit_partial_gap(self):
         for attempt, expected in [(1, 'queued'), (2, 'queued'), (3, 'partial')]:
+            self.work.cycle_attempts = attempt
+            self.work.save()
+            finish_attempt(self.work, snapshot(coverage='comment_limit_reached'))
+            self.work.refresh_from_db()
+            self.assertEqual(self.work.status, expected)
+        update_report(self.job)
+        self.assertIn('partial', self.job.report_markdown)
+        self.assertIn('not complete coverage', self.job.report_markdown)
+
+    @patch('apps.research.views.run_facebook_scan.delay', return_value=SimpleNamespace(id='resume-task'))
+    def test_continue_keeps_sources_comments_and_discovery_progress(self, delay):
+        persist_snapshot(self.work.pk, snapshot())
+        finish_attempt(self.work, snapshot(coverage='comment_limit_reached'))
+        self.work.status = 'partial'
+        self.work.attempts = 3
+        self.work.cycle_attempts = 3
+        self.work.save()
+        self.job.plan.update(collector_version=2, discovery_index=1)
+        self.job.status = 'failed'
+        self.job.save()
+        self.client.force_login(get_user_model().objects.create_user('operator', is_staff=True))
+        response = self.client.post(reverse('research:job_retry', args=[self.job.pk]), secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.job.refresh_from_db()
+        self.work.refresh_from_db()
+        self.assertEqual(self.job.sources.count(), 1)
+        self.assertEqual(self.work.comments.count(), 1)
+        self.assertEqual(self.work.attempts, 3)
+        self.assertEqual(self.work.cycle_attempts, 0)
+        self.assertEqual(self.work.status, 'queued')
+        self.assertEqual(self.job.plan['discovery_index'], 1)
+        page = self.client.get(reverse('research:job_detail', args=[self.job.pk]), secure=True)
+        self.assertContains(page, 'Discussion queue')
+        self.assertContains(page, 'Good work PCL')
+
+
