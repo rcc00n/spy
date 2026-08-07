@@ -34,3 +34,27 @@ class CorpusTests(TestCase):
         persist_snapshot(self.work.pk, snapshot())
         second = ResearchJob.objects.create(query=URL)
         second_work = enqueue_url(second, URL+'?locale=ru_RU')
+        persist_snapshot(second_work.pk, snapshot())
+        self.assertEqual(FacebookPost.objects.count(), 1)
+        self.assertEqual(FacebookComment.objects.count(), 1)
+        self.assertEqual(FacebookCommentRevision.objects.count(), 1)
+        persist_snapshot(second_work.pk, snapshot(comment_text='Changed PCL text'))
+        self.assertEqual(FacebookCommentRevision.objects.count(), 2)
+        self.assertEqual(self.work.comments.get().text, 'Changed PCL text')
+        self.assertEqual(self.work.comments.get().parent_id, '40')
+
+    def test_failure_and_missing_visibility_do_not_erase_checkpoint(self):
+        persist_snapshot(self.work.pk, snapshot())
+        persist_snapshot(self.work.pk, {'url': URL, 'public_verified': False, 'comments': [], 'coverage': 'error'})
+        finish_attempt(self.work, error='Browser crashed')
+        self.assertEqual(FacebookComment.objects.get().text, 'Good work PCL')
+        self.assertEqual(self.job.sources.get().payload['comments'][0]['id'], '42')
+        self.assertEqual(self.job.sources.get().payload['coverage'], 'error')
+
+    def test_private_or_other_post_evidence_is_not_saved(self):
+        private = snapshot()
+        private['public_verified'] = False
+        persist_snapshot(self.work.pk, private)
+        self.assertEqual(FacebookComment.objects.count(), 0)
+        wrong = snapshot()
+        wrong['url'] = 'https://www.facebook.com/reel/456/'
