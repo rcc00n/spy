@@ -58,3 +58,27 @@ class CorpusTests(TestCase):
         self.assertEqual(FacebookComment.objects.count(), 0)
         wrong = snapshot()
         wrong['url'] = 'https://www.facebook.com/reel/456/'
+        with self.assertRaises(ValueError):
+            persist_snapshot(self.work.pk, wrong)
+        foreign_comment = snapshot()
+        foreign_comment['comments'][0]['url'] = 'https://www.facebook.com/reel/456/?comment_id=42'
+        persist_snapshot(self.work.pk, foreign_comment)
+        self.assertEqual(FacebookComment.objects.count(), 0)
+
+    def test_legacy_import_is_idempotent_and_leaves_job_terminal(self):
+        self.work.delete()
+        self.job.plan = {'engine': 'facebook_browser', 'discovered_urls': [URL],
+                         'queries': [{'query': URL, 'status': 'ok'}]}
+        self.job.status = 'completed'
+        self.job.save()
+        ResearchSource.objects.create(job=self.job, url=URL, payload=snapshot(coverage='comment_limit_reached'))
+        import_legacy_job(self.job)
+        import_legacy_job(self.job)
+        self.job.refresh_from_db()
+        self.assertEqual(self.job.status, 'completed')
+        self.assertEqual(self.job.facebook_threads.get().status, 'partial')
+        self.assertEqual(FacebookComment.objects.count(), 1)
+        self.assertEqual(FacebookCommentRevision.objects.count(), 1)
+
+    def test_limit_retries_then_remains_explicit_partial_gap(self):
+        for attempt, expected in [(1, 'queued'), (2, 'queued'), (3, 'partial')]:
