@@ -118,3 +118,27 @@ class CorpusTests(TestCase):
         self.assertContains(page, 'Good work PCL')
 
 
+class DurableTaskTests(TestCase):
+    def setUp(self):
+        self.job = ResearchJob.objects.create(query=URL, depth='standard', status='social_collecting',
+            plan={'engine': 'facebook_browser', 'collector_version': 2, 'discovery_index': 1})
+        self.work = enqueue_url(self.job, URL)
+        self.playwright = patch('apps.research.facebook_tasks.sync_playwright')
+        self.playwright.start()
+        self.addCleanup(self.playwright.stop)
+        auth = patch('apps.research.facebook_tasks.facebook_context_kwargs', return_value={})
+        auth.start()
+        self.addCleanup(auth.stop)
+
+    @patch('apps.research.facebook_tasks.collect_thread')
+    def test_exception_after_checkpoint_preserves_data_and_retry_deduplicates(self, collect):
+        def crash(page, url, limit, deadline, checkpoint, **kwargs):
+            checkpoint(snapshot())
+            raise RuntimeError('Detached dialog')
+        collect.side_effect = crash
+        scan_step(self.job)
+        self.work.refresh_from_db()
+        self.assertEqual(self.work.status, 'queued')
+        self.assertEqual(self.work.comments.count(), 1)
+        self.assertEqual(self.job.sources.count(), 1)
+        self.work.next_attempt_at = timezone.now() - timedelta(seconds=1)
