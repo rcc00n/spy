@@ -202,3 +202,5 @@ class DurableTaskTests(TestCase):
     def test_dispatcher_recovers_active_jobs_but_never_restarts_finished_jobs(self, delay):
         ResearchJob.objects.create(query=URL, status='completed', plan={'engine': 'facebook_browser'})
         ResearchJob.objects.create(query='Remote research')
+        dispatch_facebook_scans()
+        delay.assert_called_once_with(self.job.pk)
