@@ -94,3 +94,27 @@ class WorkspaceTests(TestCase):
         csrf = Client(enforce_csrf_checks=True); csrf.force_login(self.user)
         self.assertEqual(csrf.post(url,{'action':'save'},secure=True).status_code,403)
         response = self.client.post(url,{'action':'save','next':'https://evil.example/'},secure=True)
+        self.assertRedirects(response,reverse('research:facebook_discussion',args=[self.post.pk]),fetch_redirect_response=False)
+        self.user.is_staff=False; self.user.save()
+        for endpoint in [self.url,reverse('research:facebook_discussion',args=[self.post.pk]),reverse('research:facebook_settings')]:
+            self.assertEqual(self.client.get(endpoint,secure=True).status_code,403)
+        self.assertEqual(self.client.post(url,{'action':'save'},secure=True).status_code,403)
+
+    def test_source_switch_only_changes_on_valid_post(self):
+        source=FacebookDiscoverySource.objects.create(name='PCL',kind='search',target='PCL')
+        url=reverse('research:facebook_source_toggle',args=[source.pk])
+        self.assertEqual(self.client.get(url,secure=True).status_code,405)
+        self.assertEqual(self.client.post(url,{'action':'wrong'},secure=True).status_code,400)
+        self.client.post(url,{'action':'disable'},secure=True)
+        source.refresh_from_db(); self.assertFalse(source.enabled)
+        self.client.post(url,{'action':'enable'},secure=True)
+        source.refresh_from_db(); self.assertTrue(source.enabled)
+        self.assertEqual(self.post.comments.count(),2)
+
+    def test_staff_lands_in_findings_while_legacy_dashboard_stays_accessible(self):
+        self.assertRedirects(self.client.get(reverse('dashboard:index'),secure=True),self.url,fetch_redirect_response=False)
+        self.assertEqual(self.client.get(reverse('dashboard:index'),{'legacy':'1'},secure=True).status_code,200)
+
+
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from playwright.sync_api import sync_playwright, expect
