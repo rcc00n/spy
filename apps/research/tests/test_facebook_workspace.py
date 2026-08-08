@@ -34,3 +34,27 @@ class WorkspaceTests(TestCase):
         self.assertEqual(all_posts.context['page_obj'].paginator.count, 2)
         self.assertNotContains(all_posts, self.private.url)
 
+    def test_totals_count_unique_corpus_not_scan_observations_or_current_filter(self):
+        second = ResearchJob.objects.create(query='Again')
+        duplicate = enqueue_url(second, self.post.url)
+        duplicate.comments.set(self.post.comments.all())
+        response = self.client.get(self.url, {'q':'nothing matches'}, secure=True)
+        self.assertEqual(response.context['posts_read'], 2)
+        self.assertEqual(response.context['posts_found'], 3)
+        self.assertEqual(response.context['comments_read'], 2)
+        self.assertEqual(response.context['page_obj'].paginator.count, 0)
+
+    def test_search_finds_comments_and_date_filter_uses_first_discovery(self):
+        response = self.client.get(self.url, {'q':'general comment'}, secure=True)
+        self.assertEqual(response.context['page_obj'].paginator.count, 1)
+        self.post.first_seen_at = timezone.now()-timedelta(days=20); self.post.save()
+        response = self.client.get(self.url, {'period':'7'}, secure=True)
+        self.assertEqual(response.context['page_obj'].paginator.count, 0)
+        response = self.client.get(self.url, {'period':'invalid','scope':'invalid'}, secure=True)
+        self.assertEqual(response.context['page_obj'].paginator.count, 1)
+
+    def test_personal_bookmarks_are_idempotent_and_read_filter_can_be_reversed(self):
+        url = reverse('research:facebook_review', args=[self.post.pk])
+        for _ in range(2):
+            response = self.client.post(url, {'action':'save'}, HTTP_ACCEPT='application/json', secure=True)
+            self.assertTrue(response.json()['saved'])
