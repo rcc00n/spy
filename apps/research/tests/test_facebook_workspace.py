@@ -58,3 +58,39 @@ class WorkspaceTests(TestCase):
         for _ in range(2):
             response = self.client.post(url, {'action':'save'}, HTTP_ACCEPT='application/json', secure=True)
             self.assertTrue(response.json()['saved'])
+        self.assertEqual(FacebookReview.objects.count(), 1)
+        self.assertEqual(self.client.get(self.url, {'scope':'saved'}, secure=True).context['page_obj'].paginator.count, 1)
+        self.client.post(url, {'action':'read'}, secure=True)
+        self.assertEqual(self.client.get(self.url, {'unread':'1'}, secure=True).context['page_obj'].paginator.count, 0)
+        self.client.post(url, {'action':'unread'}, secure=True)
+        self.assertEqual(self.client.get(self.url, {'unread':'1'}, secure=True).context['page_obj'].paginator.count, 1)
+        second = get_user_model().objects.create_user('other-reader', is_staff=True)
+        self.client.force_login(second)
+        self.assertEqual(self.client.get(self.url, {'scope':'saved'}, secure=True).context['page_obj'].paginator.count, 0)
+        self.assertEqual(self.client.get(self.url, {'unread':'1'}, secure=True).context['page_obj'].paginator.count, 1)
+
+    def test_reading_get_never_changes_state_and_comments_are_escaped(self):
+        comment = self.post.comments.first(); comment.text='<script>alert("x")</script>'; comment.save()
+        response = self.client.get(reverse('research:facebook_discussion',args=[self.post.pk]), {'panel':'1','comments':'all'}, secure=True)
+        self.assertContains(response, '&lt;script&gt;')
+        self.assertNotContains(response, '<script>')
+        self.assertEqual(FacebookReview.objects.count(), 0)
+        self.assertContains(response, 'A general comment')
+        self.assertEqual(response['Cache-Control'], 'private, no-store')
+        self.assertEqual(self.client.get(reverse('research:facebook_discussion',args=[self.private.pk]),secure=True).status_code,404)
+
+    def test_pcl_comment_filter_and_pagination_keep_discussion_route(self):
+        for i in range(40):
+            FacebookComment.objects.create(post=self.post,facebook_id=str(i+20),url=self.post.url+'?comment_id='+str(i+20),text='PCL '+str(i),mentions_pcl=True)
+        url = reverse('research:facebook_discussion',args=[self.post.pk])
+        response = self.client.get(url, {'panel':'1'}, secure=True)
+        self.assertEqual(len(response.context['comments_page']), 30)
+        self.assertNotContains(response, 'A general comment')
+        self.assertContains(response, url+'?comments=pcl&amp;page=2&amp;panel=1')
+
+    def test_review_requires_staff_post_csrf_and_rejects_external_redirects(self):
+        url = reverse('research:facebook_review',args=[self.post.pk])
+        self.assertEqual(self.client.get(url,secure=True).status_code,405)
+        csrf = Client(enforce_csrf_checks=True); csrf.force_login(self.user)
+        self.assertEqual(csrf.post(url,{'action':'save'},secure=True).status_code,403)
+        response = self.client.post(url,{'action':'save','next':'https://evil.example/'},secure=True)
