@@ -118,3 +118,27 @@ class WorkspaceTests(TestCase):
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from playwright.sync_api import sync_playwright, expect
+
+
+class WorkspaceBrowserTests(StaticLiveServerTestCase):
+    def test_reader_bookmark_read_and_filter_controls_work_in_browser(self):
+        user=get_user_model().objects.create_user('browser-reader',is_staff=True)
+        self.client.force_login(user)
+        job=ResearchJob.objects.create(query='PCL',status='completed')
+        work=enqueue_url(job,'https://www.facebook.com/reel/123/')
+        persist_snapshot(work.pk,{'url':work.post.url,'public_verified':True,'text':'An arena post','comments':[
+            {'id':'1','url':work.post.url+'?comment_id=1','text':'PCL construction','mentions_pcl':True},
+            {'id':'2','url':work.post.url+'?comment_id=2','text':'Another comment','mentions_pcl':False}]})
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            try:
+                context=browser.new_context(viewport={'width':390,'height':844})
+                context.add_cookies([{'name':'sessionid','value':self.client.cookies['sessionid'].value,
+                                     'url':self.live_server_url}])
+                page=context.new_page();errors=[]
+                page.on('pageerror',lambda error:errors.append(str(error)))
+                page.goto(self.live_server_url+reverse('research:facebook_monitor'))
+                page.locator('[data-reader-link]').first.click()
+                panel=page.locator('#fb-reader')
+                panel.locator('[data-discussion-id]').wait_for()
+                expect(panel.locator('.fb-comment')).to_have_count(1)
