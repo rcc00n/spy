@@ -34,3 +34,27 @@ def queue_job(job: ResearchJob) -> None:
     async_result = task.delay(job.pk)
     job.task_id = async_result.id or ""
     job.save(update_fields=["task_id", "updated_at"])
+
+
+@login_required
+def jobs(request):
+    queryset = visible_jobs(request).annotate(source_count=Count("sources"))
+    context = {
+        "page_obj": paginate(request, queryset),
+        "queued_count": queryset.filter(status=ResearchJob.Status.QUEUED).count(),
+        "running_count": queryset.exclude(
+            status__in=ResearchJob.TERMINAL_STATUSES
+        ).count(),
+        "completed_count": queryset.filter(status=ResearchJob.Status.COMPLETED).count(),
+        "failed_count": queryset.filter(status=ResearchJob.Status.FAILED).count(),
+    }
+    return render(request, "research/jobs.html", context)
+
+
+@login_required
+def job_create(request):
+    if request.method == "POST":
+        form = ResearchJobForm(request.POST)
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.requested_by = request.user
