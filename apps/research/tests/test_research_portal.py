@@ -34,3 +34,22 @@ class ResearchPortalTests(TestCase):
         self.assertRedirects(
             response,
             reverse("research:job_detail", args=[job.pk]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(job.requested_by, self.user)
+        self.assertEqual(job.task_id, "celery-task-id")
+        self.assertEqual(job.status, ResearchJob.Status.QUEUED)
+        delay.assert_called_once_with(job.pk)
+
+    def test_status_endpoint_is_login_protected_job_state(self):
+        job = ResearchJob.objects.create(
+            requested_by=self.user,
+            title="Market scan",
+            query="Scan market changes.",
+            status=ResearchJob.Status.PLANNING,
+        )
+
+        response = self.client.get(reverse("research:job_status", args=[job.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], ResearchJob.Status.PLANNING)
