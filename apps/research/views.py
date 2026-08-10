@@ -142,3 +142,27 @@ def job_status(request, pk):
             ],
         }
     )
+
+
+@login_required
+def job_retry(request, pk):
+    if request.method != "POST":
+        return redirect("research:job_detail", pk=pk)
+
+    job = get_visible_job(request, pk)
+    if job.plan.get("engine") == "facebook_browser" and not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Facebook collection requires an operator account.")
+    if job.monitor_id:
+        messages.info(request, 'Scheduled cycles are managed by the Facebook monitor. Use its pause/resume controls; future cycles retain saved evidence.')
+        return redirect('research:facebook_monitor')
+    if not job.is_terminal:
+        messages.info(
+            request,
+            "Only completed, failed, or cancelled jobs can be queued again.",
+        )
+        return redirect("research:job_detail", pk=job.pk)
+
+    is_facebook = job.plan.get("engine") == "facebook_browser"
+    with transaction.atomic():
+        job = ResearchJob.objects.select_for_update().get(pk=job.pk)
