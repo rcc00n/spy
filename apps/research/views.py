@@ -58,3 +58,27 @@ def job_create(request):
         if form.is_valid():
             job = form.save(commit=False)
             job.requested_by = request.user
+            job.status = ResearchJob.Status.QUEUED
+            job.save()
+            try:
+                queue_job(job)
+            except Exception as exc:
+                job.mark_finished(ResearchJob.Status.FAILED, str(exc)[:4000])
+                messages.error(
+                    request,
+                    f"Research job was saved but could not be queued: {exc}",
+                )
+            else:
+                messages.success(request, f"Queued research job #{job.pk}.")
+            return redirect("research:job_detail", pk=job.pk)
+    else:
+        form = ResearchJobForm(
+            initial={
+                "include_social": True,
+                "depth": ResearchJob.Depth.STANDARD,
+            }
+        )
+
+    return render(
+        request,
+        "research/job_form.html",
