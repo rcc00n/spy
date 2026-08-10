@@ -190,3 +190,39 @@ def job_retry(request, pk):
         job.external_job_id = ""
         job.error_message = ""
         job.completed_at = None
+        if not is_facebook:
+            job.started_at = None
+        job.save()
+        ResearchEvent.objects.create(job=job, message="Collection resumed; saved evidence retained." if is_facebook else "Research job queued again.")
+    try:
+        queue_job(job)
+    except Exception as exc:
+        job.mark_finished(ResearchJob.Status.FAILED, str(exc)[:4000])
+        messages.error(request, f"Research job could not be queued again: {exc}")
+    else:
+        messages.success(request, f"Queued research job #{job.pk} again.")
+    return redirect("research:job_detail", pk=job.pk)
+
+
+@login_required
+def facebook_scan_create(request):
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Facebook collection requires an operator account.")
+    form = FacebookScanForm(request.POST or None, initial={"depth": "standard"})
+    if request.method == "POST" and form.is_valid():
+        job = form.save(commit=False)
+        job.requested_by = request.user
+        job.include_social = True
+        job.plan = {"engine": "facebook_browser", "discovery_version": 1, "collector_version": 2}
+        from apps.research.services.facebook_discovery import initialize_discovery
+        with transaction.atomic():
+            job.save()
+            initialize_discovery(job, form.cleaned_data['sources'], form.manual_lines)
+        try:
+            queue_job(job)
+        except Exception as exc:
+            job.mark_finished(ResearchJob.Status.FAILED, str(exc)[:2000])
+        return redirect("research:job_detail", pk=job.pk)
+    return render(request, "research/job_form.html", {"form": form, "title": "One-time scan", "submit_label": "Start scan", "facebook_scan": True, "form_base": "research/facebook_base.html", "fb_nav": "settings"})
+
