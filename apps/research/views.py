@@ -166,3 +166,27 @@ def job_retry(request, pk):
     is_facebook = job.plan.get("engine") == "facebook_browser"
     with transaction.atomic():
         job = ResearchJob.objects.select_for_update().get(pk=job.pk)
+        if not job.is_terminal:
+            return redirect("research:job_detail", pk=job.pk)
+        if is_facebook:
+            from apps.research.services.facebook_store import import_legacy_job
+            import_legacy_job(job)
+            job.facebook_discoveries.exclude(status='done').update(status='queued', cycle_attempts=0, next_attempt_at=timezone.now())
+            # Resume gaps first. A finished scan can explicitly recheck its
+            # sampled threads, while retaining the corpus and text revisions.
+            threads = job.facebook_threads.exclude(status__in=["sampled", "post_only"])
+            if not threads.exists() and not job.facebook_discoveries.exclude(status='done').exists():
+                threads = job.facebook_threads.all()
+            threads.update(status="queued", cycle_attempts=0, next_attempt_at=timezone.now())
+            errors = [i for i, q in enumerate(job.plan.get("queries", [])) if q.get("status") == "error"]
+            if errors:
+                job.plan["discovery_index"] = min(errors)
+        else:
+            job.report_markdown = ""
+            job.plan = {}
+            ResearchSource.objects.filter(job=job).delete()
+        job.status = ResearchJob.Status.QUEUED
+        job.task_id = ""
+        job.external_job_id = ""
+        job.error_message = ""
+        job.completed_at = None
