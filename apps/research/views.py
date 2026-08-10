@@ -118,3 +118,27 @@ def job_status(request, pk):
             "status": job.status,
             "status_display": job.get_status_display(),
             "is_terminal": job.is_terminal,
+            "updated_at": timezone.localtime(job.updated_at).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+            "completed_at": timezone.localtime(job.completed_at).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            if job.completed_at
+            else "",
+            "error_message": job.error_message,
+            "event_count": job.events.count(),
+            "source_count": job.sources.count(),
+            "report_available": bool(job.report_markdown),
+            "events": [
+                {
+                    "level": event["level"],
+                    "message": event["message"],
+                    "created_at": timezone.localtime(event["created_at"]).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                }
+                for event in events
+            ],
+        }
+    )
