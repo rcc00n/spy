@@ -82,3 +82,39 @@ def job_create(request):
     return render(
         request,
         "research/job_form.html",
+        {"form": form, "title": "New research job", "submit_label": "Queue research"},
+    )
+
+
+@login_required
+def job_detail(request, pk):
+    job = get_visible_job(request, pk)
+    events = list(job.events.order_by("-created_at")[:50])
+    events.reverse()
+    sources = job.sources.all()
+    return render(
+        request,
+        "research/job_detail.html",
+        {
+            "job": job,
+            "events": events,
+            "sources": sources,
+            "facebook_discoveries": job.facebook_discoveries.annotate(post_count=Count("posts")),
+            "facebook_threads": job.facebook_threads.select_related("post").annotate(comment_count=Count("comments")).order_by("pk"),
+        },
+    )
+
+
+@login_required
+def job_status(request, pk):
+    job = get_visible_job(request, pk)
+    events = list(
+        job.events.order_by("-created_at").values("level", "message", "created_at")[:50]
+    )
+    events.reverse()
+    return JsonResponse(
+        {
+            "id": job.pk,
+            "status": job.status,
+            "status_display": job.get_status_display(),
+            "is_terminal": job.is_terminal,
