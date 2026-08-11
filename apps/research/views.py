@@ -226,3 +226,27 @@ def facebook_scan_create(request):
         return redirect("research:job_detail", pk=job.pk)
     return render(request, "research/job_form.html", {"form": form, "title": "One-time scan", "submit_label": "Start scan", "facebook_scan": True, "form_base": "research/facebook_base.html", "fb_nav": "settings"})
 
+
+@login_required
+def facebook_sources(request):
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Operator account required.')
+    return render(request, 'research/facebook_sources.html', {'sources': FacebookDiscoverySource.objects.all(), 'fb_nav': 'sources'})
+
+
+@login_required
+def facebook_source_edit(request, pk=None):
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Operator account required.')
+    source=get_object_or_404(FacebookDiscoverySource,pk=pk) if pk else None
+    form=FacebookDiscoverySourceForm(request.POST or None,instance=source)
+    if request.method=='POST' and form.is_valid():
+        form.save()
+        return redirect('research:facebook_sources')
+    return render(request,'research/job_form.html',{'form':form,'title':'Edit source' if pk else 'New source', 'submit_label':'Save source', 'facebook_scan':True, 'form_base':'research/facebook_base.html', 'fb_nav':'sources'})
+
+
+# Compatibility import for operational scripts; route renders the new workspace.
+from apps.research.facebook_views import workspace as facebook_monitor  # noqa: E402, F401
