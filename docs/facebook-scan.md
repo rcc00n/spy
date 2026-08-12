@@ -70,3 +70,27 @@ DB work invoked from Playwright's synchronous event loop uses a separate thread.
 The login repair passed 32 tests and a live authenticated refresh (request #16).
 External noVNC WebSocket connection and injected extension-error handling passed.
 VNC survived a repeated container restart. Browser collection adds seven tests
+(39 total). On the user-supplied sample Reel, a live pilot captured 9 comment and
+reply records; absence of additional visible controls is not a completeness claim.
+
+Production backups: `/var/backups/spy/login-20260924T032400Z/`.
+Docker tags `before-login-fix-20260924` retain the previous image versions;
+`login-fixed-20260924` retain the version before browser research was added.
+The source tree at `/var/www/spy` is not a Git checkout; deploy changed files
+explicitly and retain backups. No production schema migration was required.
+
+The first search job (Research #1) discovered 73 distinct URLs over eight queries;
+its original ordinary-post extraction was incomplete. The parser was corrected
+for public SVG badges and post dialogs over the home feed. The follow-up job
+(Research #2) verified four public sources and captured 85 comments/replies.
+One source failed due to a changing dialog locator. Two large discussions hit
+the configured 40-comment limit. Two explicit PCL comment matches were a project
+link and “Great job PCL!”; this is not evidence of negative spillover, nor proof
+that none exists beyond the collected sample. This was the baseline before the durable queue upgrade below.
+
+
+## Durable queue upgrade (2026-09-24 UTC)
+
+Migration `research.0002` adds the corpus, comment revisions and durable thread
+queue; all existing Research models remain intact. Run `python manage.py
+import_facebook_evidence` once after migration to import older reports. The command
