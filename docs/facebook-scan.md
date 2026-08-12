@@ -94,3 +94,27 @@ that none exists beyond the collected sample. This was the baseline before the d
 Migration `research.0002` adds the corpus, comment revisions and durable thread
 queue; all existing Research models remain intact. Run `python manage.py
 import_facebook_evidence` once after migration to import older reports. The command
+is idempotent and starts no jobs. It preserves historical job status.
+
+Backup before deployment: `/var/backups/spy/queue-20260924T041321Z/`, containing
+source and a PostgreSQL custom-format dump. Previous web/worker/beat image tags:
+`spy-<service>:before-durable-queue-20260924`. Schema changes are additive: rolling
+back those service images does not require dropping the corpus tables.
+
+Next stages: independent discovery via a source watchlist, recurring monitoring,
+reliable alert delivery, AI relevance/risk classification and measured recall.
+
+Validation: 54 tests passed locally and in the production image with networking
+and production database access disabled. These include a real Chromium/DB
+checkpoint test, hidden-dialog removal, an unrelated icon labelled “Ещё”, empty
+comment extraction, interrupted-task recovery, challenge pauses, cross-job
+idempotency, text revisions, legacy import and the Continue handler.
+
+The collector only expands “See more / Ещё” when it is actual visible button
+text. An icon with the same accessible label can open unrelated link information;
+that panel must not replace the discussion scope. Zero captured comments are
+reported as `comments_not_observed` or `comment_links_not_matched`, rather than a
+successful end-of-discussion observation. These gaps get bounded retries.
+
+The first production cycle of Research #3 retained 124 comments from a large
+petition thread over three passes (42 → 82 → 124). Continuing through the portal
