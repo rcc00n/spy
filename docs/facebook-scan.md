@@ -46,3 +46,27 @@ an allegation classifier. No AI model is connected in this first collector.
 Video, audio, images, hidden/deleted comments and inaccessible/private sources
 are not analyzed. Visible text can be automatically translated by Facebook.
 A completed job is a completed bounded scan, not complete coverage of Facebook.
+The report identifies unvisited links, per-source limits and extraction gaps.
+
+## Operator login
+
+Open `/settings/facebook-login/` as a staff user. The noVNC route requires the
+same application login, including its WebSocket connection. Include the rules
+in `nginx/facebook-session.conf.example` in the host TLS server configuration.
+Telegram request links do not independently grant remote desktop access.
+
+The session supervisor waits for Xvfb, VNC and websockify readiness, removes
+stale display locks after restarts, and exits if a component dies. Logs are in
+`/tmp/xvfb.log`, `/tmp/x11vnc.log`, `/tmp/novnc.log` inside the session container.
+The image applies `scripts/patch_novnc.py` so browser-extension errors do not
+open noVNC's fatal overlay; errors in noVNC itself remain visible.
+
+Session storage is replaced atomically. The checker requires Facebook auth
+cookies and a loaded Facebook page before reporting an authenticated session.
+DB work invoked from Playwright's synchronous event loop uses a separate thread.
+
+## Deployment verification (2026-09-24 UTC)
+
+The login repair passed 32 tests and a live authenticated refresh (request #16).
+External noVNC WebSocket connection and injected extension-error handling passed.
+VNC survived a repeated container restart. Browser collection adds seven tests
