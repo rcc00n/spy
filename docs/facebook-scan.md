@@ -118,3 +118,39 @@ successful end-of-discussion observation. These gaps get bounded retries.
 
 The first production cycle of Research #3 retained 124 comments from a large
 petition thread over three passes (42 → 82 → 124). Continuing through the portal
+handler preserved all three sources and 127 comments in the job, without repeating
+discovery or its already sampled PCL discussion. This verifies increasing depth
+and retention; it is not a claim to have read the entire petition discussion.
+
+After the parser correction and Continue, the live job reached 164 petition
+comments and 82 comments on the previously failing Oilers post, plus 3 on the PCL
+post (249 unique comments in Research #3 at that checkpoint). Collection continues
+in the background within its bounded retry cycle. Production health, detail/status
+views and all service containers were checked successfully after deployment.
+
+## Source discovery upgrade (2026-09-24 UTC)
+
+Operators manage the watchlist at `/research/facebook/sources/`: pages, public
+groups and search phrases can be added, edited or disabled. New scans snapshot
+selected source settings; later edits affect future scans only. Up to 30 sources
+plus 12 manual phrases/page/group/post URLs can be selected. Empty requests and
+non-Facebook URLs are rejected. Existing browser scans keep their original engine.
+
+`FacebookDiscoveryRun` records each independent discovery attempt and its post
+links. A page feed and a search can find the same post: both origins are retained,
+while only one discussion work item is queued per job. Partial discovery commits
+survive a browser error. Continue retries unfinished discoveries; successful
+source passes are not repeated. Blank output is a visible gap, not proof that a
+source contains no discussions. Selected feeds collect broadly; relevance and
+sentiment classification remain a later stage.
+
+Feed discovery accepts source-owned post URLs and generic Reel links with an
+owner link in the same post card. Unrelated recommendations are excluded. Group
+public visibility is verified in the header outside user posts/feed content before
+discovery and again before each group post read. The collector never joins groups.
+Page/post visibility and access-state checks from the previous collector remain.
+Discovery uses bounded scroll/link budgets; feed order can be ranked or pinned.
+Dates/backfill and full historical coverage are not provided by this stage.
+
+`python manage.py seed_facebook_sources` adds the initial PCL/Oilers watchlist:
+5 pages, 3 public fan groups and 8 search variants. It is idempotent, does not
