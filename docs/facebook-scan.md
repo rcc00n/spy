@@ -178,3 +178,27 @@ Research #4 (`/research/4/`) completed all 16 discovery passes: 5 pages, 3 publi
 groups and 8 searches. It retained 78 distinct canonical post links with their
 origins. The quick discovery limit is 5 links per source; this is a bounded pilot,
 not a census of those feeds. Subsequent public-post reading continues through the
+durable queue. Research #5 completed a separate group-post check and stored 15
+comments/replies after fresh verification of the group's public header.
+
+Next step (3): recurring monitoring of new posts and active comment threads,
+plus controlled continuation/backfill of older discussions. Steps 4–6 remain:
+reliable alert delivery, AI relevance/risk classification, and measured coverage.
+
+## Recurring monitor (stage 3, 2026-09-24 UTC)
+
+`/research/facebook/monitor/` controls one site-wide schedule (migration 0004).
+The default schedule finds posts every 6 hours using all enabled sources, checks
+fresh comments in batches of 12 discussions every 2 hours, and continues batches
+of 4 unfinished discussions every 12 hours. Discovery uses the standard source
+budget (10 links, 4 scrolls per source) then saves post captions. Refresh prefers
+Newest, falling back to All comments when necessary; the actual sort is retained
+in the evidence. It uses 40 visible comments / 45 seconds of comment expansion.
+Continuation seeds prior saved comments and attempt depth, then replays with a
+larger budget (up to 150 seconds of comment expansion). Refresh and continuation
+perform one attempt per thread per cycle; any limits remain explicit gaps.
+
+Refresh rotates through all known, previously verified public posts, including
+manual scans. Continuation rotates through known unfinished threads, including
+unread links and failed attempts. A successful deep-read sample is not reset by a
+later caption or refresh pass. Threads with active manual work are skipped by
