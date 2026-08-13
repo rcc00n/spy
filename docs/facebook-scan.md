@@ -202,3 +202,39 @@ Refresh rotates through all known, previously verified public posts, including
 manual scans. Continuation rotates through known unfinished threads, including
 unread links and failed attempts. A successful deep-read sample is not reset by a
 later caption or refresh pass. Threads with active manual work are skipped by
+continuation. Observation order, not publication dates, drives rotation. This is
+continuation of the known corpus, not historical discovery by publication date.
+
+Intervals are queue targets, not per-post guarantees: 120 verified discussions
+with a refresh batch of 12 require at least 10 cycles to rotate once. The UI exposes
+batch sizes and intervals. Changes reset due times but do not rewrite the active
+cycle. Source changes affect the next discovery cycle. No keyword relevance
+filter or sentiment classifier is applied at this stage.
+
+The existing 30-second dispatcher locks the singleton schedule in PostgreSQL and
+creates at most one unfinished scheduled cycle at a time, choosing the oldest due
+lane. Missed intervals are coalesced, never expanded into a catch-up backlog. Jobs
+and post rotation timestamps commit together before broker publication. Broker
+loss, worker restart and interrupted browser work retain their durable recovery
+paths; the global Redis lease still allows only one collector browser at a time.
+
+Pause holds scheduled queue work, including already-published tasks, at the next
+browser-step boundary; an in-flight step can finish saving its checkpoint. Resume
+retains that cycle and evidence. Manual scans are separate. Access challenges or
+rate limits pause the monitor and stop active Facebook jobs; unexpected scheduled
+collector failures also pause the monitor. Nothing automatically re-enables it.
+Controls require staff authorization and CSRF-protected POST. Scheduled cycles
+cannot be restarted via the manual-job retry endpoint. No Telegram notifications
+are introduced by stage 3.
+
+For rollback, first pause the monitor and let the in-flight browser step finish.
+Stop the worker and beat before restoring the previous service images. Old code
+has no monitor gate, so also leave any unfinished scheduled jobs cancelled when
+rolling back; do not remove corpus/schema tables or saved evidence.
+
+Next (stage 4): durable alert delivery with deduplication and failure notices.
+Then stage 5 adds relevance and PCL-risk classification, and stage 6 adds coverage
+metrics and gap controls. None can guarantee 100% coverage of Facebook.
+
+Stage 3 deployment validation: 83 tests passed in the final production image
+(`ff1623d7fbefd8cfc2e672315421cad4a57470aadc81b6e4db0e91a2fc1aed6f`),
