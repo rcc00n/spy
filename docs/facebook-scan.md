@@ -154,3 +154,27 @@ Dates/backfill and full historical coverage are not provided by this stage.
 
 `python manage.py seed_facebook_sources` adds the initial PCL/Oilers watchlist:
 5 pages, 3 public fan groups and 8 search variants. It is idempotent, does not
+re-enable existing disabled entries and does not start scans. Seed pages and group
+headers were checked in the production browser on 2026-09-24. Old unavailable
+OilersNation/EO7 URLs were not included. Enabled does not mean continuously watched:
+recurring monitoring is the next stage.
+
+Productive tasks publish the next queue step with a 5-second delay after releasing
+the browser lock. The existing 30-second dispatcher recovers missed publications
+and expired leases. One browser collection task still holds the global lock at a
+time. This accelerates a submitted scan; it does not schedule new recurring scans.
+
+Migration: `research.0003`. Backup: `/var/backups/spy/discovery-20260924T044829Z/`.
+Previous service images: `spy-<service>:before-discovery-20260924` for web, worker
+and beat. The schema additions are compatible with rollback to the prior images;
+do not drop corpus or discovery tables to roll back application code.
+
+Stage 2 validation: 69 tests passed in the final production image with networking
+and production database access disabled. The live watchlist form renders 16
+selected sources; an actual Chromium check confirmed each checkbox changes
+independently. The watchlist, scan detail and health endpoint returned HTTP 200.
+
+Research #4 (`/research/4/`) completed all 16 discovery passes: 5 pages, 3 public
+groups and 8 searches. It retained 78 distinct canonical post links with their
+origins. The quick discovery limit is 5 links per source; this is a bounded pilot,
+not a census of those feeds. Subsequent public-post reading continues through the
