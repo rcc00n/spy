@@ -238,3 +238,27 @@ metrics and gap controls. None can guarantee 100% coverage of Facebook.
 
 Stage 3 deployment validation: 83 tests passed in the final production image
 (`ff1623d7fbefd8cfc2e672315421cad4a57470aadc81b6e4db0e91a2fc1aed6f`),
+with networking and production database access disabled. Tests include browser
+sorting, schedule rotation, duplicate prevention, pause/resume, CSRF/staff access,
+access-stop handling, interrupted threads and corpus preservation. On production
+PostgreSQL, eight concurrent scheduler calls created exactly one cycle. Beat
+picked up Research #6 without direct task publication; its PCL comment refresh
+completed with Newest sorting and three saved comments, no duplicated corpus rows.
+The live monitor page rendered HTTP 200 in Chromium; health and Django checks
+passed. Memory at the post-deployment check was approximately 164 MiB web, 731 MiB
+worker with browser, and 72 MiB beat.
+
+Backup: `/var/backups/spy/monitor-20260924T051159Z/` (source and database).
+Previous service tags: `spy-<service>:before-monitor-20260924` for web, worker and
+beat. The `monitor_lane` column retains a database default for compatibility with
+old application inserts. Normal intervals/batches were restored after the one-post
+validation cycle: 6h discovery, 2h / 12-thread refresh, 12h / 4-thread continuation.
+
+Research #7 completed the live continuation check: two earlier comments remained
+saved, the attempt budget advanced from 1 to 2, and no additional comments were
+observed. Research #8 then started automatically with all 16 enabled sources.
+Its first completed source pass increased the global corpus from 138 to 142
+canonical links at the verification checkpoint. The monitor remained enabled
+with the normal settings and no pause reason. The older manual Research #4 ended
+with collection gaps, retained in its report; its 16 discovery passes succeeded.
+
