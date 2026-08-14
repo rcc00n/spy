@@ -262,3 +262,27 @@ canonical links at the verification checkpoint. The monitor remained enabled
 with the normal settings and no pause reason. The older manual Research #4 ended
 with collection gaps, retained in its report; its 16 discovery passes succeeded.
 
+
+## Evidence workspace (2026-09-24)
+
+The product plan now prioritizes the interface. The user explicitly removed
+notification delivery from the roadmap; the next stage is source expansion and
+AI relevance analysis, followed by coverage improvements.
+
+The English workspace at `/research/facebook/monitor/` replaces the old schedule
+page and is the default staff landing page. Collection settings moved to
+`/research/facebook/settings/`; old monitor POST actions still work. The legacy
+account dashboard remains accessible with `/?legacy=1`. Sources have a separate
+page, and technical tools/history remain available without crowding findings.
+
+Findings default to PCL keyword matches, with matching comments placed first.
+Operators can search post/comment text, filter by first discovery date, select
+unread items, and bookmark discussions. The reader opens alongside the list and
+retains scroll position. A full-page reader and normal POST forms work without
+JavaScript. Read status is an explicit personal review mark, not a promise that
+all current or future comments have been read. Source texts retain their original
+language; familiar Facebook UI controls are trimmed for display only. Saved raw
+evidence remains unchanged.
+
+Top-level totals deliberately distinguish saved post text (`public_verified`
+and non-empty text), all discovered canonical links, saved comment/reply records,
