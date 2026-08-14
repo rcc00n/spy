@@ -286,3 +286,27 @@ evidence remains unchanged.
 
 Top-level totals deliberately distinguish saved post text (`public_verified`
 and non-empty text), all discovered canonical links, saved comment/reply records,
+and enabled discovery sources. They are global collection totals; feed filters
+do not change them. Repeated observations or multiple scan jobs do not multiply
+corpus records. Canonical URL aliases that Facebook exposes differently remain
+an existing limitation; these are corpus counts, not a platform census.
+
+Migration 0005 adds per-user `FacebookReview` rows with unique `(user, post)`
+constraints. Reading GET requests never mutate review state. Review and source
+controls require staff access, CSRF-protected POST, validated actions and safe
+redirects. No saved Facebook evidence is altered by these controls.
+
+Browser validation covers real AJAX saves, read/unread actions, comment tabs,
+Escape/close behavior and mobile widths of 390 and 320 pixels. The final test
+suite also verifies corpus counters, filtering, pagination, HTML escaping,
+permissions, personal state isolation and all existing collection behavior.
+
+Deployment must run `collectstatic` before restarting the web service, because
+this release adds the scoped `facebook-workspace.css` and `facebook-workspace.js`
+assets. The database change is additive and compatible with previous collector
+images. Rollback does not require dropping review or evidence tables.
+
+Workspace release validation (2026-09-25): all 93 tests passed in the production
+image with external networking and production database access disabled. The
+final tested image is `71ce8e6d7c6de93e3a0e5a3f3095f5cf54857420e453eee90a2dd9e439d3ce4f`.
+Pre-workspace application source is backed up at
