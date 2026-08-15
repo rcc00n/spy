@@ -1,0 +1,24 @@
+upstream django_web {
+    server web:8000;
+}
+
+server {
+    listen 80;
+    server_name spy.raccncode.com;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name spy.raccncode.com;
+
+    ssl_certificate /etc/letsencrypt/live/spy.raccncode.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/spy.raccncode.com/privkey.pem;
+
