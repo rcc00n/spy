@@ -1,0 +1,24 @@
+# Include inside the TLS server block. The Django upstream must share its
+# session database with the main app. Never expose the noVNC port publicly.
+location = /_facebook_session_auth {
+    internal;
+    proxy_pass http://127.0.0.1:18010/settings/facebook-login/session-access/;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+location /facebook-session/ {
+    auth_request /_facebook_session_auth;
+    error_page 401 =302 https://$host/login/?next=/settings/facebook-login/;
+    access_log off;
+    add_header Cache-Control "no-store" always;
+    add_header Referrer-Policy "no-referrer" always;
+    proxy_pass http://127.0.0.1:18011/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
