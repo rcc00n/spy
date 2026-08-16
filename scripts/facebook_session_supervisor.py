@@ -70,3 +70,24 @@ def main():
         wait_ready(proxy, ('127.0.0.1', 7900), socket.AF_INET, 'novnc')
         manager = start('session-manager', [sys.executable, 'manage.py', 'run_facebook_session_manager', *sys.argv[1:]], log=False)
         while not stopping:
+            for child in children:
+                code = child.poll()
+                if code is not None:
+                    if child is manager and code == 0:
+                        return
+                    raise RuntimeError(f'Session component exited: {child.args[0]} ({code})')
+            time.sleep(0.5)
+    finally:
+        for child in reversed(children):
+            if child.poll() is None:
+                child.terminate()
+        for child in reversed(children):
+            try:
+                child.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait()
+
+
+if __name__ == '__main__':
+    main()
