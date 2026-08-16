@@ -46,3 +46,27 @@ def main():
 
     def stop(signum, frame):
         nonlocal stopping
+        stopping = True
+
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
+
+    def start(name, args, log=True):
+        if log:
+            with open(f'/tmp/{name}.log', 'w') as output:
+                child = subprocess.Popen(args, stdout=output, stderr=subprocess.STDOUT)
+        else:
+            child = subprocess.Popen(args)
+        children.append(child)
+        return child
+
+    try:
+        xvfb = start('xvfb', ['Xvfb', display, '-screen', '0', os.environ.get('FACEBOOK_SESSION_SCREEN_RESOLUTION', '1366x900x24'), '-nolisten', 'tcp'])
+        wait_ready(xvfb, x_socket, socket.AF_UNIX, 'xvfb')
+        start('fluxbox', ['fluxbox'])
+        vnc = start('x11vnc', ['x11vnc', '-display', display, '-forever', '-shared', '-nopw', '-listen', '127.0.0.1', '-rfbport', '5900'])
+        wait_ready(vnc, ('127.0.0.1', 5900), socket.AF_INET, 'x11vnc')
+        proxy = start('novnc', ['websockify', '--web=/usr/share/novnc', '0.0.0.0:7900', '127.0.0.1:5900'])
+        wait_ready(proxy, ('127.0.0.1', 7900), socket.AF_INET, 'novnc')
+        manager = start('session-manager', [sys.executable, 'manage.py', 'run_facebook_session_manager', *sys.argv[1:]], log=False)
+        while not stopping:
