@@ -34,3 +34,4 @@ def patch(root):
 
 
 if __name__ == '__main__':
+    patch(Path(sys.argv[1] if len(sys.argv) > 1 else '/usr/share/novnc'))
