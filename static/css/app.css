@@ -118,3 +118,27 @@ code {
   line-height: 1.2;
 }
 
+.brand small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  margin-top: 2px;
+}
+
+.nav {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nav a {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--muted-strong);
+  display: flex;
+  font-size: 14px;
+  font-weight: 720;
+  gap: 10px;
+  min-height: 40px;
+  padding: 9px 10px;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
