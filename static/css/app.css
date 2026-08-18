@@ -94,3 +94,27 @@ code {
   color: var(--text-strong);
 }
 
+.brand-mark {
+  align-items: center;
+  background: var(--text-strong);
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  flex: 0 0 42px;
+  font-size: 13px;
+  font-weight: 800;
+  height: 42px;
+  justify-content: center;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand strong {
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
