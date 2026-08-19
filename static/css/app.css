@@ -202,3 +202,27 @@ code {
   min-height: 66px;
   padding: 0 32px;
   position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.site-header strong {
+  color: var(--text-strong);
+  display: block;
+  font-size: 15px;
+}
+
+.logout-form {
+  margin: 0;
+}
+
+.page {
+  margin: 0 auto;
+  max-width: 1320px;
+  min-width: 0;
+  padding: 32px;
+  width: 100%;
+}
+
+.auth-page {
+  max-width: none;
