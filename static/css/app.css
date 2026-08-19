@@ -250,3 +250,39 @@ h2 {
   color: var(--text-strong);
   font-size: 18px;
   font-weight: 760;
+  line-height: 1.2;
+  margin: 0;
+}
+
+p {
+  color: var(--muted);
+  margin: 7px 0 0;
+}
+
+button,
+.button {
+  align-items: center;
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 760;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 14px;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  white-space: nowrap;
+}
+
+button:hover,
+.button:hover {
+  background: var(--accent-strong);
+  color: #fff;
+  text-decoration: none;
+}
+
+button:focus-visible,
