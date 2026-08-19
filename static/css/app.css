@@ -286,3 +286,27 @@ button:hover,
 }
 
 button:focus-visible,
+.button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.16);
+  outline: 0;
+}
+
+.button-secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.button-secondary:hover {
+  background: var(--surface-muted);
+  border-color: #cbd5e1;
+  color: var(--text-strong);
+}
+
+.button-danger {
+  background: #fff;
+  border-color: #f4b4ad;
