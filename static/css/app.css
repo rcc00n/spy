@@ -310,3 +310,27 @@ a:focus-visible {
 .button-danger {
   background: #fff;
   border-color: #f4b4ad;
+  color: var(--error);
+}
+
+.button-danger:hover {
+  background: #fff1f0;
+  border-color: #f29990;
+  color: #8f1d14;
+}
+
+.button-small {
+  font-size: 12px;
+  min-height: 32px;
+  padding: 6px 10px;
+}
+
+.page-actions,
+.form-actions,
+.row-actions,
+.inline-check-form {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
