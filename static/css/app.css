@@ -394,3 +394,27 @@ a:focus-visible {
   margin-left: 14px;
   text-transform: uppercase;
 }
+
+.stat-card strong {
+  color: var(--text-strong);
+  display: block;
+  font-size: 34px;
+  font-weight: 780;
+  line-height: 1;
+  margin-top: 14px;
+}
+
+.operations-strip {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding: 17px 18px;
+}
+
+.operations-strip strong {
+  color: var(--text-strong);
+  display: block;
+  font-size: 18px;
+  line-height: 1.2;
