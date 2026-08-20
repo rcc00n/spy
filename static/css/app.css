@@ -370,3 +370,27 @@ a:focus-visible {
   box-shadow: var(--shadow);
 }
 
+.stat-card {
+  padding: 18px 18px 16px;
+  position: relative;
+}
+
+.stat-card::before {
+  background: var(--accent);
+  border-radius: 999px;
+  content: "";
+  height: 6px;
+  left: 18px;
+  position: absolute;
+  top: 15px;
+  width: 6px;
+}
+
+.stat-card span {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-left: 14px;
+  text-transform: uppercase;
+}
