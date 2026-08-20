@@ -334,3 +334,39 @@ a:focus-visible {
   flex-wrap: wrap;
   gap: 9px;
 }
+
+.page-actions {
+  justify-content: flex-end;
+}
+
+.inline-check-form {
+  justify-content: flex-end;
+}
+
+.compact-check-form {
+  margin-top: 0;
+}
+
+.row-actions {
+  min-width: 190px;
+}
+
+.stats-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.stat-card,
+.panel,
+.auth-panel,
+.form-panel,
+.table-wrap,
+.operations-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
