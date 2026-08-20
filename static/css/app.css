@@ -442,3 +442,39 @@ a:focus-visible {
 
 .status-stack {
   display: grid;
+  gap: 18px;
+}
+
+.status-panel {
+  margin-top: 20px;
+}
+
+.panel,
+.form-panel {
+  padding: 20px;
+}
+
+.collapsible-panel {
+  overflow: hidden;
+  padding: 0;
+}
+
+.panel-summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  list-style: none;
+  padding: 18px 20px;
+}
+
+.panel-summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-summary strong {
+  color: var(--text-strong);
+  display: block;
+  font-size: 18px;
+  font-weight: 760;
