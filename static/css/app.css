@@ -418,3 +418,27 @@ a:focus-visible {
   display: block;
   font-size: 18px;
   line-height: 1.2;
+  margin-top: 3px;
+}
+
+.split-grid,
+.settings-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-grid {
+  align-items: start;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.run-summary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.status-stack {
+  display: grid;
