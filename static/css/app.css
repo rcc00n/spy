@@ -562,3 +562,27 @@ a:focus-visible {
 .list-row strong,
 .list-row span {
   display: block;
+}
+
+.list-row strong {
+  color: var(--text-strong);
+  font-size: 14px;
+}
+
+.list-row span {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.list-row p {
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.empty {
+  background: var(--surface-subtle);
+  border: 1px dashed #cbd5e1;
+  border-radius: 7px;
+  color: var(--muted);
+  padding: 16px;
