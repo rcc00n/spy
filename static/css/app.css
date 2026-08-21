@@ -586,3 +586,27 @@ a:focus-visible {
   border-radius: 7px;
   color: var(--muted);
   padding: 16px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table-wrap-flat {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0 -2px -2px;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 780px;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border-soft);
+  padding: 13px 15px;
