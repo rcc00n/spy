@@ -526,3 +526,39 @@ a:focus-visible {
 .panel-heading {
   align-items: center;
   display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.panel-heading-stacked {
+  align-items: flex-start;
+}
+
+.panel-heading a {
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.list {
+  display: grid;
+  gap: 0;
+}
+
+.list-row {
+  border-top: 1px solid var(--border-soft);
+  padding: 13px 0;
+}
+
+.list-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.list-row:last-child {
+  padding-bottom: 0;
+}
+
+.list-row strong,
+.list-row span {
+  display: block;
