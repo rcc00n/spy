@@ -502,3 +502,27 @@ a:focus-visible {
 .panel-summary:hover .summary-icon {
   border-color: var(--accent-strong);
 }
+
+.collapsible-panel[open] .summary-icon {
+  transform: rotate(225deg);
+}
+
+.collapsible-body {
+  border-top: 1px solid var(--border-soft);
+  padding: 16px 20px 20px;
+}
+
+.panel-link-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.panel-link-row a {
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.panel-heading {
+  align-items: center;
+  display: flex;
