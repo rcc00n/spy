@@ -634,3 +634,39 @@ td {
 tbody tr {
   transition: background 140ms ease;
 }
+
+tbody tr:hover {
+  background: #fbfcfd;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+.status {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 820;
+  min-height: 24px;
+  padding: 4px 9px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-success {
+  background: #e8f6ee;
+  color: var(--success);
+}
+
+.status-completed {
+  background: #e8f6ee;
+  color: var(--success);
+}
+
+.status-error {
+  background: #fff0ee;
+  color: var(--error);
+}
+
