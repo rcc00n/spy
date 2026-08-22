@@ -670,3 +670,27 @@ tr:last-child td {
   color: var(--error);
 }
 
+.status-failed {
+  background: #fff0ee;
+  color: var(--error);
+}
+
+.status-running {
+  background: #e8f5f4;
+  color: var(--accent-strong);
+}
+
+.status-planning,
+.status-collecting,
+.status-social_collecting,
+.status-critiquing {
+  background: #e8f5f4;
+  color: var(--accent-strong);
+}
+
+.status-stored {
+  background: #e8f6ee;
+  color: var(--success);
+}
+
+.status-auth_required {
