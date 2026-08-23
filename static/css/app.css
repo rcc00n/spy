@@ -778,3 +778,27 @@ tr:last-child td {
 .report-body {
   color: var(--text);
   font-size: 14px;
+  line-height: 1.62;
+  white-space: pre-wrap;
+}
+
+.report-body {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  max-height: 760px;
+  overflow: auto;
+  padding: 16px;
+}
+
+.compact-detail-list {
+  border-top: 1px solid var(--border-soft);
+  margin-top: 12px;
+}
+
+.raw-snapshot {
+  border-top: 1px solid var(--border-soft);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
