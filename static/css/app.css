@@ -694,3 +694,27 @@ tr:last-child td {
 }
 
 .status-auth_required {
+  background: #fef3e7;
+  color: #b54708;
+}
+
+.status-skipped,
+.status-pending,
+.status-queued,
+.status-expired,
+.status-cancelled {
+  background: #fff6df;
+  color: var(--warning);
+}
+
+.pagination {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.pagination span {
+  color: var(--muted);
+  font-size: 13px;
