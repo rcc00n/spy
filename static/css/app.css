@@ -754,3 +754,27 @@ tr:last-child td {
 .observed-post-header small,
 .observed-post-note {
   color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.observed-post-url {
+  display: block;
+  font-size: 13px;
+  font-weight: 760;
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+
+.observed-post-text {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.research-query,
+.report-body {
+  color: var(--text);
+  font-size: 14px;
