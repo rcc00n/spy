@@ -802,3 +802,27 @@ tr:last-child td {
   padding-top: 12px;
 }
 
+.raw-snapshot summary {
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 780;
+}
+
+.raw-snapshot pre {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  color: #27364a;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 10px 0 0;
+  max-height: 360px;
+  overflow: auto;
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.auth-shell {
+  align-items: center;
