@@ -826,3 +826,39 @@ tr:last-child td {
 
 .auth-shell {
   align-items: center;
+  display: grid;
+  min-height: calc(100vh - 48px);
+  place-items: center;
+}
+
+.auth-panel {
+  max-width: 430px;
+  padding: 30px;
+  width: 100%;
+}
+
+.auth-panel h1 {
+  color: var(--text-strong);
+  font-size: 30px;
+  line-height: 1.12;
+  margin: 0;
+}
+
+.auth-panel form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+label {
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+input,
+select,
+textarea {
+  background: #fff;
+  border: 1px solid #cfd8e3;
+  border-radius: 7px;
