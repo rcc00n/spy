@@ -910,3 +910,39 @@ textarea:hover {
 
 .form-field-checkbox {
   gap: 0;
+}
+
+.checkbox-label {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+}
+
+.form-checkbox {
+  accent-color: var(--accent);
+  min-height: 18px;
+  width: 18px;
+}
+
+.help-text {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.field-error {
+  color: var(--error);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.form-error,
+.message {
+  background: #fff0ee;
+  border: 1px solid #fac7c0;
+  border-radius: 7px;
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 720;
+  padding: 10px 12px;
+}
