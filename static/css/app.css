@@ -886,3 +886,27 @@ textarea:hover {
   max-width: 170px;
 }
 
+.form-control-tiny {
+  max-width: 70px;
+}
+
+.form-panel {
+  max-width: 760px;
+}
+
+.settings-grid .form-panel {
+  max-width: none;
+}
+
+.stacked-form {
+  display: grid;
+  gap: 17px;
+}
+
+.form-field {
+  display: grid;
+  gap: 7px;
+}
+
+.form-field-checkbox {
+  gap: 0;
