@@ -946,3 +946,27 @@ textarea:hover {
   font-weight: 720;
   padding: 10px 12px;
 }
+
+.message-success {
+  background: #e8f6ee;
+  border-color: #b8e2c8;
+  color: var(--success);
+}
+
+.message-info {
+  background: #e8f5f4;
+  border-color: #b9ddda;
+  color: var(--accent-strong);
+}
+
+.messages {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.detail-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
