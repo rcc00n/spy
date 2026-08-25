@@ -994,3 +994,27 @@ textarea:hover {
   font-weight: 800;
   margin: 0;
   text-transform: uppercase;
+}
+
+.detail-list dd {
+  color: var(--text);
+  font-size: 13px;
+  margin: 0;
+  min-width: 0;
+}
+
+.command-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.session-status-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.session-status-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
