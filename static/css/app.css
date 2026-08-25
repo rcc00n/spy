@@ -970,3 +970,27 @@ textarea:hover {
   gap: 0;
   margin: 0;
 }
+
+.detail-list div {
+  border-top: 1px solid var(--border-soft);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 130px minmax(0, 1fr);
+  padding: 12px 0;
+}
+
+.detail-list div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.detail-list div:last-child {
+  padding-bottom: 0;
+}
+
+.detail-list dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0;
+  text-transform: uppercase;
