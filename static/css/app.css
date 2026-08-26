@@ -1078,3 +1078,27 @@ textarea:hover {
 }
 
 .session-flow small {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.request-list {
+  display: grid;
+  gap: 0;
+}
+
+.request-row {
+  border-top: 1px solid var(--border-soft);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 13px 0;
+}
+
+.request-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
