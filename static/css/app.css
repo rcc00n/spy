@@ -1054,3 +1054,27 @@ textarea:hover {
 .session-flow li {
   align-items: flex-start;
   display: grid;
+  gap: 10px;
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+
+.session-flow span {
+  align-items: center;
+  background: var(--surface-muted);
+  border-radius: 999px;
+  color: var(--muted-strong);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 820;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.session-flow strong {
+  color: var(--text-strong);
+  display: block;
+  font-size: 13px;
+}
+
+.session-flow small {
