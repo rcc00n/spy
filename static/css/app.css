@@ -1138,3 +1138,27 @@ textarea:hover {
     grid-template-columns: 1fr;
   }
 
+  .site-sidebar {
+    height: auto;
+    max-height: none;
+    min-height: auto;
+    overflow: visible;
+    position: static;
+  }
+
+  .nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+
+  .site-header {
+    top: 0;
+  }
+
+  .stats-grid,
+  .split-grid,
+  .settings-grid,
+  .run-summary-grid,
