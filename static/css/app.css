@@ -1210,3 +1210,39 @@ textarea:hover {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .page-title h1 {
+    font-size: 27px;
+  }
+
+  .stats-grid,
+  .split-grid,
+  .settings-grid,
+  .run-summary-grid,
+  .session-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel,
+  .form-panel,
+  .auth-panel {
+    padding: 18px;
+  }
+
+  .inline-check-form,
+  .page-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .inline-check-form button,
+  .page-actions .button {
+    width: 100%;
+  }
+
+  .form-control-small,
+  .form-control-tiny {
+    max-width: none;
+  }
+
+  .detail-list div {
