@@ -1186,3 +1186,27 @@ textarea:hover {
   .nav a {
     flex: 1 1 108px;
     min-height: 36px;
+    padding: 8px 11px;
+  }
+
+  .nav a span {
+    display: none;
+  }
+
+  .site-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    position: static;
+  }
+
+  .page {
+    padding: 20px 14px;
+  }
+
+  .page-title,
+  .operations-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
