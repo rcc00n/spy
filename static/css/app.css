@@ -1162,3 +1162,27 @@ textarea:hover {
   .split-grid,
   .settings-grid,
   .run-summary-grid,
+  .session-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .site-sidebar {
+    gap: 14px;
+    padding: 18px 14px;
+  }
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 -2px;
+    max-width: 100%;
+    overflow-x: visible;
+    padding: 0 2px 4px;
+  }
+
+  .nav a {
+    flex: 1 1 108px;
+    min-height: 36px;
