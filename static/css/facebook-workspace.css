@@ -34,3 +34,39 @@
 .fb-brand {
   color:#1e2b24;
   display:block;
+  font-size:43px;
+  font-weight:750;
+  letter-spacing:-3px;
+  line-height:1;
+  padding:0 12px;
+  margin-bottom:38px;
+}
+
+.fb-brand span {
+  color:var(--accent);
+}
+
+.fb-project {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 10px 26px;
+  margin-bottom:20px;
+  border-bottom:1px solid var(--border);
+}
+
+.fb-project-mark {
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  border:1px solid #d5ded6;
+  border-radius:8px;
+  font-family:Georgia,serif;
+  font-size:20px;
+  background:#fff;
+}
+
+.fb-project strong {
+  display:block;
+  font-size:13px;
