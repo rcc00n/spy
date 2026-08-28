@@ -1246,3 +1246,10 @@ textarea:hover {
   }
 
   .detail-list div {
+    grid-template-columns: 1fr;
+  }
+
+  .request-row {
+    grid-template-columns: 1fr;
+  }
+}

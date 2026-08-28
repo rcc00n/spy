@@ -1,0 +1,12 @@
+/* A quiet reading workspace. All overrides stay inside the Facebook surface. */ .fb-app {
+  --bg:#fff;
+  --text:#242a2a;
+  --text-strong:#192320;
+  --muted:#727b77;
+  --muted-strong:#59635e;
+  --accent:#28755a;
+  --accent-strong:#1e5e47;
+  --border:#e3e7e3;
+  --border-soft:#edf0ed;
+  --surface-muted:#f3f6f3;
+  --fb-surface:#fff;
