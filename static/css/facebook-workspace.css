@@ -70,3 +70,27 @@
 .fb-project strong {
   display:block;
   font-size:13px;
+  font-weight:650;
+}
+
+.fb-project small {
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  margin-top:2px;
+}
+
+.fb-app .fb-nav {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:5px;
+  margin:0;
+  padding:0;
+}
+
+.fb-app .fb-nav a {
+  font-size:13px;
+  font-weight:550;
+  min-height:42px;
+  padding:10px 12px;
+  border-radius:6px;
