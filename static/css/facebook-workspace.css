@@ -10,3 +10,27 @@
   --border-soft:#edf0ed;
   --surface-muted:#f3f6f3;
   --fb-surface:#fff;
+  --sidebar-width:228px;
+  background:#fff;
+  font-size:14px;
+}
+
+.fb-app .app-shell {
+  grid-template-columns:228px minmax(0,1fr);
+}
+
+.fb-app .site-sidebar {
+  background:#f7f8f5;
+  border-color:#e5e8e1;
+  padding:32px 20px 20px;
+  gap:0;
+  position:sticky;
+  height:100vh;
+  min-height:100vh;
+  top:0;
+  overflow-y:auto;
+}
+
+.fb-brand {
+  color:#1e2b24;
+  display:block;
