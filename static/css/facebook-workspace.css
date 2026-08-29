@@ -94,3 +94,27 @@
   min-height:42px;
   padding:10px 12px;
   border-radius:6px;
+  gap:11px;
+}
+
+.fb-app .fb-nav a.is-active {
+  color:#276148;
+  background:#e8eee6;
+}
+
+.fb-app .fb-nav a:hover {
+  transform:none;
+  background:#edf1eb;
+}
+
+.fb-tools {
+  margin:29px 12px 16px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.fb-tools summary {
+  padding:10px 0;
+  cursor:pointer;
+}
+
