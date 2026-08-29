@@ -178,3 +178,27 @@
   border:0;
   color:var(--muted);
   font-weight:500;
+}
+
+.fb-app .page {
+  padding:42px 44px 28px;
+  max-width:1240px;
+  margin:0 auto;
+}
+
+.fb-app button,.fb-app .button {
+  font-weight:550;
+  font-size:12px;
+  min-height:38px;
+  border-radius:6px;
+  gap:8px;
+  box-shadow:none;
+}
+
+.fb-app button:disabled {
+  opacity:.5;
+  cursor:wait;
+}
+
+.fb-app .button-secondary {
+  background:#fff;
