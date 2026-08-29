@@ -142,3 +142,39 @@
 
 .fb-app .sidebar-footer strong {
   font-size:12px;
+  font-weight:550;
+}
+
+.fb-app .workspace {
+  display:block;
+}
+
+.fb-app .site-header {
+  height:65px;
+  min-height:65px;
+  padding:0 44px;
+  background:#ffffffed;
+  border-bottom:1px solid var(--border-soft);
+  flex-direction:row;
+  align-items:center;
+  position:sticky;
+}
+
+.fb-breadcrumb {
+  display:flex;
+  gap:14px;
+  align-items:center;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.fb-app .fb-breadcrumb strong {
+  font-size:12px;
+  font-weight:500;
+  color:var(--text);
+}
+
+.fb-app .site-header .button {
+  border:0;
+  color:var(--muted);
+  font-weight:500;
