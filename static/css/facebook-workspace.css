@@ -286,3 +286,27 @@
   border-block:1px solid var(--border-soft);
 }
 
+.fb-metric {
+  flex:1;
+  padding:0 25px;
+  border-right:1px solid var(--border-soft);
+}
+
+.fb-metric:first-child {
+  padding-left:0;
+}
+
+.fb-metric:last-child {
+  border:0;
+}
+
+.fb-metric dt {
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:5px;
+}
+
+.fb-metric dd {
+  margin:0;
+  display:flex;
+  align-items:baseline;
