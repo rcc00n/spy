@@ -202,3 +202,27 @@
 
 .fb-app .button-secondary {
   background:#fff;
+  border:1px solid var(--border);
+  color:var(--text);
+}
+
+.fb-app .button-secondary:hover {
+  background:#f5f7f4;
+}
+
+.fb-app :focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+  box-shadow:none;
+}
+
+.fb-app svg {
+  flex-shrink:0;
+}
+
+.fb-page-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  margin-bottom:28px;
