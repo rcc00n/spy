@@ -334,3 +334,39 @@
 }
 
 .fb-tabs a {
+  padding:12px 0 15px;
+  font-size:13px;
+  font-weight:500;
+  color:var(--muted);
+  border-bottom:2px solid transparent;
+  margin-bottom:-1px;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  transition:color .15s,border-color .15s;
+  white-space:nowrap;
+}
+
+.fb-tabs a:hover {
+  color:var(--text);
+}
+
+.fb-tabs a.is-active {
+  border-color:var(--accent);
+  color:var(--text);
+}
+
+.fb-tabs a span {
+  background:#f1f3ef;
+  border-radius:4px;
+  padding:1px 5px;
+  font-size:10px;
+  color:#737b72;
+  min-width:19px;
+  text-align:center;
+}
+
+.fb-tabs a.is-active span {
+  color:var(--accent);
+  background:#edf3eb;
+}
