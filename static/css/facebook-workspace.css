@@ -262,3 +262,27 @@
   width:13px;
   height:13px;
 }
+
+.fb-state-dot {
+  width:6px;
+  height:6px;
+  background:#9a9f98;
+  border-radius:50%;
+}
+
+.fb-monitor-state.is-on .fb-state-dot {
+  background:#488366;
+}
+
+.fb-monitor-state.is-on {
+  color:#47705a;
+}
+
+.fb-metrics {
+  display:flex;
+  gap:0;
+  margin:0 0 30px;
+  padding:21px 0;
+  border-block:1px solid var(--border-soft);
+}
+
