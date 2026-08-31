@@ -370,3 +370,27 @@
   color:var(--accent);
   background:#edf3eb;
 }
+
+.fb-filterbar {
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:22px 0 19px;
+}
+
+.fb-search {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding-left:12px;
+  flex:1;
+  max-width:540px;
+  background:#fff;
+}
+
+.fb-search svg {
+  color:#8e9791;
+  width:16px;
+}
