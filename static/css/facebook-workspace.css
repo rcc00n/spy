@@ -454,3 +454,27 @@
 }
 
 .fb-checkbox input {
+  accent-color:var(--accent);
+  width:14px;
+  height:14px;
+  margin:0;
+}
+
+.fb-list-caption {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  color:#808981;
+  font-size:11px;
+  padding:0 0 12px;
+  border-bottom:1px solid var(--border-soft);
+}
+
+.fb-result {
+  position:relative;
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) 36px;
+  gap:15px;
+  padding:26px 0;
+  border-bottom:1px solid var(--border-soft);
+  transition:background .18s;
