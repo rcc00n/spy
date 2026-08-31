@@ -394,3 +394,27 @@
   color:#8e9791;
   width:16px;
 }
+
+.fb-app .fb-search input {
+  padding:10px 0;
+  border:0;
+  font:inherit;
+  font-size:12px;
+  background:transparent;
+  min-width:0;
+  flex:1;
+  width:100%;
+  box-shadow:none;
+  color:var(--text);
+}
+
+.fb-search button {
+  background:transparent;
+  color:var(--muted-strong);
+  border:0;
+  min-height:38px;
+  padding:7px 11px;
+  font-size:11px;
+}
+
+.fb-search button:hover {
