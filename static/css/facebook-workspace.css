@@ -478,3 +478,27 @@
   padding:26px 0;
   border-bottom:1px solid var(--border-soft);
   transition:background .18s;
+}
+
+.fb-result:hover {
+  background:#fbfcfa;
+}
+
+.fb-source-avatar {
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid #e0e7df;
+  border-radius:8px;
+  background:#f6f8f3;
+  color:#6a7d67;
+  font-size:13px;
+  font-weight:600;
+  flex-shrink:0;
+}
+
+.fb-result-meta {
+  display:flex;
+  align-items:center;
+  gap:10px;
