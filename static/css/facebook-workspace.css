@@ -502,3 +502,27 @@
   display:flex;
   align-items:center;
   gap:10px;
+  font-size:11px;
+  margin:1px 0 8px;
+  color:var(--muted);
+  flex-wrap:wrap;
+}
+
+.fb-result-meta strong {
+  color:var(--text);
+  font-weight:600;
+  font-size:12px;
+}
+
+.fb-unread-dot {
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#67947a;
+}
+
+.fb-result.is-reviewed .fb-unread-dot {
+  display:none;
+}
+
+.fb-result-link {
