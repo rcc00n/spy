@@ -526,3 +526,39 @@
 }
 
 .fb-result-link {
+  display:block;
+  color:var(--text);
+}
+
+.fb-result-link:hover {
+  color:var(--text);
+}
+
+.fb-result h2 {
+  font-size:14px;
+  font-weight:450;
+  line-height:1.6;
+  letter-spacing:0;
+  color:#354038;
+  margin:0;
+  overflow-wrap:anywhere;
+}
+
+.fb-result blockquote {
+  margin:13px 0 0;
+  padding:0 0 0 13px;
+  border-left:2px solid #d8e5d5;
+}
+
+.fb-result blockquote>span {
+  display:block;
+  font-size:10px;
+  color:var(--accent);
+  margin-bottom:3px;
+  font-weight:500;
+}
+
+.fb-result blockquote p {
+  margin:0;
+  font-size:13px;
+  color:#54604f;
