@@ -610,3 +610,39 @@
   cursor:pointer;
 }
 
+.fb-app .fb-icon-button:hover {
+  color:var(--accent);
+  background:#eef3eb;
+}
+
+.fb-app .fb-icon-button.is-saved {
+  color:var(--accent);
+}
+
+.fb-icon-button.is-saved svg {
+  fill:#e6efe2;
+}
+
+.fb-empty {
+  text-align:center;
+  padding:67px 24px;
+}
+
+.fb-empty-mark {
+  display:inline-grid;
+  place-items:center;
+  height:44px;
+  width:44px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  color:#74866f;
+  margin-bottom:20px;
+}
+
+.fb-empty h2 {
+  font-size:19px;
+  font-weight:550;
+}
+
+.fb-empty p {
+  font-size:13px;
