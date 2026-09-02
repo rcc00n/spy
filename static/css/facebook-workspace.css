@@ -586,3 +586,27 @@
 }
 
 .fb-result-footer svg {
+  width:14px;
+  height:14px;
+}
+
+.fb-review-form {
+  align-self:start;
+  margin:-5px -3px 0 0;
+}
+
+.fb-app .fb-icon-button {
+  background:transparent;
+  color:#8b968a;
+  border:0;
+  padding:9px;
+  width:36px;
+  height:36px;
+  min-height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:5px;
+  cursor:pointer;
+}
+
