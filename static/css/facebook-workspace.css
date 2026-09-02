@@ -562,3 +562,27 @@
   margin:0;
   font-size:13px;
   color:#54604f;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+
+.fb-result-footer {
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
+  align-items:center;
+  font-size:10px;
+  color:#859083;
+  margin-top:15px;
+}
+
+.fb-result-footer a {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-left:auto;
+  color:#5b7761;
+  font-size:11px;
+}
+
+.fb-result-footer svg {
