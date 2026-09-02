@@ -646,3 +646,27 @@
 
 .fb-empty p {
   font-size:13px;
+  margin:10px auto 20px;
+  max-width:350px;
+}
+
+.fb-empty-small {
+  padding:28px 15px;
+}
+
+.fb-empty-small h3 {
+  font-size:13px;
+  margin:0;
+  font-weight:550;
+}
+
+.fb-empty-small p {
+  margin-bottom:0;
+}
+
+.fb-page-foot {
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+  color:#8a9389;
