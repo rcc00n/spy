@@ -670,3 +670,27 @@
   flex-wrap:wrap;
   gap:16px;
   color:#8a9389;
+  font-size:10px;
+  padding:24px 0 0;
+}
+
+.fb-page-foot a {
+  color:var(--muted);
+}
+
+.fb-pagination {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:24px;
+}
+
+.fb-pagination a {
+  padding:9px 0;
+}
+
+.fb-notice {
+  display:flex;
