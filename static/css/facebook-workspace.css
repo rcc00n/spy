@@ -694,3 +694,27 @@
 
 .fb-notice {
   display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  font-size:12px;
+  background:#f6f5ef;
+  border-left:2px solid #aaa278;
+  padding:14px 17px;
+  margin:0 0 24px;
+  color:#706d58;
+}
+
+.fb-notice a {
+  color:#706d58;
+}
+
+.fb-notice-block {
+  display:block;
+}
+
+.fb-notice-block p,.fb-notice-block a {
+  font-size:12px;
+  margin:7px 0;
+}
+
