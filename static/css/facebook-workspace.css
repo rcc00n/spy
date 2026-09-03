@@ -802,3 +802,39 @@
 }
 
 .fb-reader-actions form {
+  margin:0;
+}
+
+.fb-post-text {
+  border-top:1px solid var(--border-soft);
+  border-bottom:1px solid var(--border-soft);
+  padding:17px 0;
+  font-size:13px;
+}
+
+.fb-post-text summary {
+  color:var(--text);
+  cursor:pointer;
+  font-weight:550;
+}
+
+.fb-post-text>div {
+  padding-top:15px;
+  color:#536055;
+  line-height:1.8;
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+
+.fb-comment-section {
+  margin-top:30px;
+}
+
+.fb-section-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:18px;
+}
+
