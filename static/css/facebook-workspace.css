@@ -778,3 +778,27 @@
   overflow-wrap:anywhere;
   margin:10px 0 7px;
 }
+
+.fb-discussion-heading p {
+  font-size:11px;
+}
+
+.fb-reader-actions {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin:23px 0;
+}
+
+.fb-reader-actions .button {
+  font-size:11px;
+  padding:8px 10px;
+}
+
+.fb-reader-actions svg {
+  width:15px;
+  height:15px;
+}
+
+.fb-reader-actions form {
