@@ -838,3 +838,27 @@
   margin-bottom:18px;
 }
 
+.fb-section-heading h2 {
+  font-size:16px;
+  font-weight:550;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.fb-section-heading>span,.fb-section-heading>a {
+  font-size:11px;
+  color:var(--muted);
+}
+
+.fb-comment-tabs {
+  gap:23px;
+}
+
+.fb-comment-tabs a {
+  font-size:12px;
+  padding-top:5px;
+  padding-bottom:12px;
+}
+
+.fb-comment {
