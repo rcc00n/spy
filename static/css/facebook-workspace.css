@@ -754,3 +754,27 @@
 
 .fb-app .fb-reader-close {
   position:sticky;
+  top:16px;
+  margin:16px 16px -52px auto;
+  display:flex;
+  z-index:1;
+  color:var(--text);
+  background:#f3f5f0;
+}
+
+.fb-discussion {
+  padding:42px 34px 34px;
+}
+
+.fb-discussion-heading {
+  padding-right:38px;
+}
+
+.fb-discussion-heading h1 {
+  font-size:24px;
+  font-weight:600;
+  line-height:1.3;
+  letter-spacing:-.5px;
+  overflow-wrap:anywhere;
+  margin:10px 0 7px;
+}
