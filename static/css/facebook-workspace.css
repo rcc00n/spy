@@ -910,3 +910,39 @@
 }
 
 .fb-evidence-note summary {
+  cursor:pointer;
+  min-height:25px;
+}
+
+.fb-evidence-note p {
+  font-size:11px;
+  line-height:1.8;
+  max-width:720px;
+}
+
+.fb-back {
+  display:inline-block;
+  margin-bottom:20px;
+  font-size:12px;
+}
+
+.fb-discussion-page {
+  max-width:700px;
+}
+
+.fb-discussion-page .fb-discussion {
+  padding:12px 0;
+}
+
+.fb-reader-loading {
+  padding:110px 35px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.fb-reader-loading span {
+  display:block;
+  height:8px;
+  margin:18px 0;
+  width:90%;
+  border-radius:4px;
