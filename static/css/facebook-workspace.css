@@ -862,3 +862,27 @@
 }
 
 .fb-comment {
+  padding:20px 0;
+  border-bottom:1px solid var(--border-soft);
+}
+
+.fb-comment-meta {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  color:#7d897c;
+  font-size:10px;
+}
+
+.fb-comment-meta a {
+  padding:4px;
+  margin:-4px;
+  color:#92a08c;
+}
+
+.fb-comment-meta svg {
+  width:13px;
+  height:13px;
+}
+
