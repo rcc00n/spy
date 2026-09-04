@@ -886,3 +886,27 @@
   height:13px;
 }
 
+.fb-comment p {
+  color:#344030;
+  font-size:13px;
+  line-height:1.8;
+  margin:9px 0 10px;
+  overflow-wrap:anywhere;
+}
+
+.fb-comment time,.fb-comment small {
+  display:block;
+  font-size:10px;
+  color:#8a9584;
+  margin-top:9px;
+}
+
+.fb-evidence-note {
+  margin-top:30px;
+  padding-top:19px;
+  border-top:1px solid var(--border-soft);
+  color:var(--muted);
+  font-size:11px;
+}
+
+.fb-evidence-note summary {
