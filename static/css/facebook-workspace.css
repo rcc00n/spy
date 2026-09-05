@@ -1054,3 +1054,27 @@
 }
 
 .fb-settings-save p {
+  font-size:11px;
+  margin:0;
+}
+
+.fb-activity {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 0;
+  border-bottom:1px solid var(--border-soft);
+  color:var(--text);
+  font-size:12px;
+  gap:20px;
+}
+
+.fb-activity small {
+  display:block;
+  font-size:10px;
+  margin-top:5px;
+  color:var(--muted);
+}
+
+.fb-activity-state {
+  display:flex;
