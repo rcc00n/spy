@@ -970,3 +970,27 @@
 }
 
 .fb-toast[hidden] {
+  display:none;
+}
+
+.fb-collection-status {
+  display:flex;
+  justify-content:space-between;
+  gap:25px;
+  align-items:center;
+  padding:23px 0;
+  border-block:1px solid var(--border-soft);
+  margin-bottom:30px;
+}
+
+.fb-collection-status p,.fb-collection-status>a {
+  font-size:12px;
+}
+
+.fb-settings-section {
+  margin-top:35px;
+}
+
+.fb-schedule-row {
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) 140px 140px;
