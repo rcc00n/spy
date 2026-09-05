@@ -1078,3 +1078,27 @@
 
 .fb-activity-state {
   display:flex;
+  gap:12px;
+  align-items:center;
+  font-size:11px;
+  color:#7d8d79;
+}
+
+.fb-source-group {
+  margin:34px 0;
+}
+
+.fb-count {
+  color:#87907f;
+  font-size:11px;
+  font-weight:450;
+}
+
+.fb-source-row {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:17px 0;
+  border-bottom:1px solid var(--border-soft);
+}
+
