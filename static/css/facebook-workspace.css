@@ -1138,3 +1138,27 @@
   position:relative;
 }
 
+.fb-switch::before {
+  content:'';
+  position:absolute;
+  width:32px;
+  height:18px;
+  border-radius:12px;
+  background:#d8ded4;
+  transition:background .18s;
+}
+
+.fb-switch[aria-checked=true]::before {
+  background:#5e876a;
+}
+
+.fb-switch>span {
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#fff;
+  position:relative;
+  transform:translateX(-7px);
+  transition:transform .18s;
+  box-shadow:0 1px 2px #253a261a;
+}
