@@ -1102,3 +1102,39 @@
   border-bottom:1px solid var(--border-soft);
 }
 
+.fb-source-title {
+  flex:1;
+  min-width:0;
+  color:var(--text);
+}
+
+.fb-source-title strong {
+  display:block;
+  font-size:13px;
+  font-weight:500;
+}
+
+.fb-source-title>span {
+  display:block;
+  margin-top:4px;
+  font-size:11px;
+  color:var(--muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.fb-source-row.is-disabled .fb-source-title,.fb-source-row.is-disabled .fb-source-avatar {
+  opacity:.5;
+}
+
+.fb-app .fb-switch {
+  min-height:44px;
+  height:44px;
+  width:48px;
+  background:transparent;
+  padding:0;
+  border:0;
+  position:relative;
+}
+
