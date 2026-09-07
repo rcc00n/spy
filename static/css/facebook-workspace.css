@@ -1186,3 +1186,39 @@
   box-shadow:none;
 }
 
+.fb-app .page-title h1 {
+  font-size:30px;
+  font-weight:600;
+  letter-spacing:-.7px;
+}
+
+.fb-app .page-title p {
+  font-size:13px;
+  max-width:540px;
+}
+
+.fb-app .messages {
+  margin-bottom:24px;
+}
+
+.fb-app .message {
+  box-shadow:none;
+  font-size:12px;
+}
+
+.fb-sr-only {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+}
+
+@keyframes fb-reader-enter {
+  from {
+    transform:translateX(35px);
+    opacity:.4;
