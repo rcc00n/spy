@@ -1246,3 +1246,27 @@
   .fb-app .site-header {
     padding-inline:64px;
   }
+  .fb-result {
+    padding-block:29px;
+  }
+}
+
+@media(max-width:1100px) {
+  .fb-app .app-shell {
+    grid-template-columns:196px minmax(0,1fr);
+  }
+  .fb-app .site-sidebar {
+    padding-inline:13px;
+  }
+  .fb-app .site-header {
+    padding-inline:28px;
+  }
+  .fb-app .page {
+    padding:32px 28px;
+  }
+  .fb-project {
+    padding-inline:8px;
+  }
+  .fb-filterbar {
+    gap:10px;
+  }
