@@ -1294,3 +1294,39 @@
     top:0;
     z-index:20;
     height:auto;
+    min-height:0;
+    max-height:none;
+    display:grid;
+    grid-template-columns:65px 1fr;
+    gap:12px;
+    padding:10px 20px;
+    border-right:0;
+    border-bottom:1px solid var(--border);
+    align-items:center;
+    overflow:visible;
+  }
+  .fb-brand {
+    font-size:31px;
+    margin:0;
+    padding:0;
+    letter-spacing:-2px;
+  }
+  .fb-project,.fb-tools,.fb-app .sidebar-footer {
+    display:none;
+  }
+  .fb-app .fb-nav {
+    display:flex;
+    justify-content:flex-end;
+    gap:5px;
+    flex-wrap:nowrap;
+  }
+  .fb-app .fb-nav a {
+    flex:0 1 auto;
+    gap:7px;
+    font-size:12px;
+    padding:10px 12px;
+    min-height:42px;
+  }
+  .fb-app .site-header {
+    position:static;
+    min-height:47px;
