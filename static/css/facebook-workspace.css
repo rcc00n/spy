@@ -1354,3 +1354,27 @@
   .fb-app .site-sidebar {
     padding:8px 14px;
     gap:7px;
+    grid-template-columns:48px 1fr;
+  }
+  .fb-app .fb-nav a {
+    padding:10px 8px;
+    font-size:11px;
+    gap:5px;
+  }
+  .fb-nav svg {
+    width:15px;
+    height:15px;
+  }
+  .fb-app .site-header {
+    padding:0 17px;
+  }
+  .fb-breadcrumb {
+    font-size:10px;
+    gap:8px;
+  }
+  .fb-app .fb-breadcrumb strong {
+    font-size:10px;
+  }
+  .fb-app .page {
+    padding:25px 18px;
+  }
