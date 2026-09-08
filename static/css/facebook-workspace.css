@@ -1378,3 +1378,39 @@
   .fb-app .page {
     padding:25px 18px;
   }
+  .fb-page-heading {
+    align-items:flex-start;
+    margin-bottom:23px;
+    flex-wrap:wrap;
+    gap:15px;
+  }
+  .fb-page-heading h1 {
+    font-size:29px;
+  }
+  .fb-page-heading p {
+    font-size:12px;
+  }
+  .fb-page-heading .fb-eyebrow {
+    font-size:9px;
+  }
+  .fb-monitor-state {
+    font-size:11px;
+  }
+  .fb-metrics {
+    margin-bottom:18px;
+    padding:16px 0;
+  }
+  .fb-metric {
+    padding:0 12px;
+  }
+  .fb-metric dt {
+    font-size:10px;
+  }
+  .fb-metric strong {
+    font-size:22px;
+  }
+  .fb-metric span {
+    font-size:9px;
+  }
+  .fb-metric dd {
+    display:block;
