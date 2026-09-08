@@ -1330,3 +1330,27 @@
   .fb-app .site-header {
     position:static;
     min-height:47px;
+    height:47px;
+    padding:0 24px;
+  }
+  .fb-app .page {
+    padding:28px 24px;
+  }
+  .fb-page-heading h1 {
+    font-size:30px;
+  }
+  .fb-toast {
+    left:50%;
+  }
+  .fb-app .page-actions .button {
+    width:auto;
+  }
+  .fb-app .page-actions {
+    width:auto;
+  }
+}
+
+@media(max-width:560px) {
+  .fb-app .site-sidebar {
+    padding:8px 14px;
+    gap:7px;
