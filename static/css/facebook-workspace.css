@@ -1462,3 +1462,27 @@
   .fb-result .fb-source-avatar {
     width:27px;
     height:27px;
+    font-size:11px;
+    border-radius:6px;
+  }
+  .fb-result-meta {
+    font-size:9px;
+    gap:7px;
+  }
+  .fb-result-meta strong {
+    font-size:11px;
+  }
+  .fb-result h2 {
+    font-size:13px;
+  }
+  .fb-result blockquote {
+    padding-left:10px;
+  }
+  .fb-result blockquote p {
+    font-size:12px;
+  }
+  .fb-result-footer {
+    gap:8px 12px;
+    font-size:9px;
+  }
+  .fb-result-footer a {
