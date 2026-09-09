@@ -1486,3 +1486,39 @@
     font-size:9px;
   }
   .fb-result-footer a {
+    font-size:10px;
+  }
+  .fb-result .fb-icon-button {
+    width:30px;
+    height:36px;
+    padding:7px;
+  }
+  .fb-result .fb-icon-button svg {
+    width:16px;
+  }
+  .fb-page-foot {
+    font-size:9px;
+  }
+  .fb-discussion {
+    padding:38px 22px 28px;
+  }
+  .fb-discussion-heading h1 {
+    font-size:22px;
+  }
+  .fb-reader-actions {
+    gap:7px;
+  }
+  .fb-reader-actions .button {
+    font-size:10px;
+    padding:8px;
+  }
+  .fb-comment p {
+    font-size:13px;
+  }
+  .fb-schedule-row {
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    padding:23px 0;
+  }
+  .fb-schedule-row>div {
+    grid-column:1/-1;
