@@ -1414,3 +1414,27 @@
   }
   .fb-metric dd {
     display:block;
+  }
+  .fb-metric dd span {
+    display:block;
+    margin-top:4px;
+  }
+  .fb-tabs {
+    gap:20px;
+  }
+  .fb-tabs a {
+    font-size:12px;
+    gap:6px;
+    padding-bottom:12px;
+  }
+  .fb-tabs a span {
+    font-size:9px;
+  }
+  .fb-filterbar {
+    flex-wrap:wrap;
+    padding:19px 0 14px;
+    gap:5px 20px;
+  }
+  .fb-search {
+    flex-basis:100%;
+    max-width:none;
