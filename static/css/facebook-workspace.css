@@ -1438,3 +1438,27 @@
   .fb-search {
     flex-basis:100%;
     max-width:none;
+  }
+  .fb-period {
+    margin-left:0;
+  }
+  .fb-period select {
+    font-size:11px;
+    padding-left:0;
+  }
+  .fb-checkbox {
+    margin-left:auto;
+    font-size:11px;
+  }
+  .fb-list-caption {
+    font-size:10px;
+    gap:15px;
+  }
+  .fb-result {
+    grid-template-columns:27px minmax(0,1fr) 26px;
+    gap:10px;
+    padding:23px 0;
+  }
+  .fb-result .fb-source-avatar {
+    width:27px;
+    height:27px;
