@@ -1522,3 +1522,27 @@
   }
   .fb-schedule-row>div {
     grid-column:1/-1;
+  }
+  .fb-schedule-row label>span {
+    gap:8px;
+  }
+  .fb-settings-save {
+    align-items:flex-start;
+    flex-direction:column;
+    gap:15px;
+  }
+  .fb-collection-status {
+    align-items:flex-start;
+    flex-direction:column;
+    gap:12px;
+  }
+  .fb-section-heading {
+    align-items:baseline;
+  }
+  .fb-section-heading>span {
+    font-size:10px;
+    max-width:145px;
+    text-align:right;
+  }
+  .fb-source-row {
+    gap:10px;
