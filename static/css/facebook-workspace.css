@@ -1546,3 +1546,27 @@
   }
   .fb-source-row {
     gap:10px;
+  }
+  .fb-source-title strong {
+    font-size:12px;
+  }
+  .fb-source-title>span {
+    font-size:10px;
+  }
+  .fb-source-row .fb-icon-button {
+    width:26px;
+    padding:5px;
+  }
+  .fb-source-row .fb-source-avatar {
+    width:30px;
+    height:30px;
+  }
+  .fb-source-group {
+    margin-top:28px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .fb-app *, .fb-reader, .fb-reader::backdrop {
+    animation:none!important;
+    transition:none!important;
