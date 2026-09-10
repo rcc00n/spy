@@ -46,3 +46,27 @@
     } catch (error) {
       if (error.name === 'AbortError') return;
       const message = document.createElement('p');
+      message.className = 'fb-reader-loading';
+      message.textContent = 'Could not load this discussion. ';
+      const fallback = document.createElement('a');
+      url.searchParams.delete('panel');
+      fallback.href = url.href;
+      fallback.textContent = 'Open the full page →';
+      message.append(fallback);
+      content.replaceChildren(message);
+    }
+  }
+  document.addEventListener('click', event => {
+    const link = event.target.closest('[data-reader-link], [data-panel-link]');
+    if (!link || !reader || !reader.showModal || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (link.hasAttribute('data-panel-link') && !reader.contains(link)) return;
+    event.preventDefault();
+    openReader(link.href, link);
+  });
+  reader?.querySelector('[data-close-reader]').addEventListener('click', () => reader.close());
+  reader?.addEventListener('click', event => {
+    if (event.target === reader && event.clientX < reader.getBoundingClientRect().left) reader.close();
+  });
+  reader?.addEventListener('close', () => {
+    controller?.abort();
+    document.body.style.overflow = '';
