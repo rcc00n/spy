@@ -1570,3 +1570,6 @@
   .fb-app *, .fb-reader, .fb-reader::backdrop {
     animation:none!important;
     transition:none!important;
+    scroll-behavior:auto!important;
+  }
+}
