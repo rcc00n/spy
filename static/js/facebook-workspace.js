@@ -70,3 +70,27 @@
   reader?.addEventListener('close', () => {
     controller?.abort();
     document.body.style.overflow = '';
+    trigger?.focus({preventScroll: true});
+  });
+  document.querySelector('.fb-filterbar')?.addEventListener('change', event => {
+    if (event.target.matches('select, input[type=checkbox]')) event.currentTarget.requestSubmit();
+  });
+  document.addEventListener('submit', async event => {
+    const form = event.target.closest('[data-review-form]');
+    if (!form || !event.submitter) return;
+    event.preventDefault();
+    const button = event.submitter;
+    if (button.disabled) return;
+    const data = new FormData(form);
+    data.set('action', button.value);
+    const action = button.value;
+    button.disabled = true;
+    try {
+      const response = await fetch(form.getAttribute('action'), {method: 'POST', body: data, credentials: 'same-origin', headers: {'Accept': 'application/json'}});
+      if (!response.ok || response.redirected) throw new Error('Could not save');
+      const state = await response.json();
+      document.querySelectorAll(`[data-review-form][data-post-id="${state.post_id}"]`).forEach(item => {
+        const saveButton = item.querySelector('[data-save-button]');
+        if (saveButton) {
+          saveButton.value = state.saved ? 'unsave' : 'save';
+          saveButton.setAttribute('aria-label', state.saved ? 'Remove bookmark' : 'Bookmark');
