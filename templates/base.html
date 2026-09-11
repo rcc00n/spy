@@ -22,3 +22,27 @@
           </span>
         </a>
 
+        <nav class="nav" aria-label="Primary navigation">
+          {% if request.user.is_staff %}<a href="{% url 'research:facebook_monitor' %}"><span aria-hidden="true">↗</span> Facebook findings</a>{% endif %}
+          <a class="{% if app_name == 'research' %}is-active{% endif %}" href="{% url 'research:jobs' %}">
+            <span aria-hidden="true">01</span> Research
+          </a>
+          <a class="{% if app_name == 'dashboard' and url_name == 'index' %}is-active{% endif %}" href="{% url 'dashboard:index' %}?legacy=1">
+            <span aria-hidden="true">02</span> Dashboard
+          </a>
+          <a class="{% if url_name == 'accounts' or url_name == 'account_create' or url_name == 'account_edit' %}is-active{% endif %}" href="{% url 'dashboard:accounts' %}">
+            <span aria-hidden="true">03</span> Accounts
+          </a>
+          <a class="{% if url_name == 'keywords' or url_name == 'keyword_create' or url_name == 'keyword_edit' %}is-active{% endif %}" href="{% url 'dashboard:keywords' %}">
+            <span aria-hidden="true">04</span> Keywords
+          </a>
+          <a class="{% if url_name == 'matches' %}is-active{% endif %}" href="{% url 'dashboard:matches' %}">
+            <span aria-hidden="true">05</span> Matches
+          </a>
+          <a class="{% if url_name == 'check_runs' %}is-active{% endif %}" href="{% url 'dashboard:check_runs' %}">
+            <span aria-hidden="true">06</span> Runs
+          </a>
+          {% if request.user.is_staff %}
+            <a class="{% if url_name == 'facebook_login' %}is-active{% endif %}" href="{% url 'dashboard:facebook_login' %}">
+              <span aria-hidden="true">07</span> Facebook Login
+            </a>
