@@ -1,0 +1,24 @@
+{% load static %}
+<!doctype html>
+<html lang="{% block language %}en{% endblock %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Research Portal{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="{% if request.user.is_authenticated %}app-body{% else %}auth-body{% endif %} {% block body_class %}{% endblock %}">
+  {% if request.user.is_authenticated %}
+    {% with url_name=request.resolver_match.url_name app_name=request.resolver_match.app_name %}
+    <div class="app-shell">
+      <aside class="site-sidebar">
+        {% block sidebar %}
+        <a class="brand" href="{% url 'research:jobs' %}" aria-label="Research Portal dashboard">
+          <span class="brand-mark">RP</span>
+          <span>
+            <strong>Research Portal</strong>
+            <small>Operations console</small>
+          </span>
+        </a>
+
