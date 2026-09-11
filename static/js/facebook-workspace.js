@@ -94,3 +94,38 @@
         if (saveButton) {
           saveButton.value = state.saved ? 'unsave' : 'save';
           saveButton.setAttribute('aria-label', state.saved ? 'Remove bookmark' : 'Bookmark');
+          saveButton.setAttribute('aria-pressed', String(state.saved));
+          saveButton.classList.toggle('is-saved', state.saved);
+        }
+        const readButton = item.querySelector('[data-read-button]');
+        if (readButton) {
+          readButton.value = state.reviewed ? 'unread' : 'read';
+          readButton.querySelector('span').textContent = state.reviewed ? 'Read' : 'Mark as read';
+          readButton.setAttribute('aria-pressed', String(state.reviewed));
+        }
+      });
+      const row = document.querySelector(`.fb-result[data-post-id="${state.post_id}"]`);
+      row?.classList.toggle('is-reviewed', state.reviewed);
+      toast(action === 'save' ? 'Discussion saved' : action === 'unsave' ? 'Bookmark removed' : action === 'read' ? 'Marked as read' : 'Marked as unread');
+      // Reconcile counts and filters after a reading session, without moving the list.
+      if (reader?.open) reader.dataset.needsRefresh = '1';
+      else {
+        reloadInPlace();
+      }
+    } catch (error) {
+      toast('Could not save the change. Please try again.');
+    } finally {
+      button.disabled = false;
+    }
+  });
+  reader?.addEventListener('close', () => {
+    if (reader.dataset.needsRefresh === '1') {
+      reloadInPlace();
+    }
+  });
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('fb-restore-scroll'));
+    sessionStorage.removeItem('fb-restore-scroll');
+    if (saved?.url === location.href) requestAnimationFrame(() => window.scrollTo(0, saved.y));
+  } catch (_) { /* Reading remains functional when storage is unavailable. */ }
+})();
