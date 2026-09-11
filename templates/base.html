@@ -46,3 +46,39 @@
             <a class="{% if url_name == 'facebook_login' %}is-active{% endif %}" href="{% url 'dashboard:facebook_login' %}">
               <span aria-hidden="true">07</span> Facebook Login
             </a>
+            <a href="{% url 'admin:index' %}">
+              <span aria-hidden="true">08</span> Django Admin
+            </a>
+          {% endif %}
+        </nav>
+
+        {% endblock %}
+        <div class="sidebar-footer">
+          <span>{% block signed_in_label %}Signed in as{% endblock %}</span>
+          <strong>{{ request.user.get_username }}</strong>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <header class="site-header">
+          {% block topbar %}<div>
+            <span class="topbar-label">Operations</span>
+            <strong>Research and monitoring workspace</strong>
+          </div>
+          {% endblock %}
+          <form class="logout-form" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="button button-secondary button-small" type="submit">{% block logout_label %}Logout{% endblock %}</button>
+          </form>
+        </header>
+    {% endwith %}
+  {% endif %}
+
+  <main class="page {% if not request.user.is_authenticated %}auth-page{% endif %}">
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <div class="message message-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
