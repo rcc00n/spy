@@ -82,3 +82,13 @@
         {% endfor %}
       </div>
     {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if request.user.is_authenticated %}
+      </div>
+    </div>
+  {% endif %}
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>
