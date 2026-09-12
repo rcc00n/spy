@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Accounts</h1>
+    <p>Public Facebook Pages and Instagram accounts configured for monitoring.</p>
+  </div>
+  <div class="page-actions">
+    <form class="inline-check-form" method="post" action="{% url 'dashboard:run_check_now' %}">
