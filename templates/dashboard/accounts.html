@@ -10,3 +10,27 @@
   </div>
   <div class="page-actions">
     <form class="inline-check-form" method="post" action="{% url 'dashboard:run_check_now' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'dashboard:accounts' %}">
+      <button type="submit">Run all active checks now</button>
+    </form>
+    <a class="button" href="{% url 'dashboard:account_create' %}">Add account</a>
+  </div>
+</section>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Platform</th>
+        <th>Interval</th>
+        <th>Max posts</th>
+        <th>Scrolls</th>
+        <th>Active</th>
+        <th>Last checked</th>
+        <th>Status</th>
+        <th>Latest run</th>
+        <th>Last error</th>
+        <th>Actions</th>
+      </tr>
