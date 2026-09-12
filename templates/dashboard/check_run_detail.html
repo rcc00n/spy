@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Check Run #{{ run.id }} - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Check run #{{ run.id }}</h1>
+    <p>{{ run.monitored_account.account_name }} - {{ run.started_at|date:"Y-m-d H:i" }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="button button-secondary" href="{% url 'dashboard:check_runs' %}">Back to runs</a>

@@ -70,3 +70,12 @@
               </form>
             {% endif %}
           </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="11">No accounts configured.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "dashboard/pagination.html" %}
+{% endblock %}
