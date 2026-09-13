@@ -10,3 +10,27 @@
   </div>
   <div class="page-actions">
     <a class="button button-secondary" href="{% url 'dashboard:check_runs' %}">Back to runs</a>
+  </div>
+</section>
+
+<section class="run-summary-grid">
+  <article class="session-status-card">
+    <span>Status</span>
+    <strong><span class="status status-{{ run.status }}">{{ run.get_status_display }}</span></strong>
+  </article>
+  <article class="session-status-card">
+    <span>Stored posts</span>
+    <strong>{{ run.posts_found }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>New posts</span>
+    <strong>{{ run.new_posts_found }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Observed</span>
+    <strong>{{ observed_posts|length }}</strong>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading panel-heading-stacked">
