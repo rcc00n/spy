@@ -34,3 +34,39 @@
 
 <section class="panel">
   <div class="panel-heading panel-heading-stacked">
+    <div>
+      <h2>Diagnostics</h2>
+      <p>Last route snapshot captured while loading Facebook for this run.</p>
+    </div>
+  </div>
+  <dl class="detail-list compact-detail-list">
+    <div>
+      <dt>Facebook state</dt>
+      <dd>{{ run.facebook_state|default:"unknown" }}</dd>
+    </div>
+    <div>
+      <dt>HTTP</dt>
+      <dd>{{ run.http_status_code|default:"unknown" }}</dd>
+    </div>
+    <div>
+      <dt>Articles</dt>
+      <dd>{{ run.article_count }}</dd>
+    </div>
+    <div>
+      <dt>Links</dt>
+      <dd>{{ run.link_count }}</dd>
+    </div>
+    <div>
+      <dt>Post links</dt>
+      <dd>{{ run.post_link_count }}</dd>
+    </div>
+    <div>
+      <dt>Title</dt>
+      <dd>{{ run.page_title|default:"None" }}</dd>
+    </div>
+    <div>
+      <dt>Route URL</dt>
+      <dd>{% if run.route_url %}<a href="{{ run.route_url }}" target="_blank" rel="noopener">{{ run.route_url }}</a>{% else %}None{% endif %}</dd>
+    </div>
+    <div>
+      <dt>Final URL</dt>
