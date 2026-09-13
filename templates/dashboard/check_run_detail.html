@@ -70,3 +70,27 @@
     </div>
     <div>
       <dt>Final URL</dt>
+      <dd>{% if run.final_url %}<a href="{{ run.final_url }}" target="_blank" rel="noopener">{{ run.final_url }}</a>{% else %}None{% endif %}</dd>
+    </div>
+    <div>
+      <dt>Screenshot</dt>
+      <dd>{{ run.screenshot_path|default:"None" }}</dd>
+    </div>
+  </dl>
+  {% if run.diagnostic_text %}
+    <details class="raw-snapshot">
+      <summary>Visible text</summary>
+      <pre>{{ run.diagnostic_text|truncatechars:5000 }}</pre>
+    </details>
+  {% endif %}
+  {% if run.diagnostic_html_snapshot %}
+    <details class="raw-snapshot">
+      <summary>HTML snapshot</summary>
+      <pre>{{ run.diagnostic_html_snapshot|truncatechars:5000 }}</pre>
+    </details>
+  {% endif %}
+</section>
+
+{% if run.error_message %}
+  <section class="panel">
+    <div class="panel-heading panel-heading-stacked">
