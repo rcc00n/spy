@@ -118,3 +118,27 @@
             <div>
               <strong>#{{ item.sequence }}</strong>
               <span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>
+              {% if item.is_new %}<span class="status status-success">New</span>{% endif %}
+            </div>
+            <small>{{ item.source_type|default:"unknown" }}</small>
+          </header>
+
+          {% if item.post_url %}
+            <a class="observed-post-url" href="{{ item.post_url }}" target="_blank" rel="noopener">{{ item.post_url }}</a>
+          {% endif %}
+          {% if item.skip_reason %}<p class="observed-post-note">Skipped: {{ item.skip_reason }}</p>{% endif %}
+          <p class="observed-post-text">{{ item.text|truncatechars:1200 }}</p>
+
+          <dl class="detail-list compact-detail-list">
+            <div>
+              <dt>External id</dt>
+              <dd>{{ item.external_post_id }}</dd>
+            </div>
+            <div>
+              <dt>Observed</dt>
+              <dd>{{ item.observed_at|date:"Y-m-d H:i:s" }}</dd>
+            </div>
+          </dl>
+
+          {% if item.raw_snapshot %}
+            <details class="raw-snapshot">
