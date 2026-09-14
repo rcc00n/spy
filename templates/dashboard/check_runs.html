@@ -22,3 +22,27 @@
         <th>New</th>
         <th>Matches</th>
         <th>Error</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in page_obj %}
+        <tr>
+          <td>{{ run.started_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ run.monitored_account.account_name }}</td>
+          <td><span class="status status-{{ run.status }}">{{ run.get_status_display }}</span></td>
+          <td>{{ run.posts_found }}</td>
+          <td>{{ run.observed_count }}</td>
+          <td>{{ run.new_posts_found }}</td>
+          <td>{{ run.matches_found }}</td>
+          <td>{{ run.error_message|truncatechars:160 }}</td>
+          <td><a class="button button-secondary button-small" href="{% url 'dashboard:check_run_detail' run.pk %}">View</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9">No check runs yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "dashboard/pagination.html" %}
+{% endblock %}
