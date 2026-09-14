@@ -142,3 +142,15 @@
 
           {% if item.raw_snapshot %}
             <details class="raw-snapshot">
+              <summary>Raw snapshot</summary>
+              <pre>{{ item.raw_snapshot|truncatechars:5000 }}</pre>
+            </details>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No observed posts were recorded for this run. Older runs only have aggregate counters.</p>
+  {% endif %}
+</section>
+{% endblock %}
