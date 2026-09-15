@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>{{ title }}</h1>
+    <p>This keeps history intact and stops future monitoring.</p>
+  </div>
+</section>
+
+<section class="form-panel">
+  <form method="post" class="stacked-form">
+    {% csrf_token %}
+    <p>Deactivate <strong>{{ object_label }}</strong>?</p>
+    <div class="form-actions">
+      <button class="button-danger" type="submit">Deactivate</button>
+      <a class="button button-secondary" href="{% url cancel_url %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
