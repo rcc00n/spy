@@ -34,3 +34,27 @@
     <div class="panel-heading panel-heading-stacked">
       <div>
         <h2>Credentials</h2>
+        <p>Credentials only prefill the first screen. The operator still completes Facebook checks manually.</p>
+      </div>
+    </div>
+    <form method="post" class="stacked-form">
+      {% csrf_token %}
+      {% include "dashboard/form_fields.html" %}
+      <div class="form-actions">
+        <button type="submit">Save credentials</button>
+      </div>
+    </form>
+
+    <section class="panel command-panel session-flow-panel">
+      <h2>Operator flow</h2>
+      <ol class="session-flow">
+        <li>
+          <span>1</span>
+          <div>
+            <strong>Create a session request</strong>
+            <small>Telegram receives the request, token hint, expiration, and operator URL.</small>
+          </div>
+        </li>
+        <li>
+          <span>2</span>
+          <div>
