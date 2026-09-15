@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Facebook Login - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Facebook login</h1>
+    <p>Human-assisted session refresh for Facebook monitoring.</p>
+  </div>
+  <form method="post" action="{% url 'dashboard:facebook_session_request_create' %}">
+    {% csrf_token %}
+    <button type="submit">Create session request</button>
+  </form>
+</section>
+
+<section class="session-status-grid">
+  <article class="session-status-card">
+    <span>Auth mode</span>
+    <strong>{{ facebook_auth_enabled|yesno:"Enabled,Disabled" }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Saved session</span>
+    <strong>{{ facebook_session_exists|yesno:"Present,Missing" }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Session manager</span>
+    <strong>{{ facebook_session_manager_url|yesno:"Configured,Not configured" }}</strong>
+  </article>
+</section>
+
+<section class="settings-grid">
+  <div class="form-panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Credentials</h2>
