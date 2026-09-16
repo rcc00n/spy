@@ -106,3 +106,39 @@
         </div>
         <div>
           <dt>Last refresh</dt>
+          <dd>{{ credential.last_session_refreshed_at|default:"Never" }}</dd>
+        </div>
+        <div>
+          <dt>Last error</dt>
+          <dd>{{ credential.last_error|default:"None"|truncatechars:180 }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel command-panel">
+      <h2>Session request</h2>
+      <p>Create a one-time request for the session-manager browser. Telegram receives the request, progress, and final result.</p>
+      <form method="post" action="{% url 'dashboard:facebook_session_request_create' %}">
+        {% csrf_token %}
+        <button type="submit">Create session request</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading panel-heading-stacked">
+        <div>
+          <h2>Recent requests</h2>
+          <p>Pending and running requests are handled by the dedicated Docker service.</p>
+        </div>
+      </div>
+      <div class="request-list">
+        {% for request in recent_session_requests %}
+          <article class="request-row">
+            <div class="request-row-main">
+              <strong>#{{ request.id }} <span class="status status-{{ request.status }}">{{ request.get_status_display }}</span></strong>
+              <span>Requested {{ request.requested_at }}; expires {{ request.expires_at }}</span>
+              {% if request.error_message %}<p>{{ request.error_message|truncatechars:160 }}</p>{% endif %}
+            </div>
+            {% if request.operator_url and request.is_active %}
+              <a class="button button-secondary button-small" href="{{ request.operator_url }}" target="_blank" rel="noopener">Open</a>
+            {% endif %}
