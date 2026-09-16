@@ -142,3 +142,12 @@
             {% if request.operator_url and request.is_active %}
               <a class="button button-secondary button-small" href="{{ request.operator_url }}" target="_blank" rel="noopener">Open</a>
             {% endif %}
+          </article>
+        {% empty %}
+          <p class="empty">No session requests yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </aside>
+</section>
+{% endblock %}

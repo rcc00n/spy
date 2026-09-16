@@ -1,0 +1,12 @@
+{% if form.non_field_errors %}
+  <div class="form-error">{{ form.non_field_errors }}</div>
+{% endif %}
+
+{% for field in form %}
+  <div class="form-field {% if field.field.widget.input_type == 'checkbox' %}form-field-checkbox{% endif %}">
+    {% if field.field.widget.input_type == 'checkbox' and field.field.widget.allow_multiple_selected %}
+      <fieldset>
+        <legend>{{ field.label }}</legend>
+        {{ field }}
+      </fieldset>
+    {% elif field.field.widget.input_type == 'checkbox' %}
