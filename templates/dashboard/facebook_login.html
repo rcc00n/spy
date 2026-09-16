@@ -82,3 +82,27 @@
         </div>
       </div>
       <dl class="detail-list">
+        <div>
+          <dt>Auth active</dt>
+          <dd><span class="status status-{{ facebook_auth_enabled|yesno:'success,error' }}">{{ facebook_auth_enabled|yesno:"Enabled,Disabled" }}</span></dd>
+        </div>
+        <div>
+          <dt>Saved session</dt>
+          <dd><span class="status status-{{ facebook_session_exists|yesno:'success,skipped' }}">{{ facebook_session_exists|yesno:"Present,Missing" }}</span></dd>
+        </div>
+        <div>
+          <dt>Storage path</dt>
+          <dd><code>{{ facebook_storage_state_path }}</code></dd>
+        </div>
+        <div>
+          <dt>Manager URL</dt>
+          <dd>
+            {% if facebook_session_manager_url %}
+              <a href="{{ facebook_session_manager_url }}" target="_blank" rel="noopener">{{ facebook_session_manager_url }}</a>
+            {% else %}
+              Not configured
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Last refresh</dt>
