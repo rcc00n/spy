@@ -106,3 +106,39 @@
     <table>
       <thead>
         <tr>
+          <th>Job</th>
+          <th>Status</th>
+          <th>Scope</th>
+          <th>Requested</th>
+          <th>Finished</th>
+          <th>Summary</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in recent_manual_jobs %}
+          <tr>
+            <td>#{{ job.pk }}</td>
+            <td><span class="status status-{{ job.status }}">{{ job.get_status_display }}</span></td>
+            <td>{% if job.account %}{{ job.account.account_name }}{% else %}All active accounts{% endif %}</td>
+            <td>{{ job.requested_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ job.finished_at|date:"Y-m-d H:i"|default:"-" }}</td>
+            <td>{{ job.summary|default:job.error_message|truncatechars:180 }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6">No manual check jobs yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel status-panel">
+  <div class="panel-heading">
+    <h2>Account status</h2>
+    <a href="{% url 'dashboard:accounts' %}">Manage accounts</a>
+  </div>
+  <div class="table-wrap table-wrap-flat">
+    <table>
+      <thead>
+        <tr>
+          <th>Account</th>
