@@ -10,3 +10,19 @@
         {{ field }}
       </fieldset>
     {% elif field.field.widget.input_type == 'checkbox' %}
+      <label class="checkbox-label">
+        {{ field }}
+        <span>{{ field.label }}</span>
+      </label>
+    {% else %}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+    {% endif %}
+    {% if field.help_text %}
+      <p class="help-text">{{ field.help_text }}</p>
+    {% endif %}
+    {% for error in field.errors %}
+      <div class="field-error">{{ error }}</div>
+    {% endfor %}
+  </div>
+{% endfor %}
