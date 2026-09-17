@@ -58,3 +58,27 @@
     {% if recent_matches %}
       <div class="list">
         {% for match in recent_matches %}
+          <article class="list-row">
+            <strong>{{ match.keyword.phrase }}</strong>
+            <span>{{ match.post.monitored_account.account_name }} - {{ match.created_at|date:"Y-m-d H:i" }}</span>
+            <p>{{ match.matched_text_preview|truncatechars:160 }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty">No keyword matches yet.</p>
+    {% endif %}
+  </div>
+  <details class="panel collapsible-panel">
+    <summary class="panel-summary">
+      <span>
+        <strong>Recent check runs</strong>
+        <small>{{ recent_runs|length }} latest runs</small>
+      </span>
+      <span class="summary-icon" aria-hidden="true"></span>
+    </summary>
+    <div class="collapsible-body">
+      <div class="panel-link-row">
+        <a href="{% url 'dashboard:check_runs' %}">View all check runs</a>
+      </div>
+    {% if recent_runs %}
