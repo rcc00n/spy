@@ -34,3 +34,27 @@
   </article>
 </section>
 
+<section class="operations-strip">
+  <div>
+    <span class="eyebrow">Facebook session</span>
+    <strong>{{ facebook_session_exists|yesno:"Ready,Needs refresh" }}</strong>
+    <p>
+      Auth {{ facebook_auth_enabled|yesno:"enabled,disabled" }}{% if facebook_credential %};
+      credentials saved for {{ facebook_credential.username }}{% else %};
+      no active stored credentials{% endif %}.
+    </p>
+  </div>
+  {% if request.user.is_staff %}
+    <a class="button button-secondary" href="{% url 'dashboard:facebook_login' %}">Manage login</a>
+  {% endif %}
+</section>
+
+<section class="split-grid">
+  <div class="panel">
+    <div class="panel-heading">
+      <h2>Recent matches</h2>
+      <a href="{% url 'dashboard:matches' %}">View all</a>
+    </div>
+    {% if recent_matches %}
+      <div class="list">
+        {% for match in recent_matches %}
