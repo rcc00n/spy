@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Monitoring dashboard</h1>
+    <p>Public account checks, keyword matches, and recent errors.</p>
+  </div>
+  <form class="inline-check-form" method="post" action="{% url 'dashboard:run_check_now' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'dashboard:index' %}">
+    <button type="submit">Run all active checks now</button>
+  </form>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card">
+    <span>Active accounts</span>
+    <strong>{{ active_accounts }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Active keywords</span>
+    <strong>{{ active_keywords }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Total matches</span>
+    <strong>{{ total_matches }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Error runs</span>
+    <strong>{{ error_runs }}</strong>
+  </article>
+</section>
+
