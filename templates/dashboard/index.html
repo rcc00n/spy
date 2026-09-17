@@ -82,3 +82,27 @@
         <a href="{% url 'dashboard:check_runs' %}">View all check runs</a>
       </div>
     {% if recent_runs %}
+      <div class="list">
+        {% for run in recent_runs %}
+          <article class="list-row">
+            <strong>{{ run.monitored_account.account_name }}</strong>
+            <span class="status status-{{ run.status }}">{{ run.get_status_display }}</span>
+            <p>{{ run.started_at|date:"Y-m-d H:i" }} - posts {{ run.posts_found }}, new {{ run.new_posts_found }}, matches {{ run.matches_found }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty">No check runs yet.</p>
+    {% endif %}
+    </div>
+  </details>
+</section>
+
+<section class="panel status-panel">
+  <div class="panel-heading">
+    <h2>Manual check jobs</h2>
+  </div>
+  <div class="table-wrap table-wrap-flat">
+    <table>
+      <thead>
+        <tr>
