@@ -166,3 +166,16 @@
                 matches {{ latest_run.matches_found }}
               {% else %}
                 No runs
+              {% endif %}
+            </td>
+            <td>{{ account.last_error|truncatechars:120 }}</td>
+          </tr>
+          {% endwith %}
+        {% empty %}
+          <tr><td colspan="7">No accounts configured.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
