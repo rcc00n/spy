@@ -142,3 +142,27 @@
       <thead>
         <tr>
           <th>Account</th>
+          <th>Platform</th>
+          <th>Active</th>
+          <th>Last status</th>
+          <th>Last checked</th>
+          <th>Latest run</th>
+          <th>Last error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for account in accounts_status %}
+          {% with latest_run=account.check_runs.first %}
+          <tr>
+            <td><a href="{{ account.account_url }}" target="_blank" rel="noopener">{{ account.account_name }}</a></td>
+            <td>{{ account.get_platform_display }}</td>
+            <td><span class="status status-{{ account.is_active|yesno:'success,skipped' }}">{{ account.is_active|yesno:"Active,Paused" }}</span></td>
+            <td><span class="status status-{{ account.last_status|default:'skipped' }}">{{ account.last_status|default:"pending" }}</span></td>
+            <td>{{ account.last_checked_at|default:"Never" }}</td>
+            <td>
+              {% if latest_run %}
+                posts {{ latest_run.posts_found }},
+                new {{ latest_run.new_posts_found }},
+                matches {{ latest_run.matches_found }}
+              {% else %}
+                No runs
