@@ -10,3 +10,27 @@
   </div>
   <a class="button" href="{% url 'dashboard:keyword_create' %}">Add keyword</a>
 </section>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Phrase</th>
+        <th>Active</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for keyword in page_obj %}
+        <tr>
+          <td>{{ keyword.phrase }}</td>
+          <td><span class="status status-{{ keyword.is_active|yesno:'success,skipped' }}">{{ keyword.is_active|yesno:"Active,Paused" }}</span></td>
+          <td>{{ keyword.created_at|date:"Y-m-d H:i" }}</td>
+          <td class="row-actions">
+            <a class="button button-secondary button-small" href="{% url 'dashboard:keyword_edit' keyword.pk %}">Edit</a>
+            {% if keyword.is_active %}
+              <a class="button button-danger button-small" href="{% url 'dashboard:keyword_deactivate' keyword.pk %}">Deactivate</a>
+            {% endif %}
+          </td>
+        </tr>
