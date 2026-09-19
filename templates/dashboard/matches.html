@@ -10,3 +10,27 @@
   </div>
 </section>
 
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Created</th>
+        <th>Keyword</th>
+        <th>Account</th>
+        <th>Preview</th>
+        <th>Telegram</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for match in page_obj %}
+        <tr>
+          <td>{{ match.created_at|date:"Y-m-d H:i" }}</td>
+          <td>{{ match.keyword.phrase }}</td>
+          <td><a href="{{ match.post.post_url }}" target="_blank" rel="noopener">{{ match.post.monitored_account.account_name }}</a></td>
+          <td>{{ match.matched_text_preview|truncatechars:180 }}</td>
+          <td><span class="status status-{{ match.telegram_sent|yesno:'success,skipped' }}">{{ match.telegram_sent|yesno:"Sent,Pending" }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">No matches found yet.</td></tr>
+      {% endfor %}
+    </tbody>
