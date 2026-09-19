@@ -34,3 +34,11 @@
             {% endif %}
           </td>
         </tr>
+      {% empty %}
+        <tr><td colspan="4">No keywords configured.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "dashboard/pagination.html" %}
+{% endblock %}
