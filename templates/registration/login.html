@@ -10,3 +10,14 @@
     <form method="post">
       {% csrf_token %}
       {% if form.errors %}
+        <div class="form-error">Invalid username or password.</div>
+      {% endif %}
+      <label for="{{ form.username.id_for_label }}">Username</label>
+      {{ form.username }}
+      <label for="{{ form.password.id_for_label }}">Password</label>
+      {{ form.password }}
+      <button type="submit">Sign in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
