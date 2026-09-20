@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Spy Monitor{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+  <div class="auth-panel">
+    <h1>Sign in</h1>
+    <p>Access is restricted to internal monitoring users.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% if form.errors %}
