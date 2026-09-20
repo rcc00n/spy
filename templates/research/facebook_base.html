@@ -10,3 +10,13 @@
   <a {% if fb_nav == 'findings' %}class="is-active" aria-current="page"{% endif %} href="{% url 'research:facebook_monitor' %}">{% include 'research/partials/fb_icon.html' with name='inbox' %} Findings</a>
   <a {% if fb_nav == 'sources' %}class="is-active" aria-current="page"{% endif %} href="{% url 'research:facebook_sources' %}">{% include 'research/partials/fb_icon.html' with name='sources' %} Sources</a>
   <a {% if fb_nav == 'settings' %}class="is-active" aria-current="page"{% endif %} href="{% url 'research:facebook_settings' %}">{% include 'research/partials/fb_icon.html' with name='settings' %} Collection</a>
+</nav>
+<details class="fb-tools"><summary>Tools</summary><nav aria-label="More tools">
+  <a href="{% url 'research:facebook_scan_create' %}">One-time scan</a>
+  <a href="{% url 'dashboard:facebook_login' %}">Facebook login</a>
+  <a href="{% url 'research:jobs' %}">Research history</a>
+</nav></details>
+{% endblock %}
+{% block topbar %}<div class="fb-breadcrumb"><span>Workspace</span><span aria-hidden="true">/</span><strong>Facebook</strong></div>{% endblock %}
+{% block signed_in_label %}Account{% endblock %}{% block logout_label %}Log out{% endblock %}
+{% block extra_scripts %}<script src="{% static 'js/facebook-workspace.js' %}" defer></script>{% endblock %}

@@ -1,0 +1,3 @@
+{% extends 'research/facebook_base.html' %}
+{% block title %}{{ post.source_name }} · spy{% endblock %}
+{% block content %}<a class="fb-back" href="{% url 'research:facebook_monitor' %}">← Back to findings</a><div class="fb-discussion-page">{% include 'research/facebook_discussion_content.html' %}</div><div class="fb-toast" role="status" aria-live="polite" data-toast hidden></div>{% endblock %}
