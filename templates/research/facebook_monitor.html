@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Facebook monitor{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div><h1>Facebook monitor · {{ monitor.enabled|yesno:"Enabled,Paused" }}</h1>
+    <p>{{ source_count }} enabled discovery sources · {{ known_posts }} known discussions · {{ verified_posts }} public posts verified at least once.</p></div>
+  <div class="page-actions">
+    <a class="button button-secondary" href="{% url 'research:facebook_sources' %}">Manage sources</a>
+    <a class="button button-secondary" href="{% url 'research:jobs' %}">Research jobs</a>
+    <form method="post">{% csrf_token %}
+      {% if monitor.enabled %}<button name="action" value="pause">Pause monitor</button>
+      {% else %}<button name="action" value="resume">Enable / resume monitor</button>{% endif %}
