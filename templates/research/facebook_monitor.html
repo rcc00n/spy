@@ -34,3 +34,10 @@
 </section>
 <h2>Recent cycles</h2>
 <div class="table-wrap"><table>
+  <thead><tr><th>Cycle</th><th>Status</th><th>Created</th><th>Collection gaps / error</th></tr></thead>
+  <tbody>{% for cycle in recent_cycles %}<tr>
+    <td><a href="{% url 'research:job_detail' cycle.pk %}">#{{ cycle.pk }} · {{ cycle.monitor_lane }}</a></td>
+    <td>{{ cycle.get_status_display }}</td><td>{{ cycle.created_at }}</td><td>{{ cycle.error_message|default:"—" }}</td>
+  </tr>{% empty %}<tr><td colspan="4">No scheduled cycles yet.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}
