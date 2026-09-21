@@ -34,3 +34,9 @@
 {% empty %}
 <div class="fb-empty"><span class="fb-empty-mark">{% include 'research/partials/fb_icon.html' with name='inbox' %}</span><h2>{% if query or unread or period != 'all' %}No matching findings{% elif scope == 'saved' %}Keep the important ones{% elif scope == 'pcl' %}No PCL mentions found yet{% else %}No posts yet{% endif %}</h2><p>{% if query or unread or period != 'all' %}Try a different search or clear your filters.{% elif scope == 'saved' %}Bookmark a discussion to come back to it later.{% elif scope == 'pcl' %}This reflects the collected sample, not all of Facebook.{% else %}Findings will appear as sources are checked.{% endif %}</p><a class="button button-secondary" href="{% url 'research:facebook_monitor' %}?scope=all">Browse all posts</a></div>
 {% endfor %}
+</div>
+{% if page_obj.has_other_pages %}<nav class="fb-pagination" aria-label="Finding pages">{% if page_obj.has_previous %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.previous_page_number }}">← Previous</a>{% else %}<span></span>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.next_page_number }}">Next →</a>{% else %}<span></span>{% endif %}</nav>{% endif %}
+<footer class="fb-page-foot"><span>{% if last_observed_at %}Last post check: {{ last_observed_at|date:"d.m.Y H:i" }}{% else %}Waiting for the first completed check{% endif %}</span><a href="{{ request.get_full_path }}">Refresh</a></footer>
+<dialog class="fb-reader" id="fb-reader" aria-label="Discussion"><button type="button" class="fb-icon-button fb-reader-close" data-close-reader aria-label="Close discussion">{% include 'research/partials/fb_icon.html' with name='close' %}</button><div data-reader-content></div></dialog>
+<div class="fb-toast" role="status" aria-live="polite" data-toast hidden></div>
+{% endblock %}

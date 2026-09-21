@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Research #{{ job.id }} - Research Portal{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Research #{{ job.id }}</h1>
+    <p>{{ job.display_title }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="button button-secondary" href="{% url 'research:jobs' %}">Back to research</a>
