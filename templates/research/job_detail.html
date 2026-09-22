@@ -34,3 +34,39 @@
     <span>Social sources</span>
     <strong>{{ job.include_social|yesno:"Enabled,Off" }}</strong>
   </article>
+  <article class="session-status-card">
+    <span>Sources</span>
+    <strong id="research-source-count">{{ sources|length }}</strong>
+  </article>
+</section>
+
+{% if job.plan.engine == "facebook_browser" %}
+<section class="panel">
+  <div class="panel-heading panel-heading-stacked">
+    <h2>Discussion queue</h2>
+    <p>Saved comments survive retries. No further comments observed does not mean all Facebook comments were collected. Refresh this page to see new checkpoints.</p>
+  </div>
+  <div class="list">
+    {% for thread in facebook_threads %}
+    <article class="list-row">
+      <a href="{{ thread.post.url }}" target="_blank" rel="noopener noreferrer">{{ thread.post.url }}</a>
+      <strong>{{ thread.get_status_display }} · {{ thread.comment_count }} saved comments · {{ thread.attempts }} attempts</strong>
+      <span>Discovered via: {{ thread.queries|join:", "|default:"Direct link / legacy scan" }}</span>
+      <span>{{ thread.coverage|default:"Not read yet" }} · Last checkpoint: {{ thread.checkpoint.last_checkpoint_at|default:"None" }}</span>
+      {% if thread.error %}<p>{{ thread.error }}</p>{% endif %}
+    </article>
+    {% empty %}<p>Discovering discussions. Links are saved as they are found.</p>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if facebook_discoveries %}
+<section class="panel">
+  <h2>Discovery sources</h2>
+  <p>Each source has a separate result. Link limits and scroll limits describe a bounded pass, not complete coverage. Search can return unrelated posts.</p>
+  {% for discovery in facebook_discoveries %}
+  <article class="list-row">
+    <strong>{{ discovery.name }} · {{ discovery.kind }}</strong>
+    <span>{{ discovery.target }}</span>
+    <span>{{ discovery.status }} · {{ discovery.coverage|default:"Not read yet" }} · {{ discovery.post_count }} links · {{ discovery.attempts }} attempts</span>
+    {% if discovery.error %}<p>{{ discovery.error }}</p>{% endif %}
