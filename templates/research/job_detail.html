@@ -70,3 +70,27 @@
     <span>{{ discovery.target }}</span>
     <span>{{ discovery.status }} · {{ discovery.coverage|default:"Not read yet" }} · {{ discovery.post_count }} links · {{ discovery.attempts }} attempts</span>
     {% if discovery.error %}<p>{{ discovery.error }}</p>{% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
+<section class="split-grid">
+  <div class="panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Request</h2>
+        <p>Created {{ job.created_at|date:"Y-m-d H:i" }}{% if job.requested_by %} by {{ job.requested_by.get_username }}{% endif %}.</p>
+      </div>
+    </div>
+    <p class="research-query">{{ job.query }}</p>
+    <dl class="detail-list compact-detail-list">
+      <div>
+        <dt>Updated</dt>
+        <dd id="research-updated">{{ job.updated_at|date:"Y-m-d H:i:s" }}</dd>
+      </div>
+      <div>
+        <dt>Celery task</dt>
+        <dd>{{ job.task_id|default:"-" }}</dd>
+      </div>
+      <div>
+        <dt>Remote job</dt>
