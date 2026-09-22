@@ -10,3 +10,27 @@
   </div>
   <div class="page-actions">
     <a class="button button-secondary" href="{% url 'research:jobs' %}">Back to research</a>
+    {% if job.monitor_id %}
+      <a class="button button-secondary" href="{% url 'research:facebook_monitor' %}">Monitor schedule</a>
+    {% elif job.is_terminal %}
+      <form method="post" action="{% url 'research:job_retry' job.pk %}">
+        {% csrf_token %}
+        <button type="submit">{% if job.plan.engine == "facebook_browser" %}Continue collection{% else %}Queue again{% endif %}</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+
+<section class="run-summary-grid">
+  <article class="session-status-card">
+    <span>Status</span>
+    <strong><span id="research-status" class="status status-{{ job.status }}">{{ job.get_status_display }}</span></strong>
+  </article>
+  <article class="session-status-card">
+    <span>Depth</span>
+    <strong>{{ job.get_depth_display }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Social sources</span>
+    <strong>{{ job.include_social|yesno:"Enabled,Off" }}</strong>
+  </article>
