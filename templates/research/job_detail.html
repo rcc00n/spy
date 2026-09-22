@@ -118,3 +118,27 @@
         </article>
       {% empty %}
         <p class="empty">No events yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if job.error_message %}
+  <section class="panel status-panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Error</h2>
+        <p id="research-error">{{ job.error_message }}</p>
+      </div>
+    </div>
+  </section>
+{% else %}
+  <p id="research-error" hidden></p>
+{% endif %}
+
+{% if job.plan %}
+  <section class="panel status-panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Plan</h2>
+        <p>Execution details and collection coverage.</p>
