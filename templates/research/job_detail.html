@@ -94,3 +94,27 @@
       </div>
       <div>
         <dt>Remote job</dt>
+        <dd>{{ job.external_job_id|default:"-" }}</dd>
+      </div>
+      <div>
+        <dt>Completed</dt>
+        <dd id="research-completed">{{ job.completed_at|date:"Y-m-d H:i:s"|default:"-" }}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Events</h2>
+        <p><span id="research-event-count">{{ job.events.count }}</span> portal and engine updates.</p>
+      </div>
+    </div>
+    <div id="research-events" class="list">
+      {% for event in events %}
+        <article class="list-row">
+          <strong>{{ event.created_at|date:"Y-m-d H:i:s" }} - {{ event.get_level_display }}</strong>
+          <p>{{ event.message }}</p>
+        </article>
+      {% empty %}
+        <p class="empty">No events yet.</p>
