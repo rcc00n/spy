@@ -202,3 +202,27 @@
   {% endif %}
 </section>
 
+{% if not job.is_terminal %}
+<script>
+(function () {
+  const terminalStatuses = new Set(["completed", "failed", "cancelled"]);
+  const statusUrl = "{% url 'research:job_status' job.pk %}";
+  const statusEl = document.getElementById("research-status");
+  const updatedEl = document.getElementById("research-updated");
+  const completedEl = document.getElementById("research-completed");
+  const eventCountEl = document.getElementById("research-event-count");
+  const sourceCountEl = document.getElementById("research-source-count");
+  const eventsEl = document.getElementById("research-events");
+  const errorEl = document.getElementById("research-error");
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderEvents(events) {
+    if (!events.length) {
