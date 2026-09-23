@@ -142,3 +142,39 @@
       <div>
         <h2>Plan</h2>
         <p>Execution details and collection coverage.</p>
+      </div>
+    </div>
+    <details class="raw-snapshot" open>
+      <summary>JSON plan</summary>
+      <pre>{{ job.plan }}</pre>
+    </details>
+  </section>
+{% endif %}
+
+<section class="panel status-panel">
+  <div class="panel-heading panel-heading-stacked">
+    <div>
+      <h2>Sources</h2>
+      <p>Collected evidence and source links. Check the report for coverage and limitations.</p>
+    </div>
+  </div>
+  {% if sources %}
+    <div class="list">
+      {% for source in sources %}
+        <article class="list-row">
+          <strong>{{ source.title|default:source.url|default:"Untitled source" }}</strong>
+          <span>{{ source.get_source_type_display }}{% if source.url %} - <a href="{{ source.url }}" target="_blank" rel="noopener">{{ source.url }}</a>{% endif %}</span>
+          {% if source.excerpt %}<p>{{ source.excerpt|truncatechars:420 }}</p>{% endif %}
+          {% if job.plan.engine == "facebook_browser" %}
+            <p>Coverage: {{ source.payload.coverage }} · Public visibility verified: {{ source.payload.public_verified|yesno:"Yes,No" }} · Comment order: {{ source.payload.sort|default:"unknown" }}</p>
+            {% if source.payload.error %}<p>{{ source.payload.error }}</p>{% endif %}
+            <details>
+              <summary>{{ source.payload.comments|length }} captured comments</summary>
+              {% for comment in source.payload.comments %}
+                <div class="list-row">
+                  <a href="{{ comment.url }}" target="_blank" rel="noopener noreferrer">Comment {{ comment.id }}</a>
+                  {% if comment.mentions_pcl %}<strong>PCL mention — review context</strong>{% endif %}
+                  <p>{{ comment.text|default:"No text captured; may contain media." }}</p>
+                  {% if comment.parent_id %}<small>Reply to {{ comment.parent_id }}</small>{% endif %}
+                </div>
+              {% endfor %}
