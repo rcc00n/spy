@@ -1,0 +1,12 @@
+{% extends form_base|default:"base.html" %}
+
+{% block title %}{{ title }} - Research Portal{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>{{ title }}</h1>
+    {% if facebook_scan %}<p>{% if fb_nav == "sources" %}Use a Facebook page, public group, or search phrase.{% else %}Choose sources or add a query for a one-time collection.{% endif %}</p>{% else %}<p>The portal queues the request; the remote research engine does the heavy model work.</p>{% endif %}
+  </div>
+  <div class="page-actions">
+    {% if facebook_scan %}<a class="button button-secondary" href="{% url 'research:facebook_monitor' %}">Back to findings</a>{% else %}<a class="button button-secondary" href="{% url 'research:jobs' %}">Back to research</a>{% endif %}
