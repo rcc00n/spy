@@ -178,3 +178,27 @@
                   {% if comment.parent_id %}<small>Reply to {{ comment.parent_id }}</small>{% endif %}
                 </div>
               {% endfor %}
+            </details>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No sources have been returned yet.</p>
+  {% endif %}
+</section>
+
+<section class="panel status-panel">
+  <div class="panel-heading panel-heading-stacked">
+    <div>
+      <h2>Report</h2>
+      <p>Report and collection findings.</p>
+    </div>
+  </div>
+  {% if job.report_markdown %}
+    <div class="report-body">{{ job.report_markdown|linebreaksbr }}</div>
+  {% else %}
+    <p class="empty">No final report yet.</p>
+  {% endif %}
+</section>
+
