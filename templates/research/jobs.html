@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Research Jobs - Research Portal{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Research jobs</h1>
+    <p>Search Facebook discussions or submit a research request.</p>
+  </div>
+  <div class="page-actions">
+    {% if request.user.is_staff %}<a class="button button-secondary" href="{% url 'research:facebook_monitor' %}">Facebook monitor</a><a class="button button-secondary" href="{% url 'research:facebook_sources' %}">Facebook sources</a><a class="button button-secondary" href="{% url 'research:facebook_scan_create' %}">Facebook scan</a>{% endif %}
+    <a class="button" href="{% url 'research:job_create' %}">New research</a>
+  </div>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card">
+    <span>Queued</span>
+    <strong>{{ queued_count }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Active</span>
+    <strong>{{ running_count }}</strong>
