@@ -58,3 +58,16 @@
           <td><span class="status status-{{ job.status }}">{{ job.get_status_display }}</span></td>
           <td>{{ job.get_depth_display }}</td>
           <td>{{ job.include_social|yesno:"Enabled,Off" }}</td>
+          <td>{{ job.source_count }}</td>
+          <td>{% if job.requested_by %}{{ job.requested_by.get_username }}{% else %}-{% endif %}</td>
+          <td><a class="button button-secondary button-small" href="{% url 'research:job_detail' job.pk %}">View</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8">No research jobs yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "dashboard/pagination.html" %}
+{% endblock %}
+
