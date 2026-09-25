@@ -1,6 +1,9 @@
 import logging
+import os
+import tempfile
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.utils import timezone
@@ -123,6 +126,9 @@ def visible_text(page) -> str:
 def facebook_session_state(page) -> str:
     text = visible_text(page).lower()
     url = (page.url or "").lower()
+    host = urlparse(url).hostname or ""
+    if host != "facebook.com" and not host.endswith(".facebook.com"):
+        return "unknown"
 
     if (
         "checkpoint" in url
@@ -132,7 +138,14 @@ def facebook_session_state(page) -> str:
         return "checkpoint"
     if "/login" in url or any(marker in text for marker in LOGIN_MARKERS):
         return "login_required"
-    return "authenticated"
+    # A loading/empty page is not evidence of an authenticated session.
+    cookies = {
+        cookie["name"]: cookie.get("value")
+        for cookie in page.context.cookies("https://www.facebook.com")
+    }
+    if text and cookies.get("c_user") and cookies.get("xs"):
+        return "authenticated"
+    return "unknown"
 
 
 def get_stored_facebook_credential():
@@ -291,9 +304,13 @@ def ensure_facebook_storage_state(
 def save_facebook_storage_state(context) -> Path:
     state_path = storage_state_path()
     state_path.parent.mkdir(parents=True, exist_ok=True)
-    context.storage_state(path=str(state_path))
+    # Workers must never read a partially written session file.
+    fd, temporary_path = tempfile.mkstemp(prefix=".facebook-session-", dir=state_path.parent)
+    os.close(fd)
     try:
-        state_path.chmod(0o600)
-    except OSError:
-        logger.warning("Could not restrict permissions for %s", state_path)
+        context.storage_state(path=temporary_path)
+        os.chmod(temporary_path, 0o600)
+        os.replace(temporary_path, state_path)
+    finally:
+        Path(temporary_path).unlink(missing_ok=True)
     return state_path

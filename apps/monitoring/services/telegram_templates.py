@@ -2,6 +2,7 @@ import logging
 import re
 
 from apps.monitoring.models import TelegramMessageTemplate
+from apps.monitoring.services.sync_db import call_sync_db
 
 
 logger = logging.getLogger(__name__)
@@ -17,8 +18,8 @@ def render_telegram_template(
 ) -> str:
     body = default
     try:
-        configured_body = (
-            TelegramMessageTemplate.objects.filter(key=key, is_active=True)
+        configured_body = call_sync_db(
+            lambda: TelegramMessageTemplate.objects.filter(key=key, is_active=True)
             .values_list("body", flat=True)
             .first()
         )

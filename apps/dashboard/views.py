@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Count
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import user_passes_test
 
@@ -44,6 +45,13 @@ def staff_required(view_func):
     return user_passes_test(lambda user: user.is_staff)(view_func)
 
 
+def facebook_session_access(request):
+    """Authorize the operator's noVNC HTTP and WebSocket routes."""
+    if not request.user.is_authenticated:
+        return HttpResponse(status=401)
+    return HttpResponse(status=204 if request.user.is_staff else 403)
+
+
 def facebook_credential_status():
     credential = PlatformCredential.objects.filter(
         platform=PlatformCredential.Platform.FACEBOOK,
@@ -64,6 +72,8 @@ def facebook_credential_status():
 
 @login_required
 def index(request):
+    if request.user.is_staff and request.GET.get("legacy") != "1":
+        return redirect("research:facebook_monitor")
     context = {
         "active_accounts": MonitoredAccount.objects.filter(is_active=True).count(),
         "active_keywords": Keyword.objects.filter(is_active=True).count(),

@@ -660,12 +660,30 @@ tr:last-child td {
   color: var(--success);
 }
 
+.status-completed {
+  background: #e8f6ee;
+  color: var(--success);
+}
+
 .status-error {
   background: #fff0ee;
   color: var(--error);
 }
 
+.status-failed {
+  background: #fff0ee;
+  color: var(--error);
+}
+
 .status-running {
+  background: #e8f5f4;
+  color: var(--accent-strong);
+}
+
+.status-planning,
+.status-collecting,
+.status-social_collecting,
+.status-critiquing {
   background: #e8f5f4;
   color: var(--accent-strong);
 }
@@ -682,6 +700,7 @@ tr:last-child td {
 
 .status-skipped,
 .status-pending,
+.status-queued,
 .status-expired,
 .status-cancelled {
   background: #fff6df;
@@ -753,6 +772,23 @@ tr:last-child td {
   line-height: 1.55;
   margin-bottom: 12px;
   white-space: pre-wrap;
+}
+
+.research-query,
+.report-body {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.62;
+  white-space: pre-wrap;
+}
+
+.report-body {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  max-height: 760px;
+  overflow: auto;
+  padding: 16px;
 }
 
 .compact-detail-list {

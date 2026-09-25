@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from django.conf import settings
 from django.utils import timezone
@@ -35,8 +35,10 @@ def build_operator_url(request: FacebookSessionRefreshRequest, raw_token: str) -
     base_url = settings.FACEBOOK_SESSION_MANAGER_URL
     if not base_url:
         return ""
-    separator = "&" if "?" in base_url else "?"
-    return f"{base_url}{separator}{urlencode({'request': request.pk, 'token': raw_token})}"
+    parts = urlsplit(base_url)
+    query = dict(parse_qsl(parts.query))
+    query.update({"request": request.pk, "token": raw_token, "autoconnect": "true", "resize": "scale"})
+    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 def verify_request_token(

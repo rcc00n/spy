@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Research #{{ job.id }} - Research Portal{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Research #{{ job.id }}</h1>
+    <p>{{ job.display_title }}</p>
+  </div>
+  <div class="page-actions">
+    <a class="button button-secondary" href="{% url 'research:jobs' %}">Back to research</a>
+    {% if job.monitor_id %}
+      <a class="button button-secondary" href="{% url 'research:facebook_monitor' %}">Monitor schedule</a>
+    {% elif job.is_terminal %}
+      <form method="post" action="{% url 'research:job_retry' job.pk %}">
+        {% csrf_token %}
+        <button type="submit">{% if job.plan.engine == "facebook_browser" %}Continue collection{% else %}Queue again{% endif %}</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+
+<section class="run-summary-grid">
+  <article class="session-status-card">
+    <span>Status</span>
+    <strong><span id="research-status" class="status status-{{ job.status }}">{{ job.get_status_display }}</span></strong>
+  </article>
+  <article class="session-status-card">
+    <span>Depth</span>
+    <strong>{{ job.get_depth_display }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Social sources</span>
+    <strong>{{ job.include_social|yesno:"Enabled,Off" }}</strong>
+  </article>
+  <article class="session-status-card">
+    <span>Sources</span>
+    <strong id="research-source-count">{{ sources|length }}</strong>
+  </article>
+</section>
+
+{% if job.plan.engine == "facebook_browser" %}
+<section class="panel">
+  <div class="panel-heading panel-heading-stacked">
+    <h2>Discussion queue</h2>
+    <p>Saved comments survive retries. No further comments observed does not mean all Facebook comments were collected. Refresh this page to see new checkpoints.</p>
+  </div>
+  <div class="list">
+    {% for thread in facebook_threads %}
+    <article class="list-row">
+      <a href="{{ thread.post.url }}" target="_blank" rel="noopener noreferrer">{{ thread.post.url }}</a>
+      <strong>{{ thread.get_status_display }} · {{ thread.comment_count }} saved comments · {{ thread.attempts }} attempts</strong>
+      <span>Discovered via: {{ thread.queries|join:", "|default:"Direct link / legacy scan" }}</span>
+      <span>{{ thread.coverage|default:"Not read yet" }} · Last checkpoint: {{ thread.checkpoint.last_checkpoint_at|default:"None" }}</span>
+      {% if thread.error %}<p>{{ thread.error }}</p>{% endif %}
+    </article>
+    {% empty %}<p>Discovering discussions. Links are saved as they are found.</p>{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if facebook_discoveries %}
+<section class="panel">
+  <h2>Discovery sources</h2>
+  <p>Each source has a separate result. Link limits and scroll limits describe a bounded pass, not complete coverage. Search can return unrelated posts.</p>
+  {% for discovery in facebook_discoveries %}
+  <article class="list-row">
+    <strong>{{ discovery.name }} · {{ discovery.kind }}</strong>
+    <span>{{ discovery.target }}</span>
+    <span>{{ discovery.status }} · {{ discovery.coverage|default:"Not read yet" }} · {{ discovery.post_count }} links · {{ discovery.attempts }} attempts</span>
+    {% if discovery.error %}<p>{{ discovery.error }}</p>{% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
+<section class="split-grid">
+  <div class="panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Request</h2>
+        <p>Created {{ job.created_at|date:"Y-m-d H:i" }}{% if job.requested_by %} by {{ job.requested_by.get_username }}{% endif %}.</p>
+      </div>
+    </div>
+    <p class="research-query">{{ job.query }}</p>
+    <dl class="detail-list compact-detail-list">
+      <div>
+        <dt>Updated</dt>
+        <dd id="research-updated">{{ job.updated_at|date:"Y-m-d H:i:s" }}</dd>
+      </div>
+      <div>
+        <dt>Celery task</dt>
+        <dd>{{ job.task_id|default:"-" }}</dd>
+      </div>
+      <div>
+        <dt>Remote job</dt>
+        <dd>{{ job.external_job_id|default:"-" }}</dd>
+      </div>
+      <div>
+        <dt>Completed</dt>
+        <dd id="research-completed">{{ job.completed_at|date:"Y-m-d H:i:s"|default:"-" }}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Events</h2>
+        <p><span id="research-event-count">{{ job.events.count }}</span> portal and engine updates.</p>
+      </div>
+    </div>
+    <div id="research-events" class="list">
+      {% for event in events %}
+        <article class="list-row">
+          <strong>{{ event.created_at|date:"Y-m-d H:i:s" }} - {{ event.get_level_display }}</strong>
+          <p>{{ event.message }}</p>
+        </article>
+      {% empty %}
+        <p class="empty">No events yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if job.error_message %}
+  <section class="panel status-panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Error</h2>
+        <p id="research-error">{{ job.error_message }}</p>
+      </div>
+    </div>
+  </section>
+{% else %}
+  <p id="research-error" hidden></p>
+{% endif %}
+
+{% if job.plan %}
+  <section class="panel status-panel">
+    <div class="panel-heading panel-heading-stacked">
+      <div>
+        <h2>Plan</h2>
+        <p>Execution details and collection coverage.</p>
+      </div>
+    </div>
+    <details class="raw-snapshot" open>
+      <summary>JSON plan</summary>
+      <pre>{{ job.plan }}</pre>
+    </details>
+  </section>
+{% endif %}
+
+<section class="panel status-panel">
+  <div class="panel-heading panel-heading-stacked">
+    <div>
+      <h2>Sources</h2>
+      <p>Collected evidence and source links. Check the report for coverage and limitations.</p>
+    </div>
+  </div>
+  {% if sources %}
+    <div class="list">
+      {% for source in sources %}
+        <article class="list-row">
+          <strong>{{ source.title|default:source.url|default:"Untitled source" }}</strong>
+          <span>{{ source.get_source_type_display }}{% if source.url %} - <a href="{{ source.url }}" target="_blank" rel="noopener">{{ source.url }}</a>{% endif %}</span>
+          {% if source.excerpt %}<p>{{ source.excerpt|truncatechars:420 }}</p>{% endif %}
+          {% if job.plan.engine == "facebook_browser" %}
+            <p>Coverage: {{ source.payload.coverage }} · Public visibility verified: {{ source.payload.public_verified|yesno:"Yes,No" }} · Comment order: {{ source.payload.sort|default:"unknown" }}</p>
+            {% if source.payload.error %}<p>{{ source.payload.error }}</p>{% endif %}
+            <details>
+              <summary>{{ source.payload.comments|length }} captured comments</summary>
+              {% for comment in source.payload.comments %}
+                <div class="list-row">
+                  <a href="{{ comment.url }}" target="_blank" rel="noopener noreferrer">Comment {{ comment.id }}</a>
+                  {% if comment.mentions_pcl %}<strong>PCL mention — review context</strong>{% endif %}
+                  <p>{{ comment.text|default:"No text captured; may contain media." }}</p>
+                  {% if comment.parent_id %}<small>Reply to {{ comment.parent_id }}</small>{% endif %}
+                </div>
+              {% endfor %}
+            </details>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No sources have been returned yet.</p>
+  {% endif %}
+</section>
+
+<section class="panel status-panel">
+  <div class="panel-heading panel-heading-stacked">
+    <div>
+      <h2>Report</h2>
+      <p>Report and collection findings.</p>
+    </div>
+  </div>
+  {% if job.report_markdown %}
+    <div class="report-body">{{ job.report_markdown|linebreaksbr }}</div>
+  {% else %}
+    <p class="empty">No final report yet.</p>
+  {% endif %}
+</section>
+
+{% if not job.is_terminal %}
+<script>
+(function () {
+  const terminalStatuses = new Set(["completed", "failed", "cancelled"]);
+  const statusUrl = "{% url 'research:job_status' job.pk %}";
+  const statusEl = document.getElementById("research-status");
+  const updatedEl = document.getElementById("research-updated");
+  const completedEl = document.getElementById("research-completed");
+  const eventCountEl = document.getElementById("research-event-count");
+  const sourceCountEl = document.getElementById("research-source-count");
+  const eventsEl = document.getElementById("research-events");
+  const errorEl = document.getElementById("research-error");
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderEvents(events) {
+    if (!events.length) {
+      eventsEl.innerHTML = '<p class="empty">No events yet.</p>';
+      return;
+    }
+    eventsEl.innerHTML = events.map(function (event) {
+      return '<article class="list-row"><strong>' +
+        escapeHtml(event.created_at) + ' - ' + escapeHtml(event.level) +
+        '</strong><p>' + escapeHtml(event.message) + '</p></article>';
+    }).join("");
+  }
+
+  async function refreshStatus() {
+    try {
+      const response = await fetch(statusUrl, {headers: {"Accept": "application/json"}});
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      statusEl.textContent = data.status_display;
+      statusEl.className = "status status-" + data.status;
+      updatedEl.textContent = data.updated_at || "-";
+      completedEl.textContent = data.completed_at || "-";
+      eventCountEl.textContent = data.event_count;
+      sourceCountEl.textContent = data.source_count;
+      if (errorEl) {
+        errorEl.textContent = data.error_message || "";
+        errorEl.hidden = !data.error_message;
+      }
+      renderEvents(data.events || []);
+      if (terminalStatuses.has(data.status)) {
+        window.location.reload();
+      }
+    } catch (error) {
+      return;
+    }
+  }
+
+  refreshStatus();
+  window.setInterval(refreshStatus, 5000);
+})();
+</script>
+{% endif %}
+{% endblock %}
+

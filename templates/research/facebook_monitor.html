@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Facebook monitor{% endblock %}
+{% block content %}
+<section class="page-title">
+  <div><h1>Facebook monitor · {{ monitor.enabled|yesno:"Enabled,Paused" }}</h1>
+    <p>{{ source_count }} enabled discovery sources · {{ known_posts }} known discussions · {{ verified_posts }} public posts verified at least once.</p></div>
+  <div class="page-actions">
+    <a class="button button-secondary" href="{% url 'research:facebook_sources' %}">Manage sources</a>
+    <a class="button button-secondary" href="{% url 'research:jobs' %}">Research jobs</a>
+    <form method="post">{% csrf_token %}
+      {% if monitor.enabled %}<button name="action" value="pause">Pause monitor</button>
+      {% else %}<button name="action" value="resume">Enable / resume monitor</button>{% endif %}
+    </form>
+  </div>
+</section>
+{% if monitor.pause_reason %}<p role="status"><strong>Pause reason:</strong> {{ monitor.pause_reason }}</p>{% endif %}
+{% if active_cycle %}<p>Current cycle: <a href="{% url 'research:job_detail' active_cycle.pk %}">#{{ active_cycle.pk }} · {{ active_cycle.monitor_lane }}</a>.
+  {% if not monitor.enabled %}Queue held. Saved evidence will be retained on resume.{% endif %}</p>{% endif %}
+<p>One cycle at a time. Due times are queue targets; a running cycle can delay the next one. Fresh-comment cycles rotate through verified discussions, {{ monitor.refresh_batch }} at a time, so each discussion is checked less often than the cycle interval when the corpus is larger.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Cycle</th><th>Next due</th><th>Scope</th></tr></thead>
+  <tbody>
+    <tr><td>New posts · every {{ monitor.discovery_hours }} h</td><td>{{ monitor.discovery_due_at }}</td><td>All enabled pages, public groups and searches; up to 10 links per source; captions saved.</td></tr>
+    <tr><td>Fresh comments · every {{ monitor.refresh_hours }} h</td><td>{{ monitor.refresh_due_at }}</td><td>{{ monitor.refresh_batch }} verified discussions; prefer Newest, up to 40 visible comments per discussion. Actual sort recorded in each report.</td></tr>
+    <tr><td>Continue threads · every {{ monitor.backfill_hours }} h</td><td>{{ monitor.backfill_due_at }}</td><td>{{ monitor.backfill_batch }} unfinished known discussions; replay with a larger budget and retain earlier evidence.</td></tr>
+  </tbody>
+</table></div>
+<p>Continuation covers known links, not a historical Facebook archive. Search, comments and sorting remain bounded by what Facebook exposes. A finished pass is not complete coverage. Login challenges or access limits pause automatic monitoring until an operator resumes it.</p>
+<section class="form-panel"><h2>Schedule</h2>
+  <form class="stacked-form" method="post">{% csrf_token %}
+    {% include "dashboard/form_fields.html" %}
+    <button name="action" value="save">Save intervals and batch sizes</button>
+  </form>
+</section>
+<h2>Recent cycles</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Cycle</th><th>Status</th><th>Created</th><th>Collection gaps / error</th></tr></thead>
+  <tbody>{% for cycle in recent_cycles %}<tr>
+    <td><a href="{% url 'research:job_detail' cycle.pk %}">#{{ cycle.pk }} · {{ cycle.monitor_lane }}</a></td>
+    <td>{{ cycle.get_status_display }}</td><td>{{ cycle.created_at }}</td><td>{{ cycle.error_message|default:"—" }}</td>
+  </tr>{% empty %}<tr><td colspan="4">No scheduled cycles yet.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

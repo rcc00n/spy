@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Research Jobs - Research Portal{% endblock %}
+
+{% block content %}
+<section class="page-title">
+  <div>
+    <h1>Research jobs</h1>
+    <p>Search Facebook discussions or submit a research request.</p>
+  </div>
+  <div class="page-actions">
+    {% if request.user.is_staff %}<a class="button button-secondary" href="{% url 'research:facebook_monitor' %}">Facebook monitor</a><a class="button button-secondary" href="{% url 'research:facebook_sources' %}">Facebook sources</a><a class="button button-secondary" href="{% url 'research:facebook_scan_create' %}">Facebook scan</a>{% endif %}
+    <a class="button" href="{% url 'research:job_create' %}">New research</a>
+  </div>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card">
+    <span>Queued</span>
+    <strong>{{ queued_count }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Active</span>
+    <strong>{{ running_count }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Completed</span>
+    <strong>{{ completed_count }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Failed</span>
+    <strong>{{ failed_count }}</strong>
+  </article>
+</section>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Created</th>
+        <th>Research</th>
+        <th>Status</th>
+        <th>Depth</th>
+        <th>Social</th>
+        <th>Sources</th>
+        <th>Owner</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in page_obj %}
+        <tr>
+          <td>{{ job.created_at|date:"Y-m-d H:i" }}</td>
+          <td>
+            <strong>{{ job.display_title }}</strong>
+            <p>{{ job.query|truncatechars:130 }}</p>
+          </td>
+          <td><span class="status status-{{ job.status }}">{{ job.get_status_display }}</span></td>
+          <td>{{ job.get_depth_display }}</td>
+          <td>{{ job.include_social|yesno:"Enabled,Off" }}</td>
+          <td>{{ job.source_count }}</td>
+          <td>{% if job.requested_by %}{{ job.requested_by.get_username }}{% else %}-{% endif %}</td>
+          <td><a class="button button-secondary button-small" href="{% url 'research:job_detail' job.pk %}">View</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8">No research jobs yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "dashboard/pagination.html" %}
+{% endblock %}
+

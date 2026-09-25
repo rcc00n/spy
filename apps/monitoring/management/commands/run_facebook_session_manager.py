@@ -33,6 +33,7 @@ from apps.monitoring.services.facebook_session_requests import (
     next_pending_session_request,
 )
 from apps.monitoring.services.runner import run_account_checks
+from apps.monitoring.services.sync_db import call_sync_db
 from apps.monitoring.services.telegram import (
     active_chat_ids,
     send_system_alert,
@@ -217,11 +218,13 @@ class Command(BaseCommand):
         if not settings.FACEBOOK_SESSION_VALIDATE_MONITORED_ACCOUNTS:
             return
 
-        accounts = list(
-            MonitoredAccount.objects.filter(
-                platform=MonitoredAccount.Platform.FACEBOOK,
-                is_active=True,
-            ).order_by("id")
+        accounts = call_sync_db(
+            lambda: list(
+                MonitoredAccount.objects.filter(
+                    platform=MonitoredAccount.Platform.FACEBOOK,
+                    is_active=True,
+                ).order_by("id")
+            )
         )
         if not accounts:
             return

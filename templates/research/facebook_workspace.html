@@ -1,0 +1,42 @@
+{% extends "research/facebook_base.html" %}
+{% block title %}Findings · spy{% endblock %}
+{% block content %}
+<header class="fb-page-heading">
+  <div><p class="fb-eyebrow">FACEBOOK / MONITORING</p><h1>Findings</h1><p>Review collected posts and comments.</p></div>
+  <a class="fb-monitor-state {% if monitor.enabled %}is-on{% endif %}" href="{% url 'research:facebook_settings' %}"><span class="fb-state-dot"></span>{% if monitor.enabled %}Collection enabled{% else %}Collection paused{% endif %}{% include 'research/partials/fb_icon.html' with name='chevron' %}</a>
+</header>
+{% if monitor.pause_reason %}<div class="fb-notice"><span>Collection paused{% if 'Paused by operator' not in monitor.pause_reason %}: access needs attention{% endif %}.</span><a href="{% url 'research:facebook_settings' %}">Details →</a></div>{% endif %}
+<dl class="fb-metrics" aria-label="Collection totals">
+<div class="fb-metric"><dt title="Unique public posts with saved text. Repeat checks do not increase this count.">Posts read</dt><dd><strong>{{ posts_read }}</strong><span>of {{ posts_found }} links found</span></dd></div>
+<div class="fb-metric"><dt title="Unique saved comments and replies, across all scans.">Comments read</dt><dd><strong>{{ comments_read }}</strong><span>unique comments &amp; replies</span></dd></div>
+<div class="fb-metric"><dt>Active sources</dt><dd><strong>{{ active_sources }}</strong><span>pages, groups &amp; searches</span></dd></div>
+</dl>
+<nav class="fb-tabs" aria-label="Finding categories">{% for tab in tabs %}<a href="{{ tab.url }}" {% if scope == tab.value %}class="is-active" aria-current="page"{% endif %}>{{ tab.label }}<span>{{ tab.count }}</span></a>{% endfor %}</nav>
+<form class="fb-filterbar" method="get" role="search">
+  <input type="hidden" name="scope" value="{{ scope }}">
+  <div class="fb-search">{% include 'research/partials/fb_icon.html' with name='search' %}<label class="fb-sr-only" for="finding-query">Search posts and comments</label><input id="finding-query" name="q" type="search" value="{{ query }}" placeholder="Search posts and comments…" maxlength="200"><button type="submit">Search</button></div>
+  <label class="fb-period"><span class="fb-sr-only">When first found</span><select name="period" aria-label="When first found"><option value="all" {% if period == 'all' %}selected{% endif %}>Any time</option><option value="1" {% if period == '1' %}selected{% endif %}>Found in 24 hours</option><option value="7" {% if period == '7' %}selected{% endif %}>Last 7 days</option><option value="30" {% if period == '30' %}selected{% endif %}>Last 30 days</option></select></label>
+  <label class="fb-checkbox"><input type="checkbox" name="unread" value="1" {% if unread %}checked{% endif %}> Unread</label>
+  <noscript><button type="submit">Apply</button></noscript>
+</form>
+<div class="fb-list-caption"><span>{% if scope == 'pcl' %}PCL keyword matches · comments first{% elif scope == 'saved' %}Your bookmarked discussions{% else %}All collected public discussions{% endif %}</span><span>{{ page_obj.paginator.count }} results</span></div>
+<div class="fb-results" data-results data-scope="{{ scope }}" data-unread="{{ unread|yesno:'1,0' }}">
+{% for post in page_obj %}
+<article class="fb-result {% if post.is_reviewed %}is-reviewed{% endif %}" data-post-id="{{ post.pk }}">
+  <div class="fb-source-avatar" aria-hidden="true">{{ post.source_initial }}</div>
+  <div class="fb-result-main">
+    <div class="fb-result-meta"><strong>{{ post.source_name }}</strong><span>{{ post.content_kind }}</span>{% if not post.is_reviewed %}<span class="fb-unread-dot" title="Unread"><span class="fb-sr-only">Unread</span></span>{% endif %}</div>
+    <a class="fb-result-link" href="{% url 'research:facebook_discussion' post.pk %}" data-reader-link><h2>{{ post.excerpt|truncatechars:240 }}</h2>{% if post.pcl_excerpt %}<blockquote><span>PCL mention in comments</span><p>{{ post.pcl_excerpt|truncatechars:280 }}</p></blockquote>{% endif %}</a>
+    <div class="fb-result-footer"><span>Found {{ post.first_seen_at|date:"d.m · H:i" }}</span><span>{{ post.comment_count }} comments</span>{% if post.has_gap %}<span title="Only the available part of this discussion was collected">Collection gaps</span>{% endif %}<a href="{% url 'research:facebook_discussion' post.pk %}" data-reader-link>Read {% include 'research/partials/fb_icon.html' with name='arrow' %}</a></div>
+  </div>
+  <form method="post" action="{% url 'research:facebook_review' post.pk %}" class="fb-review-form" data-review-form data-post-id="{{ post.pk }}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="fb-icon-button {% if post.is_saved %}is-saved{% endif %}" type="submit" name="action" value="{% if post.is_saved %}unsave{% else %}save{% endif %}" data-save-button aria-label="{% if post.is_saved %}Remove bookmark{% else %}Bookmark{% endif %}" aria-pressed="{{ post.is_saved|yesno:'true,false' }}">{% include 'research/partials/fb_icon.html' with name='bookmark' %}</button></form>
+</article>
+{% empty %}
+<div class="fb-empty"><span class="fb-empty-mark">{% include 'research/partials/fb_icon.html' with name='inbox' %}</span><h2>{% if query or unread or period != 'all' %}No matching findings{% elif scope == 'saved' %}Keep the important ones{% elif scope == 'pcl' %}No PCL mentions found yet{% else %}No posts yet{% endif %}</h2><p>{% if query or unread or period != 'all' %}Try a different search or clear your filters.{% elif scope == 'saved' %}Bookmark a discussion to come back to it later.{% elif scope == 'pcl' %}This reflects the collected sample, not all of Facebook.{% else %}Findings will appear as sources are checked.{% endif %}</p><a class="button button-secondary" href="{% url 'research:facebook_monitor' %}?scope=all">Browse all posts</a></div>
+{% endfor %}
+</div>
+{% if page_obj.has_other_pages %}<nav class="fb-pagination" aria-label="Finding pages">{% if page_obj.has_previous %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.previous_page_number }}">← Previous</a>{% else %}<span></span>{% endif %}<span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?{{ pagination_query }}&amp;page={{ page_obj.next_page_number }}">Next →</a>{% else %}<span></span>{% endif %}</nav>{% endif %}
+<footer class="fb-page-foot"><span>{% if last_observed_at %}Last post check: {{ last_observed_at|date:"d.m.Y H:i" }}{% else %}Waiting for the first completed check{% endif %}</span><a href="{{ request.get_full_path }}">Refresh</a></footer>
+<dialog class="fb-reader" id="fb-reader" aria-label="Discussion"><button type="button" class="fb-icon-button fb-reader-close" data-close-reader aria-label="Close discussion">{% include 'research/partials/fb_icon.html' with name='close' %}</button><div data-reader-content></div></dialog>
+<div class="fb-toast" role="status" aria-live="polite" data-toast hidden></div>
+{% endblock %}

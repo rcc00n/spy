@@ -1,66 +1,74 @@
 {% load static %}
 <!doctype html>
-<html lang="en">
+<html lang="{% block language %}en{% endblock %}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Spy Monitor{% endblock %}</title>
+  <title>{% block title %}Research Portal{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block extra_head %}{% endblock %}
 </head>
-<body class="{% if request.user.is_authenticated %}app-body{% else %}auth-body{% endif %}">
+<body class="{% if request.user.is_authenticated %}app-body{% else %}auth-body{% endif %} {% block body_class %}{% endblock %}">
   {% if request.user.is_authenticated %}
-    {% with url_name=request.resolver_match.url_name %}
+    {% with url_name=request.resolver_match.url_name app_name=request.resolver_match.app_name %}
     <div class="app-shell">
       <aside class="site-sidebar">
-        <a class="brand" href="{% url 'dashboard:index' %}" aria-label="Spy Monitor dashboard">
-          <span class="brand-mark">SM</span>
+        {% block sidebar %}
+        <a class="brand" href="{% url 'research:jobs' %}" aria-label="Research Portal dashboard">
+          <span class="brand-mark">RP</span>
           <span>
-            <strong>Spy Monitor</strong>
-            <small>Monitoring console</small>
+            <strong>Research Portal</strong>
+            <small>Operations console</small>
           </span>
         </a>
 
         <nav class="nav" aria-label="Primary navigation">
-          <a class="{% if url_name == 'index' %}is-active{% endif %}" href="{% url 'dashboard:index' %}">
-            <span aria-hidden="true">01</span> Dashboard
+          {% if request.user.is_staff %}<a href="{% url 'research:facebook_monitor' %}"><span aria-hidden="true">↗</span> Facebook findings</a>{% endif %}
+          <a class="{% if app_name == 'research' %}is-active{% endif %}" href="{% url 'research:jobs' %}">
+            <span aria-hidden="true">01</span> Research
+          </a>
+          <a class="{% if app_name == 'dashboard' and url_name == 'index' %}is-active{% endif %}" href="{% url 'dashboard:index' %}?legacy=1">
+            <span aria-hidden="true">02</span> Dashboard
           </a>
           <a class="{% if url_name == 'accounts' or url_name == 'account_create' or url_name == 'account_edit' %}is-active{% endif %}" href="{% url 'dashboard:accounts' %}">
-            <span aria-hidden="true">02</span> Accounts
+            <span aria-hidden="true">03</span> Accounts
           </a>
           <a class="{% if url_name == 'keywords' or url_name == 'keyword_create' or url_name == 'keyword_edit' %}is-active{% endif %}" href="{% url 'dashboard:keywords' %}">
-            <span aria-hidden="true">03</span> Keywords
+            <span aria-hidden="true">04</span> Keywords
           </a>
           <a class="{% if url_name == 'matches' %}is-active{% endif %}" href="{% url 'dashboard:matches' %}">
-            <span aria-hidden="true">04</span> Matches
+            <span aria-hidden="true">05</span> Matches
           </a>
           <a class="{% if url_name == 'check_runs' %}is-active{% endif %}" href="{% url 'dashboard:check_runs' %}">
-            <span aria-hidden="true">05</span> Runs
+            <span aria-hidden="true">06</span> Runs
           </a>
           {% if request.user.is_staff %}
             <a class="{% if url_name == 'facebook_login' %}is-active{% endif %}" href="{% url 'dashboard:facebook_login' %}">
-              <span aria-hidden="true">06</span> Facebook Login
+              <span aria-hidden="true">07</span> Facebook Login
             </a>
             <a href="{% url 'admin:index' %}">
-              <span aria-hidden="true">07</span> Django Admin
+              <span aria-hidden="true">08</span> Django Admin
             </a>
           {% endif %}
         </nav>
 
+        {% endblock %}
         <div class="sidebar-footer">
-          <span>Signed in as</span>
+          <span>{% block signed_in_label %}Signed in as{% endblock %}</span>
           <strong>{{ request.user.get_username }}</strong>
         </div>
       </aside>
 
       <div class="workspace">
         <header class="site-header">
-          <div>
+          {% block topbar %}<div>
             <span class="topbar-label">Operations</span>
-            <strong>Live monitoring workspace</strong>
+            <strong>Research and monitoring workspace</strong>
           </div>
+          {% endblock %}
           <form class="logout-form" method="post" action="{% url 'logout' %}">
             {% csrf_token %}
-            <button class="button button-secondary button-small" type="submit">Logout</button>
+            <button class="button button-secondary button-small" type="submit">{% block logout_label %}Logout{% endblock %}</button>
           </form>
         </header>
     {% endwith %}
@@ -81,5 +89,6 @@
       </div>
     </div>
   {% endif %}
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

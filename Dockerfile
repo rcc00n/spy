@@ -20,6 +20,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --ignore-installed --no-cache-dir -r /app/requirements.txt
 
 COPY . /app
+RUN python /app/scripts/patch_novnc.py
 RUN chmod +x /app/scripts/entrypoint.sh /app/scripts/facebook_session_manager.sh
 
 ENTRYPOINT ["/app/scripts/entrypoint.sh"]

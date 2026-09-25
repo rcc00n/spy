@@ -17,5 +17,6 @@ urlpatterns = [
         name="login",
     ),
     path("logout/", LogoutView.as_view(), name="logout"),
+    path("research/", include("apps.research.urls")),
     path("", include("apps.dashboard.urls")),
 ]

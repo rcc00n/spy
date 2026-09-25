@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "apps.monitoring",
     "apps.dashboard",
+    "apps.research",
 ]
 
 MIDDLEWARE = [
@@ -123,7 +124,11 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
     },
 }
 
@@ -143,7 +148,24 @@ CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default=REDIS_URL)
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default=REDIS_URL)
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = env.int("CELERY_TASK_TIME_LIMIT", default=1800)
+CELERY_WORKER_PREFETCH_MULTIPLIER = env.int(
+    "CELERY_WORKER_PREFETCH_MULTIPLIER",
+    default=1,
+)
+CELERY_TASK_ANNOTATIONS = {
+    "apps.research.tasks.run_research_job": {
+        "time_limit": env.int("RESEARCH_TASK_TIME_LIMIT_SECONDS", default=21600),
+        "soft_time_limit": env.int(
+            "RESEARCH_TASK_SOFT_TIME_LIMIT_SECONDS",
+            default=21000,
+        ),
+    },
+}
 CELERY_BEAT_SCHEDULE = {
+    "resume-facebook-collection": {
+        "task": "apps.research.facebook_tasks.dispatch_facebook_scans",
+        "schedule": timedelta(seconds=30),
+    },
     "check-monitored-accounts": {
         "task": "apps.monitoring.tasks.check_active_accounts",
         "schedule": timedelta(
@@ -151,6 +173,24 @@ CELERY_BEAT_SCHEDULE = {
         ),
     }
 }
+
+RESEARCH_ENGINE_URL = env.str("RESEARCH_ENGINE_URL", default="")
+RESEARCH_ENGINE_TOKEN = env.str("RESEARCH_ENGINE_TOKEN", default="")
+RESEARCH_ENGINE_TIMEOUT_SECONDS = env_float("RESEARCH_ENGINE_TIMEOUT_SECONDS", 30.0)
+RESEARCH_ENGINE_POLL_SECONDS = env_float("RESEARCH_ENGINE_POLL_SECONDS", 5.0)
+RESEARCH_ENGINE_MAX_POLLS = env.int("RESEARCH_ENGINE_MAX_POLLS", default=2160)
+RESEARCH_PORTAL_PUBLIC_BASE_URL = env.str("RESEARCH_PORTAL_PUBLIC_BASE_URL", default="")
+RESEARCH_SOCIAL_TOOL_BASE_URL = env.str("RESEARCH_SOCIAL_TOOL_BASE_URL", default="")
+RUNPOD_API_KEY = env.str("RUNPOD_API_KEY", default="")
+RUNPOD_POD_ID = env.str("RUNPOD_POD_ID", default="")
+RUNPOD_ENGINE_PORT = env.int("RUNPOD_ENGINE_PORT", default=8000)
+RUNPOD_AUTOSTART_ENABLED = env.bool("RUNPOD_AUTOSTART_ENABLED", default=False)
+RUNPOD_AUTOSTOP_AFTER_JOB = env.bool("RUNPOD_AUTOSTOP_AFTER_JOB", default=False)
+RUNPOD_API_TIMEOUT_SECONDS = env_float("RUNPOD_API_TIMEOUT_SECONDS", 30.0)
+RUNPOD_START_TIMEOUT_SECONDS = env_float("RUNPOD_START_TIMEOUT_SECONDS", 900.0)
+RUNPOD_HEALTH_POLL_SECONDS = env_float("RUNPOD_HEALTH_POLL_SECONDS", 10.0)
+RUNPOD_HEALTH_TIMEOUT_SECONDS = env_float("RUNPOD_HEALTH_TIMEOUT_SECONDS", 10.0)
+RUNPOD_ENGINE_HEALTH_PATH = env.str("RUNPOD_ENGINE_HEALTH_PATH", default="/health")
 
 TELEGRAM_BOT_TOKEN = env.str("TELEGRAM_BOT_TOKEN", default="")
 TELEGRAM_SEND_CHECK_RUN_SUMMARY = env.bool(
