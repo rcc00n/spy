@@ -313,3 +313,13 @@ Pre-workspace application source is backed up at
 `/var/backups/spy/workspace-20260924T055909Z/`; a fresh database backup and running
 image manifest are at `/var/backups/spy/workspace-release-20260925T200052Z/`.
 Rollback image tags are `spy-<service>:before-workspace-release`.
+
+
+The live release check found an existing monitor pause from 2026-09-25 17:36 UTC
+(`can't start new thread`), before the UI deployment. After worker replacement,
+resource usage was normal. Production's Celery worker now uses Docker's init
+process to reap orphaned browser subprocesses. This follows Playwright's Docker
+recommendation: https://playwright.dev/python/docs/docker#recommended-docker-configuration
+It mitigates process accumulation; the precise cause of the previous resource
+exhaustion was not recoverable after the old container was replaced. Access-stop
+and collector-error auto-pause behavior remains intact.

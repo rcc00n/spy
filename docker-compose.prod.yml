@@ -53,6 +53,7 @@ services:
 
   celery-worker:
     build: .
+    init: true
     restart: unless-stopped
     env_file:
       - .env
